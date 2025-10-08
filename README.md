@@ -1,3 +1,5 @@
+#Project structure
+
 This is a Kotlin Multiplatform project targeting Android, iOS.
 
 * [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
@@ -6,11 +8,21 @@ This is a Kotlin Multiplatform project targeting Android, iOS.
   - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
     For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
     the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
 
 * [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
   you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+
+The composeApp module consists of the following source sets: androidMain, commonMain and iosMain (with commonTest if you chose to include tests).
+
+A source set is a Gradle concept for a number of files logically grouped together, where each group has its own dependencies. In Kotlin Multiplatform, different source sets can target different platforms.
+
+The commonMain source set uses the common Kotlin code, and platform source sets use Kotlin code specific to each target:
+- androidMain also uses Kotlin/JVM.
+- iosMain uses Kotlin/Native.
+
+In general, write your implementation as common code whenever possible instead of duplicating functionality in platform-specific source sets.
+
+In the composeApp/src/commonMain/kotlin directory, open the App.kt file. It contains the App() function, which implements a minimalistic but complete Compose Multiplatform UI.
 
 ### Build and Run Android Application
 
