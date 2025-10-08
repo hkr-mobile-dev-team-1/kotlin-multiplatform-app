@@ -12,12 +12,24 @@ fun TaskCard(task: Task) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(task.title, style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text(task.title, style = MaterialTheme.typography.titleMedium)
+                StatusLabel(task.status)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
             Text(task.description, style = MaterialTheme.typography.bodyMedium)
-            Text("Status: ${task.status}")
+
+            Spacer(modifier = Modifier.height(12.dp))
+            DateRange(startDate = task.startDate.toString(), endDate = task.endDate.toString())
         }
     }
 }
