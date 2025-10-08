@@ -24,6 +24,40 @@ In general, write your implementation as common code whenever possible instead o
 
 In the composeApp/src/commonMain/kotlin directory, open the App.kt file. It contains the App() function, which implements a minimalistic but complete Compose Multiplatform UI.
 
+```bash
+composeApp/
+ └── src/
+ │    └── commonMain/
+ │    │    └── kotlin/com/team_scheduler/
+ │    │    │      ├── ui/
+ │    │    │      │    ├── screens/
+ │    │    │      │    │    ├── schedule/
+ │    │    │      │    │    │    └── ScheduleScreen.kt
+ │    │    │      │    │    ├── tasks/
+ │    │    │      │    │    │    └── TasksScreen.kt
+ │    │    │      │    │    └── settings/
+ │    │    │      │    │         └── SettingsScreen.kt
+ │    │    │      │    └── components/
+ │    │    │      │         ├── TaskCard.kt
+ │    │    │      │         ├── CalendarItem.kt
+ │    │    │      │         └── BottomBar.kt
+ │    │    │      ├── navigation/
+ │    │    │      │    └── NavGraph.kt
+ │    │    │      ├── viewmodel/
+ │    │    │      │    ├── ScheduleViewModel.kt
+ │    │    │      │    ├── TasksViewModel.kt
+ │    │    │      │    └── UserViewModel.kt
+ │    │    │      └── model/
+ │    │    │           ├── Task.kt
+ │    │    │           ├── Schedule.kt
+ │    │    │           ├── User.kt
+ │    │    └── resources/
+ │    ├── androidMain/
+ │    │   └── kotlin/ (Android-only code if needed)
+ │    └── iosMain/
+ │        └── kotlin/ (iOS-only code if needed)
+```
+
 ### Build and Run Android Application
 
 To build and run the development version of the Android app, use the run configuration from the run widget
@@ -44,7 +78,7 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 
 ---
 
-# Team Scheduler App
+# GitHub Workflow
 
 This guide walks you through everything you need to do to get the repository on your computer, make a change, push it, open a Pull Request (PR), and get it merged. It assumes you already have Git intalled and setup and that you clone repos with HTTPS.
 ---

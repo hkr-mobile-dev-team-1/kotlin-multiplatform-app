@@ -1,4 +1,4 @@
-package com.example.teamschedulerapp
+package com.teamschedulerapp
 
 interface Platform {
     val name: String
