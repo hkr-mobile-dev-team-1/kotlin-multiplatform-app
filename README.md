@@ -1,3 +1,5 @@
+#Project structure
+
 This is a Kotlin Multiplatform project targeting Android, iOS.
 
 * [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
@@ -6,11 +8,55 @@ This is a Kotlin Multiplatform project targeting Android, iOS.
   - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
     For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
     the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
 
 * [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
   you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+
+The composeApp module consists of the following source sets: androidMain, commonMain and iosMain (with commonTest if you chose to include tests).
+
+A source set is a Gradle concept for a number of files logically grouped together, where each group has its own dependencies. In Kotlin Multiplatform, different source sets can target different platforms.
+
+The commonMain source set uses the common Kotlin code, and platform source sets use Kotlin code specific to each target:
+- androidMain also uses Kotlin/JVM.
+- iosMain uses Kotlin/Native.
+
+In general, write your implementation as common code whenever possible instead of duplicating functionality in platform-specific source sets.
+
+In the composeApp/src/commonMain/kotlin directory, open the App.kt file. It contains the App() function, which implements a minimalistic but complete Compose Multiplatform UI.
+
+```bash
+composeApp/
+ └── src/
+ │    └── commonMain/
+ │    │    └── kotlin/com/team_scheduler/
+ │    │    │      ├── ui/
+ │    │    │      │    ├── screens/
+ │    │    │      │    │    ├── schedule/
+ │    │    │      │    │    │    └── ScheduleScreen.kt
+ │    │    │      │    │    ├── tasks/
+ │    │    │      │    │    │    └── TasksScreen.kt
+ │    │    │      │    │    └── settings/
+ │    │    │      │    │         └── SettingsScreen.kt
+ │    │    │      │    └── components/
+ │    │    │      │         ├── TaskCard.kt
+ │    │    │      │         ├── CalendarItem.kt
+ │    │    │      │         └── BottomBar.kt
+ │    │    │      ├── navigation/
+ │    │    │      │    └── NavGraph.kt
+ │    │    │      ├── viewmodel/
+ │    │    │      │    ├── ScheduleViewModel.kt
+ │    │    │      │    ├── TasksViewModel.kt
+ │    │    │      │    └── UserViewModel.kt
+ │    │    │      └── model/
+ │    │    │           ├── Task.kt
+ │    │    │           ├── Schedule.kt
+ │    │    │           ├── User.kt
+ │    │    └── resources/
+ │    ├── androidMain/
+ │    │   └── kotlin/ (Android-only code if needed)
+ │    └── iosMain/
+ │        └── kotlin/ (iOS-only code if needed)
+```
 
 ### Build and Run Android Application
 
@@ -32,7 +78,7 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 
 ---
 
-# Team Scheduler App
+# GitHub Workflow
 
 This guide walks you through everything you need to do to get the repository on your computer, make a change, push it, open a Pull Request (PR), and get it merged. It assumes you already have Git intalled and setup and that you clone repos with HTTPS.
 ---
