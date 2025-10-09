@@ -47,6 +47,7 @@ kotlin {
             implementation(libs.androidx.navigation.compose)
             implementation(libs.compose.material.icons.extended)
             implementation(libs.kotlinx.datetime)
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
