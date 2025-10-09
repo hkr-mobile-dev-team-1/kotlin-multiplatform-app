@@ -26,8 +26,6 @@ fun SignupScreen(
     onNavigateToLogin: () -> Unit = {},
     onSignupSuccess: () -> Unit = {}
 ) {
-    var first_name by remember { mutableStateOf("") }
-    var last_name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -64,13 +62,13 @@ fun SignupScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedTextField(
-                value = first_name,
-                onValueChange = { first_name = it },
-                label = { Text("First name") },
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
             Spacer(modifier = Modifier.height(14.dp))
