@@ -22,8 +22,9 @@ import androidx.compose.ui.unit.sp
 
 @Preview
 @Composable
-fun LoginScreen(
-    onNavigateToSignUp: () -> Unit = {}
+fun SignupScreen(
+    onNavigateToLogin: () -> Unit = {},
+    onSignupSuccess: () -> Unit = {}
 ) {
     var first_name by remember { mutableStateOf("") }
     var last_name by remember { mutableStateOf("") }
@@ -75,30 +76,6 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             OutlinedTextField(
-                value = last_name,
-                onValueChange = { last_name = it },
-                label = { Text("Last name") },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii)
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("Password") },
@@ -120,7 +97,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* Handle signup */ },
+                onClick = { onSignupSuccess() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -131,7 +108,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextButton(onClick = onNavigateToSignUp) {
+            TextButton(onClick = { onNavigateToLogin() } ) {
                 Text("Already have an account? Sign in")
             }
 

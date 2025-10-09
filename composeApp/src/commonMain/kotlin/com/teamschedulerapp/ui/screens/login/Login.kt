@@ -21,7 +21,8 @@ import androidx.compose.ui.unit.sp
 @Preview
 @Composable
 fun LoginScreen(
-    onNavigateToSignUp: () -> Unit = {}
+    onNavigateToSignUp: () -> Unit = {},
+    onLoginSuccess: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -94,7 +95,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* Handle login */ },
+                onClick = { onLoginSuccess() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -105,7 +106,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextButton(onClick = onNavigateToSignUp) {
+            TextButton(onClick = { onNavigateToSignUp() }) {
                 Text("Don't have an account? Sign Up as a Manager")
             }
 
