@@ -1,4 +1,4 @@
-package com.teamschedulerapp.calendar
+package com.teamschedulerapp.model
 
 import kotlinx.datetime.LocalDate
 
@@ -14,7 +14,7 @@ import kotlinx.datetime.LocalDate
 
 data class CalendarDay(
     val date: LocalDate,
-    val inCurrentMonth: Boolean,
+    val isCurrentMonth: Boolean,
     val isToday: Boolean,
     val taskCount: Int,
     val headcount: Int
@@ -41,7 +41,7 @@ data class CalendarUiState(
 
 /**
  * All possible user actions that can occur on the calendar screen.
- * These are processed by the [CalendarPresenter], which updates [CalendarUiState].
+ * These are processed by the [com.teamschedulerapp.ui.screens.schedule.SchedulePresenter], which updates [CalendarUiState].
  */
 
 sealed interface CalendarAction {
