@@ -2,12 +2,12 @@ package com.teamschedulerapp
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import com.teamschedulerapp.navigation.AppNavHost
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import cafe.adriel.voyager.navigator.Navigator
+import com.teamschedulerapp.navigation.Login
 
 @Composable
 fun App() {
     MaterialTheme {
-        AppNavHost()
+        Navigator(Login)
     }
 }
