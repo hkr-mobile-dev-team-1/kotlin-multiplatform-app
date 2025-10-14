@@ -6,7 +6,28 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		84C3F9D32E9D87C800BE4170 /* composeApp.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84C3F9D12E9D879D00BE4170 /* composeApp.xcframework */; };
+		84C3F9D42E9D87C800BE4170 /* composeApp.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 84C3F9D12E9D879D00BE4170 /* composeApp.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		84C3F9D52E9D87C800BE4170 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				84C3F9D42E9D87C800BE4170 /* composeApp.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		84C3F9D12E9D879D00BE4170 /* composeApp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = composeApp.xcframework; sourceTree = "<group>"; };
+		84C3F9D62E9D8F8400BE4170 /* composeApp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = composeApp.xcframework; sourceTree = "<group>"; };
 		93C5552592294965C6A56296 /* TeamSchedulerApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TeamSchedulerApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -41,17 +62,45 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				84C3F9D32E9D87C800BE4170 /* composeApp.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		84C3F9D02E9D879D00BE4170 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				84C3F9D22E9D879D00BE4170 /* XCFrameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		84C3F9D22E9D879D00BE4170 /* XCFrameworks */ = {
+			isa = PBXGroup;
+			children = (
+				84C3F9D12E9D879D00BE4170 /* composeApp.xcframework */,
+			);
+			name = XCFrameworks;
+			path = ../composeApp/build/XCFrameworks;
+			sourceTree = "<group>";
+		};
+		84C3F9D72E9D8F8400BE4170 /* XCFrameworks */ = {
+			isa = PBXGroup;
+			children = (
+				84C3F9D62E9D8F8400BE4170 /* composeApp.xcframework */,
+			);
+			path = XCFrameworks;
+			sourceTree = "<group>";
+		};
 		D0FB57D7FB9121D0CF43B62D = {
 			isa = PBXGroup;
 			children = (
+				84C3F9D72E9D8F8400BE4170 /* XCFrameworks */,
 				AF6EF2D54A6746B98C1FE591 /* Configuration */,
 				1728DAC89F7DF9FFC60566D7 /* iosApp */,
+				84C3F9D02E9D879D00BE4170 /* Frameworks */,
 				EE2BAB6F52C930FFC2B2DB2B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -75,6 +124,7 @@
 				40636B3ABF7E8E36D967E24D /* Sources */,
 				A39BEE9EB371C3A266194B28 /* Frameworks */,
 				93C237C1BF74A97D4943E803 /* Resources */,
+				84C3F9D52E9D87C800BE4170 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -232,6 +282,39 @@
 			};
 			name = Debug;
 		};
+		8301DAF2B8E67D8D18734BEA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					x86_64,
+					arm64,
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
+				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				ENABLE_PREVIEWS = YES;
+				"FRAMEWORK_SEARCH_PATHS[arch=*]" = "$(PROJECT_DIR)/../composeApp/build/XCFrameworks\n";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		A69ED8A16BD095B95FA2D77B /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReferenceAnchor = AF6EF2D54A6746B98C1FE591 /* Configuration */;
@@ -290,38 +373,13 @@
 			};
 			name = Release;
 		};
-		8301DAF2B8E67D8D18734BEA /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = arm64;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = "${TEAM_ID}";
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
 		DFB02FEEFFEE3CFE9BB1736B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = arm64;
+				ARCHS = (
+					x86_64,
+					arm64,
+				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -336,6 +394,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -349,20 +408,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8C57B9D87B6139A91D188D50 /* Build configuration list for PBXProject "iosApp" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				706D5F2885BEFFE057E43B66 /* Debug */,
-				A69ED8A16BD095B95FA2D77B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		6390FA785366DB0688B9E97B /* Build configuration list for PBXNativeTarget "iosApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8301DAF2B8E67D8D18734BEA /* Debug */,
 				DFB02FEEFFEE3CFE9BB1736B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8C57B9D87B6139A91D188D50 /* Build configuration list for PBXProject "iosApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				706D5F2885BEFFE057E43B66 /* Debug */,
+				A69ED8A16BD095B95FA2D77B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

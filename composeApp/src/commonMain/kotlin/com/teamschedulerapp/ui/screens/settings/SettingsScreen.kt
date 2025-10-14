@@ -1,4 +1,7 @@
 package com.teamschedulerapp.ui.screens.settings
 
-class SettingsScreen {
+import androidx.compose.runtime.Composable
+
+@Composable
+fun SettingsScreen () {
 }
