@@ -1,6 +1,6 @@
-package com.teamschedulerapp.viewmodel
+package com.teamschedulerapp.screenmodel
 
-import androidx.lifecycle.ViewModel
+import cafe.adriel.voyager.core.model.ScreenModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.teamschedulerapp.model.Task
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.LocalDate
 
-class TasksViewModel : ViewModel() {
+class TasksScreenModel : ScreenModel {
     private val _tasksWithUsers = MutableStateFlow<List<TaskWithUsers>>(emptyList())
     val tasksWithUsers: StateFlow<List<TaskWithUsers>> = _tasksWithUsers.asStateFlow()
 
@@ -21,7 +21,7 @@ class TasksViewModel : ViewModel() {
     }
 
     private fun loadTasksWithUsers() {
-        _tasksWithUsers.update { taskWithUsers -> listOf(
+        _tasksWithUsers.update { tasksWithUsers -> listOf(
             TaskWithUsers(
                 task = Task(
                     id = 1,
@@ -36,7 +36,7 @@ class TasksViewModel : ViewModel() {
             ),
             TaskWithUsers(
                 task = Task(
-                    id = 1,
+                    id = 2,
                     title = "Fix API bug",
                     description = "Resolve the issue causing incorrect user data to load.",
                     status = TaskStatus.PENDING,
@@ -50,14 +50,14 @@ class TasksViewModel : ViewModel() {
                         userName = "Elina"
                     ),
                     User(
-                        userId = 1,
+                        userId = 2,
                         userName = "Dimple"
                     )
                 )
             ),
             TaskWithUsers(
                 task = Task(
-                    id = 1,
+                    id = 3,
                     title = "Implement schedule view",
                     description = "Develop the calendar UI and connect it to the schedule data.",
                     status = TaskStatus.DONE,
@@ -74,7 +74,7 @@ class TasksViewModel : ViewModel() {
             ),
             TaskWithUsers(
                 task = Task(
-                    id = 1,
+                    id = 4,
                     title = "Add authentication flow",
                     description = "Integrate Supabase authentication for login and sign-up.",
                     status = TaskStatus.BLOCKED,
@@ -84,11 +84,11 @@ class TasksViewModel : ViewModel() {
                 ),
                 assignedUsers = listOf(
                     User(
-                        userId = 1,
+                        userId = 3,
                         userName = "Dario"
                     ),
                     User(
-                        userId = 1,
+                        userId = 4,
                         userName = "Andre"
                     )
                 )
