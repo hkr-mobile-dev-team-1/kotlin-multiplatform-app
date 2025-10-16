@@ -52,6 +52,18 @@ class TasksScreenModel : ScreenModel {
                     User(
                         userId = 2,
                         userName = "Dimple"
+                    ),
+                    User(
+                        userId = 3,
+                        userName = "Dario"
+                    ),
+                    User(
+                        userId = 4,
+                        userName = "Andre"
+                    ),
+                    User(
+                        userId = 2,
+                        userName = "Kate"
                     )
                 )
             ),
