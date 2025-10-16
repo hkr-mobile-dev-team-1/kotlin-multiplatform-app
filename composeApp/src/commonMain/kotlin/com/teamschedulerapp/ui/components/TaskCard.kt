@@ -6,9 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,7 +30,7 @@ fun TaskCard(taskWithUsers: TaskWithUsers) {
             pressedElevation = 4.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = Color.White
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -59,7 +60,7 @@ fun TaskCard(taskWithUsers: TaskWithUsers) {
                     onClick = { /* Handle menu click */ }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
+                        imageVector = Icons.Default.MoreHoriz,
                         contentDescription = "More options",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -90,11 +91,11 @@ fun TaskCard(taskWithUsers: TaskWithUsers) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (task.priority != null) {
-                        PriorityLabel(priority = task.priority)
-                    }
                     if (task.status != null) {
                         StatusLabel(task.status)
+                    }
+                    if (task.priority != null) {
+                        PriorityLabel(priority = task.priority)
                     }
                 }
 
