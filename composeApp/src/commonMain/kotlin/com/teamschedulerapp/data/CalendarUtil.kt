@@ -10,7 +10,7 @@ fun LocalDate.firstOfMonth(): LocalDate = LocalDate(year, month, 1)
 fun buildMonthGrid(
     monthFirstDay: LocalDate,
     today: LocalDate,
-    headcountFor: (LocalDate) -> Int = { 0 },      //how many people for the day - placeholder 0
+    headcountFor: (LocalDate) -> Int = { 0 },      // how many people for the day - placeholder 0
 ): List<CalendarDay> {
     val firstOfMonth = monthFirstDay.firstOfMonth()
 

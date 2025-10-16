@@ -9,6 +9,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.data.buildMonthGrid
@@ -114,34 +116,40 @@ private fun DayCell(day: CalendarDay, selected: Boolean, onClick: () -> Unit) {
     val isOverflow = !day.isCurrentMonth
 
     val bg = when {
+        isOverflow -> MaterialTheme.colorScheme.surface
         selected -> MaterialTheme.colorScheme.primaryContainer
         day.isToday -> MaterialTheme.colorScheme.secondaryContainer
         else -> MaterialTheme.colorScheme.surface
     }
 
+    val dayNumberColor = if (isOverflow)
+        LocalContentColor.current.copy(alpha = 0.35f) else LocalContentColor.current
+
     Surface(
         modifier = Modifier
             .aspectRatio(1f)
+            .then(
+                if (isOverflow) Modifier.semantics { disabled() } else Modifier
+            )
             .clickable(enabled = day.isCurrentMonth, onClick = onClick),
         color = bg,
         shape = MaterialTheme.shapes.medium,
         tonalElevation = if (selected && !isOverflow) 2.dp else 0.dp
     ) {
         Box(Modifier.fillMaxSize().padding(6.dp)) {
-            if (!isOverflow) {
                 Text(
                     text = day.date.dayOfMonth.toString(),
                     style = MaterialTheme.typography.labelLarge,
+                    color = dayNumberColor,
                     modifier = Modifier.align(Alignment.TopStart)
                 )
-                if (day.headcount > 0) {
+                if (!isOverflow && day.headcount > 0) {
                     Text(
                         text = "${day.headcount}",
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.align(Alignment.BottomEnd)
                     )
                 }
-            }
         }
     }
 }
