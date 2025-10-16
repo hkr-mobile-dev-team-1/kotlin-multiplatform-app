@@ -110,6 +110,9 @@ private fun WeekdayRow() {
 
 @Composable
 private fun DayCell(day: CalendarDay, selected: Boolean, onClick: () -> Unit) {
+
+    val isOverflow = !day.isCurrentMonth
+
     val bg = when {
         selected -> MaterialTheme.colorScheme.primaryContainer
         day.isToday -> MaterialTheme.colorScheme.secondaryContainer
@@ -122,20 +125,22 @@ private fun DayCell(day: CalendarDay, selected: Boolean, onClick: () -> Unit) {
             .clickable(enabled = day.isCurrentMonth, onClick = onClick),
         color = bg,
         shape = MaterialTheme.shapes.medium,
-        tonalElevation = if (selected) 2.dp else 0.dp
+        tonalElevation = if (selected && !isOverflow) 2.dp else 0.dp
     ) {
         Box(Modifier.fillMaxSize().padding(6.dp)) {
-            Text(
-                text = day.date.dayOfMonth.toString(),
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.align(Alignment.TopStart)
-            )
-            if (day.headcount > 0) {
+            if (!isOverflow) {
                 Text(
-                    text = "${day.headcount}",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.align(Alignment.BottomEnd)
+                    text = day.date.dayOfMonth.toString(),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.align(Alignment.TopStart)
                 )
+                if (day.headcount > 0) {
+                    Text(
+                        text = "${day.headcount}",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.align(Alignment.BottomEnd)
+                    )
+                }
             }
         }
     }
