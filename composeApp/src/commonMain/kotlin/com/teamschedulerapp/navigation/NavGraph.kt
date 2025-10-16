@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.teamschedulerapp.model.User
 import com.teamschedulerapp.ui.screens.login.LoginScreen
 import com.teamschedulerapp.ui.screens.schedule.ScheduleScreen
 import com.teamschedulerapp.ui.screens.settings.SettingsScreen
@@ -85,7 +86,14 @@ fun AppNavHost() {
 
             composable(Screen.Schedule.route) { ScheduleScreen() }
             composable(Screen.Tasks.route) { TasksScreen() }
-            composable(Screen.Settings.route) { SettingsScreen() }
+            composable(Screen.Settings.route) {
+                val dummyUser = User(
+                    name = "Alex Johnson",
+                    email = "alex.johnson@example.com",
+                    role = "Manager"
+                )
+                SettingsScreen(user = dummyUser)
+            }
         }
     }
 }
