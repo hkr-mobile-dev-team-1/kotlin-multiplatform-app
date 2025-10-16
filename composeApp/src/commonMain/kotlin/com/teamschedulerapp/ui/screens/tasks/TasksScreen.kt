@@ -10,10 +10,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.ui.components.TaskCard
 import com.teamschedulerapp.viewmodel.TasksViewModel
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import com.teamschedulerapp.testSupabaseInit
+import kotlinx.coroutines.launch
 
 @Composable
 fun TasksScreen(viewModel: TasksViewModel = TasksViewModel()) {
     val tasks by viewModel.tasks.collectAsState()
+    var testResult by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
