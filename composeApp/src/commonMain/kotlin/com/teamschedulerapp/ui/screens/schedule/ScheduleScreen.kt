@@ -13,8 +13,8 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.data.buildMonthGrid
-import com.teamschedulerapp.data.firstOfMonth
+import com.teamschedulerapp.domain.buildMonthGrid
+import com.teamschedulerapp.domain.firstOfMonth
 import com.teamschedulerapp.model.CalendarDay
 import kotlinx.datetime.*
 

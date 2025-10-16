@@ -1,4 +1,4 @@
-package com.teamschedulerapp.data
+package com.teamschedulerapp.domain
 
 import com.teamschedulerapp.model.CalendarDay
 import kotlinx.datetime.*
