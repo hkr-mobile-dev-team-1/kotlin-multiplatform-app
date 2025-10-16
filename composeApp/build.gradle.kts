@@ -1,11 +1,32 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.codingfeline.buildkonfig.compiler.FieldSpec
+
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    kotlin("plugin.serialization") version "2.2.20"
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.codingfelineBuildKonfig)
 }
+
+buildkonfig {
+    packageName = "com.teamschedulerapp"
+
+    defaultConfigs {
+        val supabaseUrl = project.findProperty("SUPABASE_URL")?.toString()
+            ?: System.getenv("SUPABASE_URL")
+            ?: ""
+        val supabaseKey = project.findProperty("SUPABASE_ANON_KEY")?.toString()
+            ?: System.getenv("SUPABASE_ANON_KEY")
+            ?: ""
+
+        buildConfigField(FieldSpec.Type.STRING, "SUPABASE_URL", supabaseUrl)
+        buildConfigField(FieldSpec.Type.STRING, "SUPABASE_ANON_KEY", supabaseKey)
+    }
+}
+
 
 kotlin {
     androidTarget {
@@ -29,6 +50,8 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.ktor.client.android)
+            implementation(libs.kotlinx.coroutines.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -46,8 +69,14 @@ kotlin {
             implementation(libs.compose.material.icons.extended)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
             implementation(libs.bundles.voyager.common)
+            implementation(libs.bundles.supabase.common)
+            implementation(libs.bundles.ktor.common)
 
+        }
+        iosMain.dependencies{
+            implementation(libs.ktor.client.darwin)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
