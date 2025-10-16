@@ -55,7 +55,6 @@ fun TaskCard(taskWithUsers: TaskWithUsers) {
                     modifier = Modifier.weight(1f)
                 )
 
-                // *** ADDED: Three-dot menu button ***
                 IconButton(
                     onClick = { /* Handle menu click */ }
                 ) {
@@ -69,7 +68,7 @@ fun TaskCard(taskWithUsers: TaskWithUsers) {
 
             // Task Description (if exists)
             if (!task.description.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(0.dp))
                 Text(
                     text = task.description,
                     style = MaterialTheme.typography.bodyMedium,
