@@ -24,4 +24,5 @@ build/
 DerivedData/
 *.xcframework/
 *.framework/
+*.hprof
 
