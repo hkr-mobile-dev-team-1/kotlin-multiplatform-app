@@ -73,7 +73,7 @@ class TasksScreenModel : ScreenModel {
                     title = "Implement schedule view",
                     description = "Develop the calendar UI and connect it to the schedule data.",
                     status = TaskStatus.DONE,
-                    priority = TaskPriority.MODERATE,
+                    priority = TaskPriority.MEDIUM,
                     startDate = LocalDate.parse("2025-10-09"),
                     endDate = LocalDate.parse("2025-10-15")
                 ),
@@ -90,7 +90,7 @@ class TasksScreenModel : ScreenModel {
                     title = "Add authentication flow",
                     description = "Integrate Supabase authentication for login and sign-up.",
                     status = TaskStatus.BLOCKED,
-                    priority = TaskPriority.TOP,
+                    priority = TaskPriority.LOW,
                     startDate = LocalDate.parse("2025-10-09"),
                     endDate = LocalDate.parse("2025-10-15")
                 ),
