@@ -12,20 +12,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import kotlin.random.Random
 
+fun getColorForUser(userId: Number): Color {
+    val seed = userId.hashCode()
+    val random = Random(seed)
+    val red = random.nextInt(100, 256)
+    val green = random.nextInt(100, 256)
+    val blue = random.nextInt(100, 256)
+    return Color(red, green, blue)
+}
 @Composable
-fun UserTile (text: String, color: Color) {
+fun UserTile (userName: String, userId: Number) {
     Box(
         modifier = Modifier
             .size(28.dp)
             .clip(CircleShape)
-            .background(color),
+            .background(getColorForUser(userId)),
         contentAlignment = Alignment.Center
     ) {
         // If we have a user.profileImageUrl, we can use AsyncImage (from Coil)
         // For now, just show initials
         Text(
-            text = text,
+            text = userName.firstOrNull()?.uppercase() ?: "",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSecondaryContainer
         )

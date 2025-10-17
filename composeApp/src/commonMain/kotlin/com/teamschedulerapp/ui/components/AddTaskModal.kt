@@ -1,7 +1,6 @@
 package com.teamschedulerapp.ui.components
 
 import com.teamschedulerapp.model.User
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.teamschedulerapp.model.TaskPriority
 import com.teamschedulerapp.model.TaskStatus
 
@@ -58,7 +56,7 @@ fun AddTaskModal(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         scrimColor = Color.LightGray.copy(alpha = 0.5f),
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = Color.White
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -137,16 +135,12 @@ fun AddTaskModal(
                     )
                     ExposedDropdownMenu(
                         expanded = statusExpanded,
-                        onDismissRequest = { statusExpanded = false }
+                        onDismissRequest = { statusExpanded = false },
+                        containerColor = Color.White
                     ) {
                         TaskStatus.entries.forEach { status ->
                             DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        status.name.replace("_", " ").lowercase()
-                                            .replaceFirstChar { it.uppercase() }
-                                    )
-                                },
+                                text = { StatusLabel(status = status) },
                                 onClick = {
                                     selectedStatus = status
                                     statusExpanded = false
@@ -179,16 +173,12 @@ fun AddTaskModal(
                     )
                     ExposedDropdownMenu(
                         expanded = priorityExpanded,
-                        onDismissRequest = { priorityExpanded = false }
+                        onDismissRequest = { priorityExpanded = false },
+                        containerColor = Color.White
                     ) {
                         TaskPriority.entries.forEach { priority ->
                             DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        priority.name.replace("_", " ").lowercase()
-                                            .replaceFirstChar { it.uppercase() }
-                                    )
-                                },
+                                text = { PriorityLabel(priority = priority) },
                                 onClick = {
                                     selectedPriority = priority
                                     priorityExpanded = false
@@ -207,32 +197,27 @@ fun AddTaskModal(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    availableUsers.forEach { user ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    selectedUserIds = if (selectedUserIds.contains(user.userId)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        availableUsers.forEach { user ->
+                            val isSelected = selectedUserIds.contains(user.userId)
+                            print(isSelected)
+
+                            UserLabel(
+                                userName = user.userName,
+                                userId = user.userId,
+                                isSelected = isSelected,
+                                onClick = {
+                                    selectedUserIds = if (isSelected) {
                                         selectedUserIds - user.userId
                                     } else {
                                         selectedUserIds + user.userId
                                     }
-                                }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = selectedUserIds.contains(user.userId),
-                                onCheckedChange = {
-                                    selectedUserIds = if (it) {
-                                        selectedUserIds + user.userId
-                                    } else {
-                                        selectedUserIds - user.userId
-                                    }
+                                    print(selectedUserIds)
                                 }
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = user.userName)
                         }
                     }
                 }
