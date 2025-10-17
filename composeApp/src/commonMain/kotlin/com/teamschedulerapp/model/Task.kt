@@ -11,13 +11,3 @@ data class Task(
     val startDate: LocalDate? = null,
     val endDate: LocalDate? = null,
 )
-
-data class User(
-    val userId: Number,
-    val userName: String
-)
-
-data class TaskWithUsers(
-    val task: Task,
-    val assignedUsers: List<User>
-)
