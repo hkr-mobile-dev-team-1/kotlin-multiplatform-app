@@ -19,7 +19,7 @@ import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.model.CalendarDay
 import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
 import kotlinx.datetime.*
-import com.teamschedulerapp.ui.components.schedule.AttendeeRow
+import com.teamschedulerapp.ui.components.schedule.AttendeeList
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -42,7 +42,7 @@ fun ScheduleScreen() {
     }
 
     // build grid for visible month
-    val baseDays = remember(monthFirst, today) {
+    val baseDays = remember(monthFirst, today, attendanceByDate) {
         buildMonthGrid(
             monthFirstDay = monthFirst,
             today = today,
@@ -107,11 +107,18 @@ fun ScheduleScreen() {
                 }
             }
         }
-
+        // Show currently selected date label
+        selected?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Selected: $it",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
         // Attendee tiles for selected day
         Spacer(Modifier.height(12.dp))
         val attendees = attendanceByDate[selected] ?: emptyList()
-        AttendeeRow(attendees)
+        AttendeeList(attendees)
 
         Spacer(Modifier.height(12.dp))
 
@@ -124,6 +131,8 @@ fun ScheduleScreen() {
                 onClick = { showDialogFor = selected },   // open dialog
             ) { Text("Add my attendance") }
         }
+
+        Spacer(Modifier.height(12.dp))
 
         // Dialog
         val dateForDialog = showDialogFor
@@ -143,14 +152,6 @@ fun ScheduleScreen() {
                     showDialogFor = null
                 },
                 onDismiss = { showDialogFor = null }
-            )
-        }
-        // Show currently selected date? TODO: later distinguish from tap selection
-        selected?.let {
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "Selected: $it",
-                style = MaterialTheme.typography.bodyMedium
             )
         }
     }
@@ -200,7 +201,7 @@ private fun DayCell(day: CalendarDay, selected: Boolean, onClick: () -> Unit) {
     val bg = when {
         isOverflow -> MaterialTheme.colorScheme.surface
         selected -> MaterialTheme.colorScheme.primaryContainer
-        day.isToday -> MaterialTheme.colorScheme.secondaryContainer
+        day.isToday -> MaterialTheme.colorScheme.surfaceVariant
         else -> MaterialTheme.colorScheme.surface
     }
 

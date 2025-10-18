@@ -22,12 +22,14 @@ private fun LocalTime.formatHm(): String =
     "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
 
 @Composable
-fun AttendeeRow(attendees: List<Attendee>) {
-    if (attendees.isEmpty()) return
-    Text("Attendees", style = MaterialTheme.typography.titleSmall)
-    Spacer(Modifier.height(8.dp))
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(attendees) { a -> AttendeeChip(a) }
+fun AttendeeList(attendees: List<Attendee>) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        attendees.forEach { att ->
+            AttendeeChip(att)
+        }
     }
 }
 
