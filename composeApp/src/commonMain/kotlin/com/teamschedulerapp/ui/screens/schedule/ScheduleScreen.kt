@@ -19,6 +19,12 @@ import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.model.CalendarDay
 import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
 import kotlinx.datetime.*
+import com.teamschedulerapp.ui.components.schedule.AttendeeRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.BoxWithConstraints
+
 
 @Composable
 fun ScheduleScreen() {
@@ -49,7 +55,13 @@ fun ScheduleScreen() {
     // dialog trigger
     var showDialogFor by remember { mutableStateOf<LocalDate?>(null) }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())     // allow page to scroll
+            .navigationBarsPadding()                    // keep content above system bar
+            .padding(16.dp)
+    ) {
         // header
         Header(
             monthFirst = monthFirst,
@@ -61,30 +73,45 @@ fun ScheduleScreen() {
         WeekdayRow()
         Spacer(Modifier.height(8.dp))
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(7),
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(days) { day ->
-                DayCell(
-                    day = day,
-                    selected = selected == day.date,
-                    onClick = {
-                        if (day.isCurrentMonth) {
-                            selected = day.date
-                            showDialogFor = day.date  // open the attendance dialog
+        // fix the grid layout and constraint the height
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            // width available for the grid content
+            val columns = 7
+            val rows = 6
+            val gridSpacing = 8.dp
+
+            val availableWidth = maxWidth
+            val cell = (availableWidth - gridSpacing * (columns - 1)) / columns
+            val gridHeight = cell * rows + gridSpacing * (rows - 1)
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columns),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(gridHeight),                // bounded height
+                userScrollEnabled = false,              // page scrolls, grid does not
+                verticalArrangement = Arrangement.spacedBy(gridSpacing),
+                horizontalArrangement = Arrangement.spacedBy(gridSpacing)
+            ) {
+                items(days) { day ->
+                    DayCell(
+                        day = day,
+                        selected = selected == day.date,
+                        onClick = {
+                            if (day.isCurrentMonth) {
+                                selected = day.date
+                                showDialogFor = day.date
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
-        // prepare attendee tiles for selected day
-        //Spacer(Modifier.height(12.dp))
-        // attendees for the selected day (chips)
-        //val attendees = attendanceByDate[selected] ?: emptyList()
-        //AttendeeRow(attendees)
+
+        // Attendee tiles for selected day
+        Spacer(Modifier.height(12.dp))
+        val attendees = attendanceByDate[selected] ?: emptyList()
+        AttendeeRow(attendees)
 
         // Dialog
         val dateForDialog = showDialogFor
