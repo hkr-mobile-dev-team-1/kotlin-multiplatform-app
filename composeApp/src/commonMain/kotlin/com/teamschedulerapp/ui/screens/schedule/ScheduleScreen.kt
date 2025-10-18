@@ -100,7 +100,7 @@ fun ScheduleScreen() {
                         onClick = {
                             if (day.isCurrentMonth) {
                                 selected = day.date
-                                showDialogFor = day.date
+                                //showDialogFor = day.date -- move to be triggered by a button
                             }
                         }
                     )
@@ -112,6 +112,18 @@ fun ScheduleScreen() {
         Spacer(Modifier.height(12.dp))
         val attendees = attendanceByDate[selected] ?: emptyList()
         AttendeeRow(attendees)
+
+        Spacer(Modifier.height(12.dp))
+
+        // Button to trigger the attendance dialog
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Button(
+                onClick = { showDialogFor = selected },   // open dialog
+            ) { Text("Add my attendance") }
+        }
 
         // Dialog
         val dateForDialog = showDialogFor
