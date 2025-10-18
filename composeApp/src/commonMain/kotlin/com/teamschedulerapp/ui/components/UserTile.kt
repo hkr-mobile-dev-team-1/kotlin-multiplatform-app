@@ -17,9 +17,9 @@ import kotlin.random.Random
 fun getColorForUser(userId: Number): Color {
     val seed = userId.hashCode()
     val random = Random(seed)
-    val red = random.nextInt(100, 256)
-    val green = random.nextInt(100, 256)
-    val blue = random.nextInt(100, 256)
+    val red = random.nextInt(110, 256)
+    val green = random.nextInt(110, 256)
+    val blue = random.nextInt(110, 256)
     return Color(red, green, blue)
 }
 @Composable
