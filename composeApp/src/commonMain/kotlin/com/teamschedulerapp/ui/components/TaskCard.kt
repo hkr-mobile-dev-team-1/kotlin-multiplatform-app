@@ -5,10 +5,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.Task
+import com.teamschedulerapp.model.Task2
 
 @Composable
-fun TaskCard(task: Task) {
+fun TaskCard(task: Task2) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
