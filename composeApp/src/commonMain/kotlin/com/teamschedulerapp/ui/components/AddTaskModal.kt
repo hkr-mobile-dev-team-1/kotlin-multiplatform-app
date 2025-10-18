@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TaskPriority
 import com.teamschedulerapp.model.TaskStatus
+import kotlinx.datetime.*
 
 @Composable
 fun AddTaskModal(
@@ -26,7 +28,8 @@ fun AddTaskModal(
         description: String,
         status: TaskStatus,
         priority: TaskPriority,
-        assignedUserIds: List<Number>
+        assignedUserIds: List<Number>,
+        dueDate: LocalDate?
     ) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
@@ -34,10 +37,12 @@ fun AddTaskModal(
     var selectedStatus by remember { mutableStateOf(TaskStatus.PENDING) }
     var selectedPriority by remember { mutableStateOf(TaskPriority.LOW) }
     var selectedUserIds by remember { mutableStateOf(emptyList<Number>()) }
+    var selectedDueDate by remember { mutableStateOf<LocalDate?>(null) }
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
     var assigneesExpanded by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     // Mock users
     val availableUsers = remember {
@@ -135,7 +140,7 @@ fun AddTaskModal(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = statusExpanded,
@@ -177,7 +182,7 @@ fun AddTaskModal(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = priorityExpanded,
@@ -193,6 +198,53 @@ fun AddTaskModal(
                                 }
                             )
                         }
+                    }
+                }
+
+                // Due Date Field
+                OutlinedTextField(
+                    value = selectedDueDate?.let {
+                        "${it.month.name.lowercase().replaceFirstChar { c -> c.uppercase() }.take(3)} ${it.dayOfMonth}, ${it.year}"
+                    } ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Due Date") },
+                    placeholder = { Text("Select date") },
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = "Select date"
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Date Picker Dialog
+                if (showDatePicker) {
+                    val datePickerState = rememberDatePickerState()
+                    DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                datePickerState.selectedDateMillis?.let { millis ->
+                                    selectedDueDate = Instant.fromEpochMilliseconds(millis)
+                                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                                        .date
+                                }
+                                showDatePicker = false
+                            }) {
+                                Text("OK")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDatePicker = false }) {
+                                Text("Cancel")
+                            }
+                        }
+                    ) {
+                        DatePicker(state = datePickerState)
                     }
                 }
 
@@ -253,7 +305,8 @@ fun AddTaskModal(
                                 description,
                                 selectedStatus,
                                 selectedPriority,
-                                selectedUserIds
+                                selectedUserIds,
+                                selectedDueDate
                             )
                             onDismiss()
                         }

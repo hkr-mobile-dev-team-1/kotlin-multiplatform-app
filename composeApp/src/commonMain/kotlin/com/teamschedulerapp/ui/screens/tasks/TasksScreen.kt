@@ -161,7 +161,7 @@ fun TasksScreen (
     if (showAddTaskModal) {
         AddTaskModal(
             onDismiss = { showAddTaskModal = false },
-            onSave = { title, description, status, priority, assignedUserIds ->
+            onSave = { title, description, status, priority, assignedUserIds, dueDate ->
                 // TODO: Call screenModel to create the task
                 // screenModel.createTask(title, description, status, priority, assignedUserIds)
             }

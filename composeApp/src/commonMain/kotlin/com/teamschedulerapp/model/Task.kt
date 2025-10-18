@@ -8,6 +8,5 @@ data class Task(
     val description: String? = null,
     val priority: TaskPriority? = null,
     val status: TaskStatus? = null,
-    val startDate: LocalDate? = null,
-    val endDate: LocalDate? = null,
+    val dueDate: LocalDate? = null,
 )
