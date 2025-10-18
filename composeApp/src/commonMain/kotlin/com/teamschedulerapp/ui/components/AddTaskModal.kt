@@ -118,8 +118,7 @@ fun AddTaskModal(
                     onExpandedChange = { statusExpanded = it }
                 ) {
                     OutlinedTextField(
-                        value = selectedStatus.name.replace("_", " ").lowercase()
-                            .replaceFirstChar { it.uppercase() },
+                        value = " ",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Status") },
@@ -128,6 +127,11 @@ fun AddTaskModal(
                                 imageVector = Icons.Default.KeyboardArrowDown,
                                 contentDescription = null
                             )
+                        },
+                        leadingIcon = {
+                            Box(modifier = Modifier.padding(start = 10.dp)) {
+                                StatusLabel(status = selectedStatus)
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -156,8 +160,7 @@ fun AddTaskModal(
                     onExpandedChange = { priorityExpanded = it }
                 ) {
                     OutlinedTextField(
-                        value = selectedPriority.name.replace("_", " ").lowercase()
-                            .replaceFirstChar { it.uppercase() },
+                        value = " ",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Priority") },
@@ -166,6 +169,11 @@ fun AddTaskModal(
                                 imageVector = Icons.Default.KeyboardArrowDown,
                                 contentDescription = null
                             )
+                        },
+                        leadingIcon = {
+                            Box(modifier = Modifier.padding(start = 10.dp)) {
+                                PriorityLabel(priority = selectedPriority)
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()

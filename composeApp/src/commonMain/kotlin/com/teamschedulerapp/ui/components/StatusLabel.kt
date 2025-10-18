@@ -18,10 +18,10 @@ import com.teamschedulerapp.model.TaskStatus
 @Composable
 fun StatusLabel(status: TaskStatus) {
     val (backgroundColor, textColor) = when (status) {
-        TaskStatus.PENDING -> Color(0xFFf2f2f2) to Color(0xFF595861)
-        TaskStatus.IN_PROGRESS -> Color(0xFFf3f1d3) to Color(0xFFb29c30)
-        TaskStatus.DONE -> Color(0xFFe6f6f0) to Color(0xFF1d8a5f)
-        TaskStatus.BLOCKED -> Color(0xFFffe8ea) to Color(0xFFcd797b)
+        TaskStatus.PENDING -> Color(0xFFf2f2f2) to Color(0xFF797979)
+        TaskStatus.IN_PROGRESS -> Color(0xFFffeecf) to Color(0xFFd98d00)
+        TaskStatus.DONE -> Color(0xFFcffcdb) to Color(0xFF189f3c)
+        TaskStatus.BLOCKED -> Color(0xFFf8d9d6) to Color(0xFFcb2050)
     }
 
     Surface(

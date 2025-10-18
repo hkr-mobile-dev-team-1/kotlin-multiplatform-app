@@ -16,9 +16,9 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun PriorityLabel(priority: TaskPriority) {
     val (backgroundColor, textColor) = when (priority) {
-        TaskPriority.HIGH -> Color(0xFFfbefe4) to Color(0xFFd58a57)
-        TaskPriority.MEDIUM -> Color(0xFFeaf6f4) to Color(0xFF2fa19b)
-        else -> Color(0xFFf0edf9) to Color(0xFF9d83cb)
+        TaskPriority.HIGH -> Color(0xFFf3d4fc) to Color(0xFFa832cb)
+        TaskPriority.MEDIUM -> Color(0xFFd1f6f0) to Color(0xFF00aca3)
+        else -> Color(0xFFd9d6fd) to Color(0xFF4231f3)
     }
     Surface(
         shape = RoundedCornerShape(10.dp),
