@@ -1,12 +1,16 @@
 package com.teamschedulerapp.model
 
-import kotlinx.datetime.LocalDate
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Task(
-    val id: Number,
+    val id: String,
+    @SerialName("team_id")val teamId: String,
     val title: String,
     val description: String? = null,
-    val priority: TaskPriority? = null,
-    val status: TaskStatus? = null,
-    val dueDate: LocalDate? = null,
+    @SerialName("due_date")val dueDate: String? = null,
+    @SerialName("created_by")val createdBy: String? = null,
+    val status: String = "open",
+    val priority: String = "medium",
 )
