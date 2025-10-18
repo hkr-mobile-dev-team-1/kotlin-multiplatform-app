@@ -15,7 +15,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.domain.buildMonthGrid
 import com.teamschedulerapp.domain.firstOfMonth
+import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.model.CalendarDay
+import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
 import kotlinx.datetime.*
 
 @Composable
@@ -28,14 +30,24 @@ fun ScheduleScreen() {
     var monthFirst by remember { mutableStateOf(today.firstOfMonth()) }
     var selected by remember { mutableStateOf<LocalDate?>(null) }
 
+    // attendance state (UI only
+    var attendanceByDate by remember {
+        mutableStateOf<Map<LocalDate, List<Attendee>>>(emptyMap())
+    }
+
     // build grid for visible month
-    val days = remember(monthFirst, today) {
+    val baseDays = remember(monthFirst, today) {
         buildMonthGrid(
             monthFirstDay = monthFirst,
             today = today,
-            headcountFor = { _ -> 0 } // placeholder; repo later
+            headcountFor = { d -> attendanceByDate[d]?.size ?: 0 }
         )
     }
+
+    val days = baseDays
+
+    // dialog trigger
+    var showDialogFor by remember { mutableStateOf<LocalDate?>(null) }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         // header
@@ -59,9 +71,40 @@ fun ScheduleScreen() {
                 DayCell(
                     day = day,
                     selected = selected == day.date,
-                    onClick = { if (day.isCurrentMonth) selected = day.date }
+                    onClick = {
+                        if (day.isCurrentMonth) {
+                            selected = day.date
+                            showDialogFor = day.date  // open the attendance dialog
+                        }
+                    }
                 )
             }
+        }
+        // prepare attendee tiles for selected day
+        //Spacer(Modifier.height(12.dp))
+        // attendees for the selected day (chips)
+        //val attendees = attendanceByDate[selected] ?: emptyList()
+        //AttendeeRow(attendees)
+
+        // Dialog
+        val dateForDialog = showDialogFor
+        if (dateForDialog != null) {
+            AttendanceDialog(
+                date = dateForDialog,
+                onConfirm = { name, from, to ->
+                    // Upsert attendee for this date (demo uses name as unique key) - TODO: wire to DB
+                    attendanceByDate = attendanceByDate.toMutableMap().apply {
+                        val list = (this[dateForDialog] ?: emptyList()).toMutableList()
+                        val idx =
+                            list.indexOfFirst { it.displayName.equals(name, ignoreCase = true) }
+                        val newA = Attendee(displayName = name, from = from, to = to)
+                        if (idx >= 0) list[idx] = newA else list += newA
+                        this[dateForDialog] = list
+                    }
+                    showDialogFor = null
+                },
+                onDismiss = { showDialogFor = null }
+            )
         }
         // Show currently selected date? TODO: later distinguish from tap selection
         selected?.let {

@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.screens.schedule
+package com.teamschedulerapp.ui.components.schedule
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
