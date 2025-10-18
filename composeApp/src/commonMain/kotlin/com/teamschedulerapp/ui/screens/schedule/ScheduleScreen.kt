@@ -99,8 +99,7 @@ fun ScheduleScreen() {
                         selected = selected == day.date,
                         onClick = {
                             if (day.isCurrentMonth) {
-                                selected = day.date
-                                //showDialogFor = day.date -- move to be triggered by a button
+                                selected = if (selected == day.date) null else day.date
                             }
                         }
                     )
@@ -115,25 +114,28 @@ fun ScheduleScreen() {
                 style = MaterialTheme.typography.bodyMedium
             )
         }
-        // Attendee tiles for selected day
-        Spacer(Modifier.height(12.dp))
-        val attendees = attendanceByDate[selected] ?: emptyList()
-        AttendeeList(attendees)
+        // only show when a date is selected
+        if (selected != null) {
+            // Attendee tiles for selected day
+            Spacer(Modifier.height(12.dp))
+            val attendees = attendanceByDate[selected] ?: emptyList()
+            AttendeeList(attendees)
 
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
-        // Button to trigger the attendance dialog
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            Button(
-                onClick = { showDialogFor = selected },   // open dialog
-            ) { Text("Add my attendance") }
-        }
+            // Button to trigger the attendance dialog
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = { showDialogFor = selected },   // open dialog
+                ) { Text("Add my attendance") }
+            }
 
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
+            }
         // Dialog
         val dateForDialog = showDialogFor
         if (dateForDialog != null) {
