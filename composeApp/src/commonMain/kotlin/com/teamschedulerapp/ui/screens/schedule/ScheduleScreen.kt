@@ -15,8 +15,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.domain.buildMonthGrid
 import com.teamschedulerapp.domain.firstOfMonth
+import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.model.CalendarDay
+import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
 import kotlinx.datetime.*
+import com.teamschedulerapp.ui.components.schedule.AttendeeList
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.BoxWithConstraints
+
 
 @Composable
 fun ScheduleScreen() {
@@ -28,16 +36,32 @@ fun ScheduleScreen() {
     var monthFirst by remember { mutableStateOf(today.firstOfMonth()) }
     var selected by remember { mutableStateOf<LocalDate?>(null) }
 
+    // attendance state (UI only
+    var attendanceByDate by remember {
+        mutableStateOf<Map<LocalDate, List<Attendee>>>(emptyMap())
+    }
+
     // build grid for visible month
-    val days = remember(monthFirst, today) {
+    val baseDays = remember(monthFirst, today, attendanceByDate) {
         buildMonthGrid(
             monthFirstDay = monthFirst,
             today = today,
-            headcountFor = { _ -> 0 } // placeholder; repo later
+            headcountFor = { d -> attendanceByDate[d]?.size ?: 0 }
         )
     }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    val days = baseDays
+
+    // dialog trigger
+    var showDialogFor by remember { mutableStateOf<LocalDate?>(null) }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())     // allow page to scroll
+            .navigationBarsPadding()                    // keep content above system bar
+            .padding(16.dp)
+    ) {
         // header
         Header(
             monthFirst = monthFirst,
@@ -49,26 +73,87 @@ fun ScheduleScreen() {
         WeekdayRow()
         Spacer(Modifier.height(8.dp))
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(7),
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(days) { day ->
-                DayCell(
-                    day = day,
-                    selected = selected == day.date,
-                    onClick = { if (day.isCurrentMonth) selected = day.date }
-                )
+        // fix the grid layout and constraint the height
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            // width available for the grid content
+            val columns = 7
+            val rows = 6
+            val gridSpacing = 8.dp
+
+            val availableWidth = maxWidth
+            val cell = (availableWidth - gridSpacing * (columns - 1)) / columns
+            val gridHeight = cell * rows + gridSpacing * (rows - 1)
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columns),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(gridHeight),                // bounded height
+                userScrollEnabled = false,              // page scrolls, grid does not
+                verticalArrangement = Arrangement.spacedBy(gridSpacing),
+                horizontalArrangement = Arrangement.spacedBy(gridSpacing)
+            ) {
+                items(days) { day ->
+                    DayCell(
+                        day = day,
+                        selected = selected == day.date,
+                        onClick = {
+                            if (day.isCurrentMonth) {
+                                selected = if (selected == day.date) null else day.date
+                            }
+                        }
+                    )
+                }
             }
         }
-        // Show currently selected date? TODO: later distinguish from tap selection
+        // Show currently selected date label
         selected?.let {
             Spacer(Modifier.height(8.dp))
             Text(
                 text = "Selected: $it",
                 style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        // only show when a date is selected
+        if (selected != null) {
+            // Attendee tiles for selected day
+            Spacer(Modifier.height(12.dp))
+            val attendees = attendanceByDate[selected] ?: emptyList()
+            AttendeeList(attendees)
+
+            Spacer(Modifier.height(12.dp))
+
+            // Button to trigger the attendance dialog
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = { showDialogFor = selected },   // open dialog
+                ) { Text("Add my attendance") }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            }
+        // Dialog
+        val dateForDialog = showDialogFor
+        if (dateForDialog != null) {
+            AttendanceDialog(
+                date = dateForDialog,
+                onConfirm = { name, from, to ->
+                    // Upsert attendee for this date (demo uses name as unique key) - TODO: wire to DB
+                    attendanceByDate = attendanceByDate.toMutableMap().apply {
+                        val list = (this[dateForDialog] ?: emptyList()).toMutableList()
+                        val idx =
+                            list.indexOfFirst { it.displayName.equals(name, ignoreCase = true) }
+                        val newA = Attendee(displayName = name, from = from, to = to)
+                        if (idx >= 0) list[idx] = newA else list += newA
+                        this[dateForDialog] = list
+                    }
+                    showDialogFor = null
+                },
+                onDismiss = { showDialogFor = null }
             )
         }
     }
@@ -118,7 +203,7 @@ private fun DayCell(day: CalendarDay, selected: Boolean, onClick: () -> Unit) {
     val bg = when {
         isOverflow -> MaterialTheme.colorScheme.surface
         selected -> MaterialTheme.colorScheme.primaryContainer
-        day.isToday -> MaterialTheme.colorScheme.secondaryContainer
+        day.isToday -> MaterialTheme.colorScheme.surfaceVariant
         else -> MaterialTheme.colorScheme.surface
     }
 
