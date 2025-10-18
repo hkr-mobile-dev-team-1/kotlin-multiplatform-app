@@ -75,6 +75,7 @@ codingfelineBuildKonfig = { id = "com.codingfeline.buildkonfig", version.ref = "
 voyager-common = [
     "voyager-navigator",
     "voyager-transitions",
+    "voyager-screenmodel",
     "voyager-tab-navigator"
 ]
 

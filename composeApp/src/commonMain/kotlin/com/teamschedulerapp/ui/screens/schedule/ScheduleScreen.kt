@@ -5,78 +5,157 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.domain.buildMonthGrid
+import com.teamschedulerapp.domain.firstOfMonth
+import com.teamschedulerapp.model.CalendarDay
+import kotlinx.datetime.*
 
 @Composable
 fun ScheduleScreen() {
-    //static placeholders
-    val monthTitle = "October • 2025"
-    val weekdayLabels = listOf("Mon","Tue","Wed","Thu","Fri","Sat","Sun")
+    // time anchors
+    val tz = remember { TimeZone.currentSystemDefault() }
+    val today = remember { Clock.System.now().toLocalDateTime(tz).date }
 
-    //6x7 grid
-    val dayLabels: List<String> = (1..42).map { i -> if (i in 1..30) i.toString() else "" }
+    // local screen state
+    var monthFirst by remember { mutableStateOf(today.firstOfMonth()) }
+    var selected by remember { mutableStateOf<LocalDate?>(null) }
+
+    // build grid for visible month
+    val days = remember(monthFirst, today) {
+        buildMonthGrid(
+            monthFirstDay = monthFirst,
+            today = today,
+            headcountFor = { _ -> 0 } // placeholder; repo later
+        )
+    }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         // header
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onClick = { /* noop for now */ }) { Text("◀") }
-            Text(monthTitle, style = MaterialTheme.typography.titleMedium)
-            TextButton(onClick = { /* noop for now */ }) { Text("▶") }
-        }
+        Header(
+            monthFirst = monthFirst,
+            onPrev = { monthFirst = shiftMonth(monthFirst, -1) },
+            onNext = { monthFirst = shiftMonth(monthFirst, +1) }
+        )
 
         Spacer(Modifier.height(8.dp))
-
-        // weekday row
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            weekdayLabels.forEach {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-
+        WeekdayRow()
         Spacer(Modifier.height(8.dp))
 
-        // 6x7 grid
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
             modifier = Modifier.fillMaxWidth().weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(dayLabels) { label ->
-                DayCellStatic(label)
+            items(days) { day ->
+                DayCell(
+                    day = day,
+                    selected = selected == day.date,
+                    onClick = { if (day.isCurrentMonth) selected = day.date }
+                )
             }
+        }
+        // Show currently selected date? TODO: later distinguish from tap selection
+        selected?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Selected: $it",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
 
 @Composable
-private fun DayCellStatic(label: String) {
-    Surface(
-        modifier = Modifier
-            .aspectRatio(1f)
-            .clickable { /* noop */ },
-        shape = MaterialTheme.shapes.medium,
-        tonalElevation = 0.dp
+private fun Header(
+    monthFirst: LocalDate,
+    onPrev: () -> Unit,
+    onNext: () -> Unit
+) {
+    val title = "${monthFirst.month.name.lowercase().replaceFirstChar { it.titlecase() }} • ${monthFirst.year}"
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(Modifier.fillMaxSize().padding(6.dp)) {
+        TextButton(onClick = onPrev) { Text("◀") }
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        TextButton(onClick = onNext) { Text("▶") }
+    }
+}
+
+@Composable
+private fun WeekdayRow() {
+    val labels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        labels.forEach {
             Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.align(Alignment.TopStart)
+                text = it,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center
             )
         }
     }
+}
+
+@Composable
+private fun DayCell(day: CalendarDay, selected: Boolean, onClick: () -> Unit) {
+
+    val isOverflow = !day.isCurrentMonth
+
+    val bg = when {
+        isOverflow -> MaterialTheme.colorScheme.surface
+        selected -> MaterialTheme.colorScheme.primaryContainer
+        day.isToday -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surface
+    }
+
+    val dayNumberColor = if (isOverflow)
+        LocalContentColor.current.copy(alpha = 0.35f) else LocalContentColor.current
+
+    Surface(
+        modifier = Modifier
+            .aspectRatio(1f)
+            .then(
+                if (isOverflow) Modifier.semantics { disabled() } else Modifier
+            )
+            .clickable(enabled = day.isCurrentMonth, onClick = onClick),
+        color = bg,
+        shape = MaterialTheme.shapes.medium,
+        tonalElevation = if (selected && !isOverflow) 2.dp else 0.dp
+    ) {
+        Box(Modifier.fillMaxSize().padding(6.dp)) {
+                Text(
+                    text = day.date.dayOfMonth.toString(),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = dayNumberColor,
+                    modifier = Modifier.align(Alignment.TopStart)
+                )
+                if (!isOverflow && day.headcount > 0) {
+                    Text(
+                        text = "${day.headcount}",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.align(Alignment.BottomEnd)
+                    )
+                }
+        }
+    }
+}
+
+private fun shiftMonth(date: LocalDate, delta: Int): LocalDate {
+    val y = date.year + (date.monthNumber - 1 + delta).floorDiv(12)
+    val m = ((date.monthNumber - 1 + delta) % 12 + 12) % 12 + 1
+    return LocalDate(y, m, 1)
 }

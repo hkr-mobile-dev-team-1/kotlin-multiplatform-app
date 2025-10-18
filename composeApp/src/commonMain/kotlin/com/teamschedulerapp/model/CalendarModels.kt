@@ -8,7 +8,6 @@ import kotlinx.datetime.LocalDate
  * @param date The actual date (YYYY-MM-DD).
  * @param isCurrentMonth Whether this date belongs to the month currently displayed.
  * @param isToday Whether this date matches the current system date.
- * @param taskCount Number of tasks assigned for this date.
  * @param headcount Number of users checked in for this date.
  */
 
@@ -16,7 +15,6 @@ data class CalendarDay(
     val date: LocalDate,
     val isCurrentMonth: Boolean,
     val isToday: Boolean,
-    val taskCount: Int,
     val headcount: Int
 )
 

@@ -11,9 +11,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.*
+import com.teamschedulerapp.screenmodel.TasksScreenModel
 import com.teamschedulerapp.ui.screens.schedule.ScheduleScreen
 import com.teamschedulerapp.ui.screens.settings.SettingsScreen
 import com.teamschedulerapp.ui.screens.tasks.TasksScreen
@@ -44,7 +46,8 @@ object TasksTab : Tab {
 
     @Composable
     override fun Content() {
-        TasksScreen()
+        val screenModel = rememberScreenModel { TasksScreenModel() }
+        TasksScreen(screenModel = screenModel)
     }
 }
 
