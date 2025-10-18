@@ -29,8 +29,7 @@ class TasksScreenModel : ScreenModel {
                     description = "Create a responsive login screen with email and password validation.",
                     status = TaskStatus.IN_PROGRESS,
                     priority = TaskPriority.LOW,
-                    startDate = LocalDate.parse("2025-10-02"),
-                    endDate = LocalDate.parse("2025-10-07")
+                    dueDate = LocalDate.parse("2025-10-07")
                 ),
                 assignedUsers = emptyList()
             ),
@@ -41,8 +40,7 @@ class TasksScreenModel : ScreenModel {
                     description = "Resolve the issue causing incorrect user data to load.",
                     status = TaskStatus.PENDING,
                     priority = TaskPriority.HIGH,
-                    startDate = LocalDate.parse("2025-10-09"),
-                    endDate = LocalDate.parse("2025-10-15")
+                    dueDate = LocalDate.parse("2025-10-15")
                 ),
                 assignedUsers = listOf(
                     User(
@@ -74,8 +72,7 @@ class TasksScreenModel : ScreenModel {
                     description = "Develop the calendar UI and connect it to the schedule data.",
                     status = TaskStatus.DONE,
                     priority = TaskPriority.MEDIUM,
-                    startDate = LocalDate.parse("2025-10-09"),
-                    endDate = LocalDate.parse("2025-10-15")
+                    dueDate = LocalDate.parse("2025-10-15")
                 ),
                 assignedUsers = listOf(
                     User(
@@ -91,8 +88,7 @@ class TasksScreenModel : ScreenModel {
                     description = "Integrate Supabase authentication for login and sign-up.",
                     status = TaskStatus.BLOCKED,
                     priority = TaskPriority.LOW,
-                    startDate = LocalDate.parse("2025-10-09"),
-                    endDate = LocalDate.parse("2025-10-15")
+                    dueDate = LocalDate.parse("2025-10-15")
                 ),
                 assignedUsers = listOf(
                     User(

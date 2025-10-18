@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.screenmodel.TasksScreenModel
+import com.teamschedulerapp.ui.components.AddTaskModal
 import com.teamschedulerapp.ui.components.TaskCard
 
 @Composable
@@ -25,7 +26,7 @@ fun TasksScreen (
     val tasksWithUsers by screenModel.tasksWithUsers.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
     val currentUserId = 1
-
+    var showAddTaskModal by remember { mutableStateOf(false) }
 
     val tabs = listOf("All Tasks", "My Tasks", "Unassigned")
 
@@ -53,7 +54,7 @@ fun TasksScreen (
                 )
             },
             actions = {
-                IconButton(onClick = { /* Handle add task click */ }) {
+                IconButton(onClick = { showAddTaskModal = true }) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Add Task",
@@ -154,6 +155,17 @@ fun TasksScreen (
                 }
             }
         }
+    }
+
+    // Add Task Modal
+    if (showAddTaskModal) {
+        AddTaskModal(
+            onDismiss = { showAddTaskModal = false },
+            onSave = { title, description, status, priority, assignedUserIds, dueDate ->
+                // TODO: Call screenModel to create the task
+                // screenModel.createTask(title, description, status, priority, assignedUserIds)
+            }
+        )
     }
 }
 

@@ -104,7 +104,7 @@ fun TaskCard(taskWithUsers: TaskWithUsers) {
             Spacer(modifier = Modifier.height(12.dp))
 
 
-            DateRange(startDate = task.startDate.toString(), endDate = task.endDate.toString())
+            DateRange(startDate = null, endDate = task.dueDate.toString())
 
         }
     }
