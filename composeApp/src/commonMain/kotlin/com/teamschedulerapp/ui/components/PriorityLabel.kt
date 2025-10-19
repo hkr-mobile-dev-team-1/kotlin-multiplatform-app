@@ -10,15 +10,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.TaskPriority
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun PriorityLabel(priority: TaskPriority) {
+fun PriorityLabel(priority: String) {
     val (backgroundColor, textColor) = when (priority) {
-        TaskPriority.HIGH -> Color(0xFFfbefe4) to Color(0xFFd58a57)
-        TaskPriority.MEDIUM -> Color(0xFFeaf6f4) to Color(0xFF2fa19b)
-        else -> Color(0xFFf0edf9) to Color(0xFF9d83cb)
+        "High" -> Color(0xFFf3d4fc) to Color(0xFFa832cb)
+        "Medium" -> Color(0xFFd1f6f0) to Color(0xFF00aca3)
+        else -> Color(0xFFd9d6fd) to Color(0xFF4231f3)
     }
     Surface(
         shape = RoundedCornerShape(10.dp),
@@ -36,8 +35,7 @@ fun PriorityLabel(priority: TaskPriority) {
                 modifier = Modifier.size(14.dp)
             )
             Text(
-                text = priority.name.replace("_", " ").lowercase()
-                    .replaceFirstChar { it.uppercase() },
+                text = priority,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = textColor

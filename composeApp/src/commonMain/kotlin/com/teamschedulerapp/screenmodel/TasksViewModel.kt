@@ -4,8 +4,6 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.teamschedulerapp.model.Task
-import com.teamschedulerapp.model.TaskPriority
-import com.teamschedulerapp.model.TaskStatus
 import com.teamschedulerapp.model.TaskWithUsers
 import com.teamschedulerapp.model.User
 import kotlinx.coroutines.flow.StateFlow
@@ -24,85 +22,101 @@ class TasksScreenModel : ScreenModel {
         _tasksWithUsers.update { tasksWithUsers -> listOf(
             TaskWithUsers(
                 task = Task(
-                    id = 1,
+                    id = "1",
+                    teamId = "1",
                     title = "Design login page",
                     description = "Create a responsive login screen with email and password validation.",
-                    status = TaskStatus.IN_PROGRESS,
-                    priority = TaskPriority.LOW,
-                    startDate = LocalDate.parse("2025-10-02"),
-                    endDate = LocalDate.parse("2025-10-07")
+                    status = "In progress",
+                    priority = "Low",
+                    dueDate = "2025-10-07"
                 ),
                 assignedUsers = emptyList()
             ),
             TaskWithUsers(
                 task = Task(
-                    id = 2,
+                    id = "2",
+                    teamId = "1",
                     title = "Fix API bug",
                     description = "Resolve the issue causing incorrect user data to load.",
-                    status = TaskStatus.PENDING,
-                    priority = TaskPriority.HIGH,
-                    startDate = LocalDate.parse("2025-10-09"),
-                    endDate = LocalDate.parse("2025-10-15")
+                    status = "Pending",
+                    priority = "High",
+                    dueDate = "2025-10-15"
                 ),
                 assignedUsers = listOf(
                     User(
-                        userId = 1,
-                        userName = "Elina"
+                        id = "1",
+                        firstName = "Elina",
+                        lastName = "Rosato",
+                        email = "elinarosato@gmail.com"
                     ),
                     User(
-                        userId = 2,
-                        userName = "Dimple"
+                        id = "2",
+                        firstName = "Dimple",
+                        lastName = "Narkhede",
+                        email = "dimplenarkhede@gmail.com"
                     ),
                     User(
-                        userId = 3,
-                        userName = "Dario"
+                        id = "3",
+                        firstName = "Dario",
+                        lastName = "Ostojic",
+                        email = "darioostojic@gmail.com"
                     ),
                     User(
-                        userId = 4,
-                        userName = "Andre"
+                        id = "4",
+                        firstName = "Andre",
+                        lastName = "Sandblom",
+                        email = "andresandblom@gmail.com"
                     ),
                     User(
-                        userId = 2,
-                        userName = "Kate"
+                        id = "5",
+                        firstName = "Kate",
+                        lastName = "Arvay",
+                        email = "katearvay@gmail.com"
                     )
                 )
             ),
             TaskWithUsers(
                 task = Task(
-                    id = 3,
+                    id = "3",
+                    teamId = "1",
                     title = "Implement schedule view",
                     description = "Develop the calendar UI and connect it to the schedule data.",
-                    status = TaskStatus.DONE,
-                    priority = TaskPriority.MEDIUM,
-                    startDate = LocalDate.parse("2025-10-09"),
-                    endDate = LocalDate.parse("2025-10-15")
+                    status = "Done",
+                    priority = "medium",
+                    dueDate = "2025-10-15"
                 ),
                 assignedUsers = listOf(
                     User(
-                        userId = 1,
-                        userName = "Elina"
+                        id = "1",
+                        firstName = "Elina",
+                        lastName = "Rosato",
+                        email = "elinarosato@gmail.com"
                     )
                 )
             ),
             TaskWithUsers(
                 task = Task(
-                    id = 4,
+                    id = "4",
+                    teamId = "1",
                     title = "Add authentication flow",
                     description = "Integrate Supabase authentication for login and sign-up.",
-                    status = TaskStatus.BLOCKED,
-                    priority = TaskPriority.LOW,
-                    startDate = LocalDate.parse("2025-10-09"),
-                    endDate = LocalDate.parse("2025-10-15")
+                    status = "Blocked",
+                    priority = "Low",
+                    dueDate = "2025-10-15"
                 ),
                 assignedUsers = listOf(
                     User(
-                        userId = 3,
-                        userName = "Dario"
+                        id = "3",
+                        firstName = "Dario",
+                        lastName = "Ostojic",
+                        email = "darioostojic@gmail.com"
                     ),
                     User(
-                        userId = 4,
-                        userName = "Andre"
-                    )
+                        id = "4",
+                        firstName = "Andre",
+                        lastName = "Sandblom",
+                        email = "andresandblom@gmail.com"
+                    ),
                 )
             )
         )}
