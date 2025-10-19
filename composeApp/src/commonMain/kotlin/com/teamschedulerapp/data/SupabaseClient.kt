@@ -20,4 +20,8 @@ object SupabaseClientManager {
             install(Realtime)
         }
     }
+
+    val authRepository: AuthRepository by lazy {
+        AuthRepository(client)
+    }
 }
