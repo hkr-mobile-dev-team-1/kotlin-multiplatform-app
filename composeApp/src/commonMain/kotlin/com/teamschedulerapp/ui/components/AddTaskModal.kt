@@ -27,7 +27,7 @@ fun AddTaskModal(
         status: String,
         priority: String,
         assignedUserIds: List<String>,
-        dueDate: LocalDate?
+        dueDate: String?
     ) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
@@ -35,7 +35,7 @@ fun AddTaskModal(
     var selectedStatus by remember { mutableStateOf("Pending") }
     var selectedPriority by remember { mutableStateOf("Medium") }
     var selectedUserIds by remember { mutableStateOf(emptyList<String>()) }
-    var selectedDueDate by remember { mutableStateOf<LocalDate?>(null) }
+    var selectedDueDate by remember { mutableStateOf<String?>(null) }
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
@@ -231,8 +231,9 @@ fun AddTaskModal(
 
                 // Due Date Field
                 OutlinedTextField(
-                    value = selectedDueDate?.let {
-                        "${it.month.name.lowercase().replaceFirstChar { c -> c.uppercase() }.take(3)} ${it.dayOfMonth}, ${it.year}"
+                    value = selectedDueDate?.let { dateString ->
+                        val date = LocalDate.parse(dateString)
+                        "${date.month.name.lowercase().replaceFirstChar { c -> c.uppercase() }.take(3)} ${date.dayOfMonth}, ${date.year}"
                     } ?: "",
                     onValueChange = {},
                     readOnly = true,
@@ -260,6 +261,7 @@ fun AddTaskModal(
                                     selectedDueDate = Instant.fromEpochMilliseconds(millis)
                                         .toLocalDateTime(TimeZone.currentSystemDefault())
                                         .date
+                                        .toString()
                                 }
                                 showDatePicker = false
                             }) {

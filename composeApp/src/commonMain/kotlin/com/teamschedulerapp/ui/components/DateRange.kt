@@ -16,6 +16,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.datetime.LocalDate
+
+fun formatDueDate(dueDateString: String): String {
+    val localDate = LocalDate.parse(dueDateString)
+    val month = localDate.month.name
+        .lowercase()
+        .replaceFirstChar { it.uppercase() }
+        .take(3)
+    val day = localDate.dayOfMonth
+    val year = localDate.year
+
+    return "$month $day, $year"
+}
 
 @Composable
 fun DateRange(startDate: String?, endDate: String?) {
@@ -37,7 +50,7 @@ fun DateRange(startDate: String?, endDate: String?) {
             )
         } else if (startDate != null && endDate != null) {
             Text(
-                text = startDate,
+                text = formatDueDate(startDate),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -48,7 +61,7 @@ fun DateRange(startDate: String?, endDate: String?) {
                 modifier = Modifier.size(14.dp)
             )
             Text(
-                text = endDate,
+                text = formatDueDate(endDate),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -59,7 +72,7 @@ fun DateRange(startDate: String?, endDate: String?) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = endDate,
+                text = formatDueDate(endDate),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -70,7 +83,7 @@ fun DateRange(startDate: String?, endDate: String?) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = startDate,
+                text = formatDueDate(startDate),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

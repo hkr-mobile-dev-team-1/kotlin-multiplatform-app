@@ -90,12 +90,8 @@ fun TaskCard(taskWithUsers: TaskWithUsers) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (task.status != null) {
-                        StatusLabel(task.status)
-                    }
-                    if (task.priority != null) {
-                        PriorityLabel(priority = task.priority)
-                    }
+                    StatusLabel(task.status)
+                    PriorityLabel(priority = task.priority)
                 }
 
                 AssigneesTiles(assignedUsers = assignedUsers)
@@ -104,7 +100,7 @@ fun TaskCard(taskWithUsers: TaskWithUsers) {
             Spacer(modifier = Modifier.height(12.dp))
 
 
-            DateRange(startDate = null, endDate = task.dueDate.toString())
+            DateRange(startDate = null, endDate = task.dueDate)
 
         }
     }
