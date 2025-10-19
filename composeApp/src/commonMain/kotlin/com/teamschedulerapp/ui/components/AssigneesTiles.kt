@@ -27,8 +27,7 @@ fun AssigneesTiles (assignedUsers: List<User>) {
             val visibleUsers = assignedUsers.take(4)
             visibleUsers.forEach { user ->
                 UserTile(
-                    userName = user.userName,
-                    userId = user.userId
+                    user = user,
                 )
             }
 

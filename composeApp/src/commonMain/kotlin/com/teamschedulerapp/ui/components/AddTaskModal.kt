@@ -16,8 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.TaskPriority
-import com.teamschedulerapp.model.TaskStatus
 import kotlinx.datetime.*
 
 @Composable
@@ -26,17 +24,17 @@ fun AddTaskModal(
     onSave: (
         title: String,
         description: String,
-        status: TaskStatus,
-        priority: TaskPriority,
-        assignedUserIds: List<Number>,
+        status: String,
+        priority: String,
+        assignedUserIds: List<String>,
         dueDate: LocalDate?
     ) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var selectedStatus by remember { mutableStateOf(TaskStatus.PENDING) }
-    var selectedPriority by remember { mutableStateOf(TaskPriority.LOW) }
-    var selectedUserIds by remember { mutableStateOf(emptyList<Number>()) }
+    var selectedStatus by remember { mutableStateOf("Pending") }
+    var selectedPriority by remember { mutableStateOf("Medium") }
+    var selectedUserIds by remember { mutableStateOf(emptyList<String>()) }
     var selectedDueDate by remember { mutableStateOf<LocalDate?>(null) }
 
     var statusExpanded by remember { mutableStateOf(false) }
@@ -47,12 +45,42 @@ fun AddTaskModal(
     // Mock users
     val availableUsers = remember {
         listOf(
-            User(1, "Elina"),
-            User(2, "Dimple"),
-            User(3, "Dario"),
-            User(4, "Andre"),
-            User(5, "Kate"),
-            User(6, "Dani")
+            User(
+                id = "1",
+                firstName = "Elina",
+                lastName = "Rosato",
+                email = "elinarosato@gmail.com"
+            ),
+            User(
+                id = "2",
+                firstName = "Dimple",
+                lastName = "Narkhede",
+                email = "dimplenarkhede@gmail.com"
+            ),
+            User(
+                id = "3",
+                firstName = "Dario",
+                lastName = "Ostojic",
+                email = "darioostojic@gmail.com"
+            ),
+            User(
+                id = "4",
+                firstName = "Andre",
+                lastName = "Sandblom",
+                email = "andresandblom@gmail.com"
+            ),
+            User(
+                id = "5",
+                firstName = "Kate",
+                lastName = "Arvay",
+                email = "katearvay@gmail.com"
+            ),
+            User(
+                id = "6",
+                firstName = "Dani",
+                lastName = "Marcarini",
+                email = "danimarcarini@gmail.com"
+            )
         )
     }
 
@@ -147,7 +175,7 @@ fun AddTaskModal(
                         onDismissRequest = { statusExpanded = false },
                         containerColor = Color.White
                     ) {
-                        TaskStatus.entries.forEach { status ->
+                       listOf<String>("Pending", "In progress", "Blocked", "Done").forEach { status ->
                             DropdownMenuItem(
                                 text = { StatusLabel(status = status) },
                                 onClick = {
@@ -189,7 +217,7 @@ fun AddTaskModal(
                         onDismissRequest = { priorityExpanded = false },
                         containerColor = Color.White
                     ) {
-                        TaskPriority.entries.forEach { priority ->
+                        listOf<String>("High", "Medium", "Low").forEach { priority ->
                             DropdownMenuItem(
                                 text = { PriorityLabel(priority = priority) },
                                 onClick = {
@@ -262,20 +290,17 @@ fun AddTaskModal(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         availableUsers.forEach { user ->
-                            val isSelected = selectedUserIds.contains(user.userId)
-                            print(isSelected)
+                            val isSelected = selectedUserIds.contains(user.id)
 
                             UserLabel(
-                                userName = user.userName,
-                                userId = user.userId,
+                                user = user,
                                 isSelected = isSelected,
                                 onClick = {
                                     selectedUserIds = if (isSelected) {
-                                        selectedUserIds - user.userId
+                                        selectedUserIds - user.id
                                     } else {
-                                        selectedUserIds + user.userId
+                                        selectedUserIds + user.id
                                     }
-                                    print(selectedUserIds)
                                 }
                             )
                         }

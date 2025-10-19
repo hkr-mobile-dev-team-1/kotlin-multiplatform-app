@@ -13,15 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.TaskStatus
 
 @Composable
-fun StatusLabel(status: TaskStatus) {
+fun StatusLabel(status: String) {
     val (backgroundColor, textColor) = when (status) {
-        TaskStatus.PENDING -> Color(0xFFf2f2f2) to Color(0xFF797979)
-        TaskStatus.IN_PROGRESS -> Color(0xFFffeecf) to Color(0xFFd98d00)
-        TaskStatus.DONE -> Color(0xFFcffcdb) to Color(0xFF189f3c)
-        TaskStatus.BLOCKED -> Color(0xFFf8d9d6) to Color(0xFFcb2050)
+        "Pending" -> Color(0xFFf2f2f2) to Color(0xFF797979)
+        "In progress" -> Color(0xFFffeecf) to Color(0xFFd98d00)
+        "Done" -> Color(0xFFcffcdb) to Color(0xFF189f3c)
+        else -> Color(0xFFf8d9d6) to Color(0xFFcb2050)
     }
 
     Surface(
@@ -40,8 +39,7 @@ fun StatusLabel(status: TaskStatus) {
                 modifier = Modifier.size(8.dp)
             )
             Text(
-                text = status.name.replace("_", " ").lowercase()
-                    .replaceFirstChar { it.uppercase() },
+                text = status,
                 color = textColor,
                 style = MaterialTheme.typography.labelSmall
             )

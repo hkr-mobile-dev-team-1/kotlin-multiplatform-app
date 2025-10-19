@@ -15,11 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.model.User
 
 @Composable
 fun UserLabel(
-    userName: String,
-    userId: Number,
+    user: User,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -40,9 +40,9 @@ fun UserLabel(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            UserTile(userName, userId)
+            UserTile(user)
             Text(
-                text = userName,
+                text = if (user.firstName != null && user.lastName != null) (user.firstName + " " + user.lastName) else user.email,
                 color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.labelSmall
             )

@@ -25,7 +25,7 @@ fun TasksScreen (
 ) {
     val tasksWithUsers by screenModel.tasksWithUsers.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
-    val currentUserId = 1
+    val currentUserId = "1"
     var showAddTaskModal by remember { mutableStateOf(false) }
 
     val tabs = listOf("All Tasks", "My Tasks", "Unassigned")
@@ -33,7 +33,7 @@ fun TasksScreen (
     val filteredTasks = when (selectedTab) {
         0 -> tasksWithUsers
         1 -> tasksWithUsers.filter { taskWithUsers ->
-            taskWithUsers.assignedUsers.any { it.userId == currentUserId }
+            taskWithUsers.assignedUsers.any { it.id == currentUserId }
         }
         2 -> tasksWithUsers.filter { it.assignedUsers.isEmpty() }
         else -> tasksWithUsers
