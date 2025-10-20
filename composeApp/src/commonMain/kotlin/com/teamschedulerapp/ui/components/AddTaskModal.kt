@@ -39,7 +39,6 @@ fun AddTaskModal(
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
-    var assigneesExpanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     // Mock users
@@ -88,11 +87,13 @@ fun AddTaskModal(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        scrimColor = Color.LightGray.copy(alpha = 0.5f),
+        scrimColor = Color.DarkGray.copy(alpha = 0.6f),
         containerColor = Color.White
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.9f)
         ) {
             // Header
             Row(

@@ -131,7 +131,7 @@ fun TaskCard(
             Spacer(modifier = Modifier.height(12.dp))
 
 
-            DateRange(startDate = null, endDate = task.dueDate)
+            DateRange(startDate = null, endDate = task.dueDate, big = false)
 
         }
     }

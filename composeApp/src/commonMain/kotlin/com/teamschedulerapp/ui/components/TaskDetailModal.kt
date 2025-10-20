@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -94,11 +93,13 @@ fun TaskDetailModal(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        scrimColor = Color.LightGray.copy(alpha = 0.5f),
+        scrimColor = Color.DarkGray.copy(alpha = 0.6f),
         containerColor = Color.White
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.9f)
         ) {
             // Header
             Row(
@@ -109,7 +110,7 @@ fun TaskDetailModal(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Task Detail",
+                    text = if (isEditing) "Edit Task" else "Task Detail",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -124,9 +125,6 @@ fun TaskDetailModal(
             HorizontalDivider()
 
             if (isEditing) {
-                // Editable fields (OutlinedTextFields)
-                // Save/Cancel buttons
-                // Form Content
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -184,7 +182,12 @@ fun TaskDetailModal(
                             onDismissRequest = { statusExpanded = false },
                             containerColor = Color.White
                         ) {
-                            listOf<String>("Pending", "In progress", "Blocked", "Done").forEach { status ->
+                            listOf<String>(
+                                "Pending",
+                                "In progress",
+                                "Blocked",
+                                "Done"
+                            ).forEach { status ->
                                 DropdownMenuItem(
                                     text = { StatusLabel(status = status) },
                                     onClick = {
@@ -242,7 +245,10 @@ fun TaskDetailModal(
                     OutlinedTextField(
                         value = selectedDueDate?.let { dateString ->
                             val date = LocalDate.parse(dateString)
-                            "${date.month.name.lowercase().replaceFirstChar { c -> c.uppercase() }.take(3)} ${date.dayOfMonth}, ${date.year}"
+                            "${
+                                date.month.name.lowercase().replaceFirstChar { c -> c.uppercase() }
+                                    .take(3)
+                            } ${date.dayOfMonth}, ${date.year}"
                         } ?: "",
                         onValueChange = {},
                         readOnly = true,
@@ -318,50 +324,13 @@ fun TaskDetailModal(
                         }
                     }
                 }
-
-                // Footer Buttons
-                HorizontalDivider()
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancel")
-                    }
-                    Button(
-                        onClick = {
-                            if (isEditing) {
-                                if (title.isNotBlank()) {
-                                    onSave(
-                                        title,
-                                        description,
-                                        selectedStatus,
-                                        selectedPriority,
-                                        selectedUserIds,
-                                        selectedDueDate
-                                    )
-                                    onDismiss()
-                                }
-                            } else {
-                                isEditing = true
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = title.isNotBlank()
-                    ) {
-                        Text(if (isEditing) "Save" else "Edit Task")
-                    }
-                }
-            } else {
+            }
+            else {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
                 ) {
                     // Task Title
                     Row(
@@ -380,10 +349,10 @@ fun TaskDetailModal(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     // Task Description (if exists)
-                    if (!description.isNullOrEmpty()) {
+                    if (description.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(0.dp))
                         Text(
                             text = description,
@@ -392,104 +361,136 @@ fun TaskDetailModal(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     // Status
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Column() {
                         Text(
-                            text = "Status: ",
+                            text = "Status ",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
                         )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         StatusLabel(selectedStatus)
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     // Priority
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Column() {
                         Text(
-                            text = "Priority: ",
+                            text = "Priority ",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
                         )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         PriorityLabel(priority = selectedPriority)
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Due Date
+                    Column() {
+                        Text(
+                            text = "Due Date ",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        DateRange(startDate = null, endDate = selectedDueDate, big = true)
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     // Assignees Row
                     Column {
                         Text(
                             text = "Assignees",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            task.assignedUsers.forEach { user ->
-                                UserLabel(
-                                    user = user,
-                                    isSelected = false,
-                                    onClick = { }
-                                )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        if (task.assignedUsers.isEmpty()) {
+                            Text(
+                                text = "No team member was assigned to this task.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Normal,
+                            )
+                        } else {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                task.assignedUsers.forEach { user ->
+                                    UserLabel(
+                                        user = user,
+                                        isSelected = false,
+                                        onClick = { }
+                                    )
+                                }
                             }
                         }
+
                     }
                 }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
 
-                    DateRange(startDate = null, endDate = selectedDueDate)
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                // Footer Buttons
-                HorizontalDivider()
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Footer Buttons
+            HorizontalDivider()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { if (isEditing) onDismiss() else onDelete() },
+                    modifier = Modifier.weight(1f)
                 ) {
-                    OutlinedButton(
-                        onClick = { onDelete() },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Delete")
-                    }
-                    Button(
-                        onClick = {
+                    Text(if (isEditing) "Cancel" else "Delete")
+                }
+                Button(
+                    onClick = {
+                        if (isEditing) {
+                            if (title.isNotBlank()) {
+                                onSave(
+                                    title,
+                                    description,
+                                    selectedStatus,
+                                    selectedPriority,
+                                    selectedUserIds,
+                                    selectedDueDate
+                                )
+                                onDismiss()
+                            }
+                        } else {
                             isEditing = true
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = title.isNotBlank()
-                    ) {
-                        Text("Edit")
-                    }
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = if (isEditing) title.isNotBlank() else true
+                ) {
+                    Text(if (isEditing) "Save" else "Edit Task")
                 }
             }
         }
     }
+}
