@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,15 +20,21 @@ import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TaskWithUsers
 
 @Composable
-fun TaskCard(taskWithUsers: TaskWithUsers) {
+fun TaskCard(
+    taskWithUsers: TaskWithUsers,
+    openTaskDetail: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
     val task = taskWithUsers.task
     val assignedUsers = taskWithUsers.assignedUsers
+    var showMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clickable { /* Handle task click */ },
+            .clickable { openTaskDetail() },
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp,
             pressedElevation = 4.dp
@@ -56,14 +66,35 @@ fun TaskCard(taskWithUsers: TaskWithUsers) {
                 )
 
                 IconButton(
-                    onClick = { /* Handle menu click */ }
+                    onClick = { showMenu = true }
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreHoriz,
                         contentDescription = "More options",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                showMenu = false
+                                onEditClick()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete") },
+                            onClick = {
+                                showMenu = false
+                                onDeleteClick()
+                            }
+                        )
+                    }
                 }
+
+
             }
 
             // Task Description (if exists)
