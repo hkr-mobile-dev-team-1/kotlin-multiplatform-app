@@ -25,12 +25,12 @@ import com.kizitonwose.calendar.compose.*
 @Composable
 fun ScheduleScreen() {
     // time anchors
-    //today (for highlighting)
+    // today (for highlighting)
     val today = Clock.System.now()
         .toLocalDateTime(TimeZone.currentSystemDefault())
         .let { LocalDate(it.year, it.month.number, it.day) }
 
-    //visible month - which showing first
+    // current month - which showing first
     val currentMonth = remember { YearMonth.now() }
 
     // calendar range (how far back and forth)
@@ -48,6 +48,13 @@ fun ScheduleScreen() {
         firstDayOfWeek = daysOfWeek.first(),
     )
 
+    // visible month as user swipes - reactive
+    val visibleMonth by remember(state) {
+        derivedStateOf { state.firstVisibleMonth.yearMonth }
+    }
+
+    val monthTitle = "${visibleMonth.month.name.lowercase().replaceFirstChar { it.titlecase() }} • ${visibleMonth.year}"
+
     // UI events - dialog, attendance edit
     var selected by remember { mutableStateOf<LocalDate?>(null) }
     // attendance state
@@ -58,13 +65,23 @@ fun ScheduleScreen() {
     var showDialogFor by remember { mutableStateOf<LocalDate?>(null) }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
-        // month header add prev next
-
-        // days of weeks titles lib (we can make them move with the month if we put them inside the calendar grid and use a lib fun)
-        DaysOfWeekTitle(daysOfWeek)
+        // month header - follow swipe
+        Text(
+            text = monthTitle,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            textAlign = TextAlign.Center
+        )
         // Calendar grid lib
         HorizontalCalendar(
             state = state,
+            monthHeader = { month ->
+                // weekday scrolls lib
+                val days = month.weekDays.first().map { it.date.dayOfWeek }
+                DaysOfWeekTitle(days, Modifier.padding(bottom = 8.dp))
+            },
             dayContent = { day ->
                 val isOverflow = day.position != DayPosition.MonthDate
                 val isSelected = selected == day.date
@@ -181,7 +198,7 @@ fun DayCell(
 
 // setup days of week titles lib
 @Composable
-fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
+fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>, modifier: Modifier = Modifier) {
     Row(modifier = Modifier.fillMaxWidth()) {
         daysOfWeek.forEach { dow ->
             Text(
