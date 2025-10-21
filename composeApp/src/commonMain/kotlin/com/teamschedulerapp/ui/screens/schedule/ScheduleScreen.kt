@@ -2,110 +2,90 @@ package com.teamschedulerapp.ui.screens.schedule
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.disabled
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.domain.buildMonthGrid
-import com.teamschedulerapp.domain.firstOfMonth
+
 import com.teamschedulerapp.model.Attendee
-import com.teamschedulerapp.model.CalendarDay
 import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
-import kotlinx.datetime.*
 import com.teamschedulerapp.ui.components.schedule.AttendeeList
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.BoxWithConstraints
 
+import kotlin.time.Clock
+import kotlinx.datetime.*
+import kotlin.time.ExperimentalTime
 
+// lib
+import com.kizitonwose.calendar.core.*
+import com.kizitonwose.calendar.compose.*
+
+@OptIn(ExperimentalTime::class)
 @Composable
 fun ScheduleScreen() {
     // time anchors
-    val tz = remember { TimeZone.currentSystemDefault() }
-    val today = remember { Clock.System.now().toLocalDateTime(tz).date }
+    //today (for highlighting)
+    val today = Clock.System.now()
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .let { LocalDate(it.year, it.month.number, it.day) }
 
-    // local screen state
-    var monthFirst by remember { mutableStateOf(today.firstOfMonth()) }
+    //visible month - which showing first
+    val currentMonth = remember { YearMonth.now() }
+
+    // calendar range (how far back and forth)
+    val startMonth   = remember { currentMonth.minusMonths(12) }
+    val endMonth     = remember { currentMonth.plusMonths(12) }
+
+    // days of week lib (set to begin with Monday)
+    val daysOfWeek = remember { daysOfWeek(firstDayOfWeek = DayOfWeek.MONDAY) }
+
+    // calendar state
+    val state = rememberCalendarState(
+        startMonth = startMonth,
+        endMonth = endMonth,
+        firstVisibleMonth = currentMonth,
+        firstDayOfWeek = daysOfWeek.first(),
+    )
+
+    // UI events - dialog, attendance edit
     var selected by remember { mutableStateOf<LocalDate?>(null) }
-
-    // attendance state (UI only
+    // attendance state
     var attendanceByDate by remember {
         mutableStateOf<Map<LocalDate, List<Attendee>>>(emptyMap())
     }
-
-    // build grid for visible month
-    val baseDays = remember(monthFirst, today, attendanceByDate) {
-        buildMonthGrid(
-            monthFirstDay = monthFirst,
-            today = today,
-            headcountFor = { d -> attendanceByDate[d]?.size ?: 0 }
-        )
-    }
-
-    val days = baseDays
-
     // dialog trigger
     var showDialogFor by remember { mutableStateOf<LocalDate?>(null) }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())     // allow page to scroll
-            .navigationBarsPadding()                    // keep content above system bar
-            .padding(16.dp)
-    ) {
-        // header
-        Header(
-            monthFirst = monthFirst,
-            onPrev = { monthFirst = shiftMonth(monthFirst, -1) },
-            onNext = { monthFirst = shiftMonth(monthFirst, +1) }
-        )
+    Column(Modifier.fillMaxSize().padding(16.dp)) {
+        // month header add prev next
 
-        Spacer(Modifier.height(8.dp))
-        WeekdayRow()
-        Spacer(Modifier.height(8.dp))
+        // days of weeks titles lib (we can make them move with the month if we put them inside the calendar grid and use a lib fun)
+        DaysOfWeekTitle(daysOfWeek)
+        // Calendar grid lib
+        HorizontalCalendar(
+            state = state,
+            dayContent = { day ->
+                val isOverflow = day.position != DayPosition.MonthDate
+                val isSelected = selected == day.date
+                val isToday = day.date == today
+                val headcount = attendanceByDate[day.date]?.size ?: 0
 
-        // fix the grid layout and constraint the height
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            // width available for the grid content
-            val columns = 7
-            val rows = 6
-            val gridSpacing = 8.dp
-
-            val availableWidth = maxWidth
-            val cell = (availableWidth - gridSpacing * (columns - 1)) / columns
-            val gridHeight = cell * rows + gridSpacing * (rows - 1)
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(columns),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(gridHeight),                // bounded height
-                userScrollEnabled = false,              // page scrolls, grid does not
-                verticalArrangement = Arrangement.spacedBy(gridSpacing),
-                horizontalArrangement = Arrangement.spacedBy(gridSpacing)
-            ) {
-                items(days) { day ->
-                    DayCell(
-                        day = day,
-                        selected = selected == day.date,
-                        onClick = {
-                            if (day.isCurrentMonth) {
-                                selected = if (selected == day.date) null else day.date
-                            }
+                DayCell(
+                    day = day,
+                    isOverflow = isOverflow,
+                    isSelected = isSelected,
+                    isToday = isToday,
+                    headcount = headcount,
+                    onClick = {
+                        if (!isOverflow) {
+                            // toggle selection
+                            selected = if (isSelected) null else day.date
                         }
-                    )
-                }
+                    }
+                )
             }
-        }
+        )
         // Show currently selected date label
         selected?.let {
             Spacer(Modifier.height(8.dp))
@@ -114,7 +94,7 @@ fun ScheduleScreen() {
                 style = MaterialTheme.typography.bodyMedium
             )
         }
-        // only show when a date is selected
+        // show attendees and button when day is selected
         if (selected != null) {
             // Attendee tiles for selected day
             Spacer(Modifier.height(12.dp))
@@ -130,12 +110,11 @@ fun ScheduleScreen() {
             ) {
                 Button(
                     onClick = { showDialogFor = selected },   // open dialog
-                ) { Text("Add my attendance") }
+                    ) { Text("Add my attendance") }
+                }
             }
+        }
 
-            Spacer(Modifier.height(12.dp))
-
-            }
         // Dialog
         val dateForDialog = showDialogFor
         if (dateForDialog != null) {
@@ -155,92 +134,62 @@ fun ScheduleScreen() {
                 },
                 onDismiss = { showDialogFor = null }
             )
-        }
     }
 }
 
 @Composable
-private fun Header(
-    monthFirst: LocalDate,
-    onPrev: () -> Unit,
-    onNext: () -> Unit
+fun DayCell(
+    day: CalendarDay,
+    isOverflow: Boolean,
+    isSelected: Boolean,
+    isToday: Boolean,
+    headcount: Int,
+    onClick: () -> Unit
 ) {
-    val title = "${monthFirst.month.name.lowercase().replaceFirstChar { it.titlecase() }} • ${monthFirst.year}"
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        TextButton(onClick = onPrev) { Text("◀") }
-        Text(title, style = MaterialTheme.typography.titleMedium)
-        TextButton(onClick = onNext) { Text("▶") }
-    }
-}
-
-@Composable
-private fun WeekdayRow() {
-    val labels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        labels.forEach {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun DayCell(day: CalendarDay, selected: Boolean, onClick: () -> Unit) {
-
-    val isOverflow = !day.isCurrentMonth
-
+    // cell bg colors
     val bg = when {
         isOverflow -> MaterialTheme.colorScheme.surface
-        selected -> MaterialTheme.colorScheme.primaryContainer
-        day.isToday -> MaterialTheme.colorScheme.surfaceVariant
-        else -> MaterialTheme.colorScheme.surface
+        isSelected -> MaterialTheme.colorScheme.primaryContainer
+        isToday    -> MaterialTheme.colorScheme.surfaceVariant
+        else       -> MaterialTheme.colorScheme.surface
     }
 
+    // text color for calendar days (dim overflow)
     val dayNumberColor = if (isOverflow)
-        LocalContentColor.current.copy(alpha = 0.35f) else LocalContentColor.current
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+    else
+        MaterialTheme.colorScheme.onSurface
 
     Surface(
-        modifier = Modifier
-            .aspectRatio(1f)
-            .then(
-                if (isOverflow) Modifier.semantics { disabled() } else Modifier
-            )
-            .clickable(enabled = day.isCurrentMonth, onClick = onClick),
         color = bg,
         shape = MaterialTheme.shapes.medium,
-        tonalElevation = if (selected && !isOverflow) 2.dp else 0.dp
+        tonalElevation = if (isSelected && !isOverflow) 2.dp else 0.dp,
+        modifier = Modifier.aspectRatio(1f).clickable(enabled = !isOverflow, onClick = onClick)
     ) {
         Box(Modifier.fillMaxSize().padding(6.dp)) {
-                Text(
-                    text = day.date.dayOfMonth.toString(),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = dayNumberColor,
-                    modifier = Modifier.align(Alignment.TopStart)
-                )
-                if (!isOverflow && day.headcount > 0) {
-                    Text(
-                        text = "${day.headcount}",
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.align(Alignment.BottomEnd)
-                    )
-                }
+            Text(
+                day.date.day.toString(),
+                modifier = Modifier.align(Alignment.Center),
+                color = dayNumberColor
+            )
+            if (!isOverflow && headcount > 0) {
+                Text(headcount.toString(), modifier = Modifier.align(Alignment.BottomEnd))
+            }
         }
     }
 }
 
-private fun shiftMonth(date: LocalDate, delta: Int): LocalDate {
-    val y = date.year + (date.monthNumber - 1 + delta).floorDiv(12)
-    val m = ((date.monthNumber - 1 + delta) % 12 + 12) % 12 + 1
-    return LocalDate(y, m, 1)
+// setup days of week titles lib
+@Composable
+fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        daysOfWeek.forEach { dow ->
+            Text(
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center,
+                text = dow.name.lowercase().replaceFirstChar { it.titlecase() }.take(3),
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
+    }
 }

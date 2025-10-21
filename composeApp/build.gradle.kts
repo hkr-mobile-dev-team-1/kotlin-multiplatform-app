@@ -73,7 +73,8 @@ kotlin {
             implementation(libs.bundles.voyager.common)
             implementation(libs.bundles.supabase.common)
             implementation(libs.bundles.ktor.common)
-
+            implementation("com.kizitonwose.calendar:compose-multiplatform:2.9.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
         }
         iosMain.dependencies{
             implementation(libs.ktor.client.darwin)
