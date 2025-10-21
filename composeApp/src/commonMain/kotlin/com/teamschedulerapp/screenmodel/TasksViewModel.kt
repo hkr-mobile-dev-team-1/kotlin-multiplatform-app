@@ -8,7 +8,6 @@ import com.teamschedulerapp.model.TaskWithUsers
 import com.teamschedulerapp.model.User
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.datetime.LocalDate
 
 class TasksScreenModel : ScreenModel {
     private val _tasksWithUsers = MutableStateFlow<List<TaskWithUsers>>(emptyList())
@@ -59,7 +58,7 @@ class TasksScreenModel : ScreenModel {
                         id = "3",
                         firstName = "Dario",
                         lastName = "Ostojic",
-                        email = "darioostojic@gmail.com"
+                        email = "darioostojic2@gmail.com"
                     ),
                     User(
                         id = "4",
