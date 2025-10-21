@@ -15,6 +15,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.*
+import com.teamschedulerapp.model.User
 import com.teamschedulerapp.screenmodel.TasksScreenModel
 import com.teamschedulerapp.ui.screens.schedule.ScheduleScreen
 import com.teamschedulerapp.ui.screens.settings.SettingsScreen
@@ -62,9 +63,19 @@ object SettingsTab : Tab {
 
     @Composable
     override fun Content() {
-        SettingsScreen()
+        val dummyUser = remember {
+            User(
+                id = "12345",
+                firstName = "Jane",
+                lastName = "Doe",
+                email = "jane.doe@example.com"
+            )
+        }
+
+        SettingsScreen(user = dummyUser)
     }
 }
+
 
 @Composable
 fun MainScreen() {

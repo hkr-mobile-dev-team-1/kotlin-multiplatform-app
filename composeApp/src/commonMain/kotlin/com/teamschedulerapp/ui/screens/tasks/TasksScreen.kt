@@ -15,8 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.model.TaskWithUsers
 import com.teamschedulerapp.screenmodel.TasksScreenModel
+import com.teamschedulerapp.ui.components.AddTaskModal
 import com.teamschedulerapp.ui.components.TaskCard
+import com.teamschedulerapp.ui.components.TaskDetailModal
 
 @Composable
 fun TasksScreen (
@@ -24,7 +27,10 @@ fun TasksScreen (
 ) {
     val tasksWithUsers by screenModel.tasksWithUsers.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
-    val currentUserId = 1
+    val currentUserId = "1"
+    var showAddTaskModal by remember { mutableStateOf(false) }
+    var selectedTask by remember { mutableStateOf<TaskWithUsers?>(null) }
+    var editMode by remember { mutableStateOf(false) }
 
 
     val tabs = listOf("All Tasks", "My Tasks", "Unassigned")
@@ -32,7 +38,7 @@ fun TasksScreen (
     val filteredTasks = when (selectedTab) {
         0 -> tasksWithUsers
         1 -> tasksWithUsers.filter { taskWithUsers ->
-            taskWithUsers.assignedUsers.any { it.userId == currentUserId }
+            taskWithUsers.assignedUsers.any { it.id == currentUserId }
         }
         2 -> tasksWithUsers.filter { it.assignedUsers.isEmpty() }
         else -> tasksWithUsers
@@ -53,7 +59,7 @@ fun TasksScreen (
                 )
             },
             actions = {
-                IconButton(onClick = { /* Handle add task click */ }) {
+                IconButton(onClick = { showAddTaskModal = true }) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Add Task",
@@ -150,10 +156,50 @@ fun TasksScreen (
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 items(filteredTasks, key = { it.task.id }) { taskWithUsers ->
-                    TaskCard(taskWithUsers = taskWithUsers)
+                    TaskCard(
+                        taskWithUsers = taskWithUsers,
+                        openTaskDetail = {
+                            selectedTask = taskWithUsers
+                            editMode = false
+                        },
+                        onEditClick = {
+                            selectedTask = taskWithUsers
+                            editMode = true
+                        },
+                        onDeleteClick = { /* Handle delete */ }
+
+                    )
                 }
             }
         }
+    }
+
+    // Add Task Modal
+    if (showAddTaskModal) {
+        AddTaskModal(
+            onDismiss = { showAddTaskModal = false },
+            onSave = { title, description, status, priority, assignedUserIds, dueDate ->
+                // TODO: Call screenModel to create the task
+                // screenModel.createTask(title, description, status, priority, assignedUserIds)
+            }
+        )
+    }
+
+    // Task Description Modal
+    selectedTask?.let { task ->
+        TaskDetailModal(
+            task = task,
+            isEditMode = editMode,
+            onDismiss = { selectedTask = null },
+            onDelete = {
+                // TODO: Delete task
+                selectedTask = null
+            },
+            onSave = { title, description, status, priority, assignedUserIds, dueDate ->
+                // TODO: Update task
+                selectedTask = null
+            }
+        )
     }
 }
 
