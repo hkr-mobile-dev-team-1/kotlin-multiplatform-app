@@ -24,7 +24,7 @@ supabase = "2.5.3"
 ktor = "2.3.7"
 
 [libraries]
-compose-multiplatform = { module = "com.kizitonwose.calendar:compose-multiplatform", version.ref = "composeMultiplatformVersion" }
+kizitonwoseCalendar= { module = "com.kizitonwose.calendar:compose-multiplatform", version.ref = "kizitonwoseCalendarVersion" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
