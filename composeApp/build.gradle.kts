@@ -82,11 +82,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.teamschedulerapp"
+    namespace = "com.example.teamschedulerapp"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.teamschedulerapp"
+        applicationId = "com.example.teamschedulerapp"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
