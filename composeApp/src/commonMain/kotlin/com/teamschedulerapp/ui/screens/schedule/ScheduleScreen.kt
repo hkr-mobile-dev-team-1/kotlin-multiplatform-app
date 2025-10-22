@@ -48,13 +48,6 @@ fun ScheduleScreen() {
         firstDayOfWeek = daysOfWeek.first(),
     )
 
-    // visible month as user swipes - reactive
-    val visibleMonth by remember(state) {
-        derivedStateOf { state.firstVisibleMonth.yearMonth }
-    }
-
-    val monthTitle = "${visibleMonth.month.name.lowercase().replaceFirstChar { it.titlecase() }} • ${visibleMonth.year}"
-
     // UI events - dialog, attendance edit
     var selected by remember { mutableStateOf<LocalDate?>(null) }
     // attendance state
@@ -66,14 +59,7 @@ fun ScheduleScreen() {
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         // month header - follow swipe
-        Text(
-            text = monthTitle,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            textAlign = TextAlign.Center
-        )
+        MonthHeader(state)
         // Calendar grid lib
         HorizontalCalendar(
             state = state,
@@ -205,8 +191,38 @@ fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>, modifier: Modifier = Modifier) 
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center,
                 text = dow.name.lowercase().replaceFirstChar { it.titlecase() }.take(3),
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelLarge
             )
         }
     }
 }
+
+@Composable
+fun MonthHeader(state: CalendarState, modifier: Modifier = Modifier) {
+    // visible month as user swipes - reactive
+    val visibleMonth by remember(state) {
+        derivedStateOf { state.firstVisibleMonth.yearMonth }
+    }
+
+    val monthTitle = "${visibleMonth.month.name.lowercase().replaceFirstChar { it.titlecase() }} • ${visibleMonth.year}"
+
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        tonalElevation = 1.dp,
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    ) {
+        Row (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+            ) { Text(monthTitle, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
