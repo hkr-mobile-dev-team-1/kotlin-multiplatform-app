@@ -19,7 +19,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TaskWithUsers
 import kotlinx.datetime.*
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun TaskDetailModal(
     task: TaskWithUsers,
