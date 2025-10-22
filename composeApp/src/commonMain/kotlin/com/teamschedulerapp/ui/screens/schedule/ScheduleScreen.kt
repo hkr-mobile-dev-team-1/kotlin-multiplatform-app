@@ -176,7 +176,10 @@ fun DayCell(
                 color = dayNumberColor
             )
             if (!isOverflow && headcount > 0) {
-                Text(headcount.toString(), modifier = Modifier.align(Alignment.BottomEnd))
+                Text(
+                    headcount.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.align(Alignment.BottomEnd))
             }
         }
     }
@@ -213,12 +216,12 @@ fun MonthHeader(state: CalendarState, modifier: Modifier = Modifier) {
         shape = MaterialTheme.shapes.medium,
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp)
+            .padding(top = 12.dp, bottom = 8.dp)
     ) {
         Row (
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
             ) { Text(monthTitle, style = MaterialTheme.typography.titleMedium)
