@@ -2,8 +2,11 @@ package com.teamschedulerapp.ui.components.schedule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,13 +25,21 @@ private fun LocalTime.formatHm(): String =
     "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
 
 @Composable
-fun AttendeeList(attendees: List<Attendee>) {
+fun AttendeeList(
+    attendees: List<Attendee>,
+    onEdit: (Attendee) -> Unit,
+    onDelete: (Attendee) -> Unit
+                 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         attendees.forEach { att ->
-            AttendeeChip(att)
+            AttendeeChip(
+                att,
+                onEdit = { onEdit(att) },
+                onDelete = { onDelete(att) },
+            )
         }
     }
 }
@@ -37,8 +48,10 @@ fun AttendeeList(attendees: List<Attendee>) {
 private fun AttendeeChip(
     att: Attendee,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
-) {
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
+
+    ) {
     val initials = remember(att.displayName) { initialsOf(att.displayName) }
     val window = when {
         att.from != null && att.to != null -> "${att.from.formatHm()}–${att.to.formatHm()}"
@@ -49,11 +62,10 @@ private fun AttendeeChip(
 
     Surface(
         modifier = modifier
-        .width(180.dp)         // fixed width
+        .fillMaxWidth()         // filling the whole width
         .height(56.dp),        // fixed height
         shape = MaterialTheme.shapes.large,
         tonalElevation = 1.dp,
-        onClick = onClick
     ) {
         Row(
             Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -73,7 +85,7 @@ private fun AttendeeChip(
                 )
             }
             Spacer(Modifier.width(10.dp))
-            Column(Modifier.fillMaxWidth()) {
+            Column(Modifier.weight(1f)) {
                 Text(
                     att.displayName,
                     style = MaterialTheme.typography.bodyMedium,
@@ -88,6 +100,12 @@ private fun AttendeeChip(
                         overflow = TextOverflow.Clip
                     )
                 }
+            }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Filled.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.secondary)
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.secondary)
             }
         }
     }
