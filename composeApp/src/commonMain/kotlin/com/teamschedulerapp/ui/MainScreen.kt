@@ -43,6 +43,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import com.teamschedulerapp.repositories.TaskAssignmentRepository
 import com.teamschedulerapp.repositories.TaskRepository
 import com.teamschedulerapp.repositories.TeamMemberRepository
+import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
 
 object ScheduleTab : Tab {
@@ -79,7 +80,6 @@ object TasksTab : Tab {
         val screenModel = rememberScreenModel {
             TaskScreenModel(
                 taskRepository = taskRepository,
-                teamMemberRepository = teamMemberRepository,
                 userRepository = userRepository,
                 taskAssignmentRepository = taskAssignmentRepository
             )
@@ -122,13 +122,15 @@ fun MainScreen() {
 
     val supabase = com.teamschedulerapp.data.SupabaseClientManager.client
     val userId = supabase.auth.currentUserOrNull()?.id ?: return
-    val teamRepository = remember { com.teamschedulerapp.repositories.TeamRepository(supabase.postgrest) }
-    val teamMemberRepository = remember { com.teamschedulerapp.repositories.TeamMemberRepository(supabase.postgrest) }
+    val teamRepository = remember { TeamRepository(supabase.postgrest) }
+    val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest) }
+    val userRepository = remember { UserRepository(supabase.postgrest) }
 
     val teamScreenModel = remember {
         MainScreenModel(
             teamRepository = teamRepository,
             teamMemberRepository = teamMemberRepository,
+            userRepository = userRepository,
             userId = userId
         )
     }

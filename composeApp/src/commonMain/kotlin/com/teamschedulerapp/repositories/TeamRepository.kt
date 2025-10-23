@@ -42,28 +42,11 @@ class TeamRepository(private val postgrest: Postgrest) {
     suspend fun getTeamsForUser(userId: String): List<Team> {
         return try {
             withContext(Dispatchers.IO) {
-                val teamMembers = postgrest.from("team_members")
-                    .select {
-                        filter {
-                            eq("user_id", userId)
-                        }
-                    }.decodeList<TeamMember>()
-                println("Found ${teamMembers.size} team memberships for user $userId")
+                val teams = postgrest.from("teams")
+                    .select {}.decodeList<Team>()
 
-
-                if (teamMembers.isEmpty()) {
-                    emptyList()
-                } else {
-                    val teamIds = teamMembers.map { it.teamId }
-                    println("Fetching teams with IDs: $teamIds")
-
-                    postgrest.from("teams")
-                        .select {
-                            filter {
-                                isIn("id", teamIds)
-                            }
-                        }.decodeList<Team>()
-                }
+                println("Found ${teams.size} teams for user $userId")
+                teams
             }
         } catch (e: Exception) {
             println("Error fetching teams for user: ${e.message}")

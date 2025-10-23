@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.screenmodel.TaskScreenModel
 import com.teamschedulerapp.ui.components.UserLabel
 import kotlinx.datetime.*
@@ -33,7 +34,7 @@ fun AddTaskModal(
         dueDate: String?
     ) -> Unit
 ) {
-    val teamMembers by screenModel.teamMembers.collectAsState()
+    val teamMembers by TeamManager.currentTeamMembers.collectAsState()
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("Pending") }
@@ -254,7 +255,7 @@ fun AddTaskModal(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        teamMembers.forEach { user ->
+                        teamMembers?.forEach { user ->
                             val isSelected = selectedUserIds.contains(user.id)
 
                             UserLabel(

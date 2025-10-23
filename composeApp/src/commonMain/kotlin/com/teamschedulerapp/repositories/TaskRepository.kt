@@ -60,7 +60,7 @@ class TaskRepository(private val postgrest: Postgrest) {
     }
 
     suspend fun updateTask(
-        taskId: String,
+       taskId: String,
        title: String?,
        description: String?,
        status: String?,

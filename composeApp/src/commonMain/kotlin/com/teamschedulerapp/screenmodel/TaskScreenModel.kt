@@ -7,28 +7,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import com.teamschedulerapp.model.Task
 import com.teamschedulerapp.model.TaskAssignment
 import com.teamschedulerapp.model.TaskWithUsers
-import com.teamschedulerapp.model.Team
-import com.teamschedulerapp.model.TeamMember
-import com.teamschedulerapp.model.User
 import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.repositories.TaskAssignmentRepository
 import com.teamschedulerapp.repositories.TaskRepository
-import com.teamschedulerapp.repositories.TeamMemberRepository
 import com.teamschedulerapp.repositories.UserRepository
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class TaskScreenModel(
     private val taskRepository: TaskRepository,
-    private val teamMemberRepository: TeamMemberRepository,
     private val userRepository: UserRepository,
     private val taskAssignmentRepository: TaskAssignmentRepository,
 ) : ScreenModel {
     private val _tasksWithUsers = MutableStateFlow<List<TaskWithUsers>>(emptyList())
     val tasksWithUsers: StateFlow<List<TaskWithUsers>> = _tasksWithUsers.asStateFlow()
 
-    private val _teamMembers = MutableStateFlow<List<User>>(emptyList())
-    val teamMembers: StateFlow<List<User>> = _teamMembers.asStateFlow()
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     private val _error = MutableStateFlow<String?>(null)
@@ -50,10 +43,8 @@ class TaskScreenModel(
         _error.value = null
 
         try {
-            // 1. Get all tasks for the team
             val tasks = taskRepository.getTasksForTeam(teamId)
 
-            // 2. For each task, get its assignments and then the users
             val tasksWithUsers = tasks.map { task ->
                 val taskId = task.id ?: return
                 val assignments = taskAssignmentRepository.getAssignmentsForTask(taskId)
@@ -72,42 +63,30 @@ class TaskScreenModel(
         }
     }
 
-    fun createTask(
-        title: String,
-        description: String?,
-        status: String,
-        priority: String,
-        assignedUserIds: List<String>?,
-        dueDate: String?
-    ) {
-        val currentTeam = TeamManager.currentTeam.value ?: return
-        val teamId = currentTeam.id ?: return
-
+    fun createTask(task: Task, assignedUserIds: List<String>) {
         screenModelScope.launch {
             try {
-                val task = Task(
-                    teamId = teamId,
-                    title = title,
-                    description = description,
-                    status = status,
-                    priority = priority,
-                    dueDate = dueDate
+                val createdTask = taskRepository.createTask(
+                    Task(
+                        teamId = task.teamId,
+                        title = task.title,
+                        description = task.description,
+                        status = task.status,
+                        priority = task.priority,
+                        dueDate = task.dueDate
+                    )
                 )
 
-                val createdTask = taskRepository.createTask(task)
-
-                // Add users assigned to task
                 if (createdTask != null && createdTask.id != null) {
                     val taskId = createdTask.id
 
-                    assignedUserIds?.forEach { userId ->
+                    assignedUserIds.forEach { userId ->
                         taskAssignmentRepository.assignUserToTask(
                             TaskAssignment(taskId = taskId, userId = userId)
                         )
                     }
 
-                    loadTasksForTeam(currentTeam.id)
-
+                    loadTasksForTeam(TeamManager.currentTeam.value?.id!!)
                 }
             } catch (e: Exception) {
                 _error.value = "Failed to create task: ${e.message}"
@@ -115,82 +94,38 @@ class TaskScreenModel(
         }
     }
 
-    fun getTeamMembers(teamId : String) {
-        screenModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-
-            try {
-                val teamMembers = teamMemberRepository.getMembersForTeam(teamId)
-
-                if (teamMembers.isNotEmpty()) {
-                    println("Team Members fetched: ${teamMembers.size}")
-
-                    // Map each TeamMember to User
-                    val users = teamMembers.mapNotNull { teamMember ->
-                        userRepository.getUserById(teamMember.userId)
-                    }
-
-                    println("Users fetched: ${users.size}")
-
-                    _teamMembers.value = users
-
-                } else {
-                    println("No team members found")
-                }
-            } catch (e: Exception) {
-                _error.value = "Failed to fetch team members: ${e.message}"
-                println("Error fetching team members: ${e.message}")
-                e.printStackTrace()
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun updateTask(
-        taskId: String,
-        title: String,
-        description: String,
-        status: String,
-        priority: String,
-        assignedUserIds: List<String>,
-        dueDate: String?
-    ) {
-        val currentTeam = TeamManager.currentTeam.value ?: return
-        val teamId = currentTeam?.id ?: return
-
+    fun updateTask(task: Task, assignedUserIds: List<String> ) {
         screenModelScope.launch {
             try {
                 val success = taskRepository.updateTask(
-                    taskId = taskId,
-                    title = title,
-                    description = description,
-                    status = status,
-                    priority = priority,
-                    dueDate = dueDate
+                    taskId = task.id!!,
+                    title = task.title,
+                    description = task.description,
+                    status = task.status,
+                    priority = task.priority,
+                    dueDate = task.dueDate
                 )
 
                 if (success) {
                     // Handle user assignments
-                    val currentAssignments = taskAssignmentRepository.getAssignmentsForTask(taskId)
+                    val currentAssignments = taskAssignmentRepository.getAssignmentsForTask(task.id)
                     val currentUserIds = currentAssignments.map { it.userId }
 
                     // Remove users no longer assigned
                     val usersToRemove = currentUserIds.filter { it !in assignedUserIds }
                     usersToRemove.forEach { userId ->
-                        taskAssignmentRepository.removeAssignment(taskId, userId)
+                        taskAssignmentRepository.removeAssignment(task.id, userId)
                     }
 
                     // Add new users
                     val usersToAdd = assignedUserIds.filter { it !in currentUserIds }
                     usersToAdd.forEach { userId ->
                         taskAssignmentRepository.assignUserToTask(
-                            TaskAssignment(taskId = taskId, userId = userId)
+                            TaskAssignment(taskId = task.id, userId = userId)
                         )
                     }
 
-                    loadTasksForTeam(currentTeam.id)
+                    loadTasksForTeam(TeamManager.currentTeam.value?.id!!)
                 }
             } catch (e: Exception) {
                 _error.value = "Failed to update task: ${e.message}"
@@ -199,14 +134,11 @@ class TaskScreenModel(
     }
 
     fun deleteTask(taskId: String) {
-        val currentTeam = TeamManager.currentTeam.value ?: return
-        val teamId = currentTeam?.id ?: return
-
         screenModelScope.launch {
             try {
                 val success = taskRepository.deleteTask(taskId)
                 if (success) {
-                    loadTasksForTeam(currentTeam.id)
+                    loadTasksForTeam(TeamManager.currentTeam.value?.id!!)
                 }
             } catch (e: Exception) {
                 _error.value = "Failed to delete task: ${e.message}"

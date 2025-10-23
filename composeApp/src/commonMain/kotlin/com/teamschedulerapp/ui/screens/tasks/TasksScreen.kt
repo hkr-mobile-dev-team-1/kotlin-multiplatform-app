@@ -15,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.model.Task
 import com.teamschedulerapp.model.TaskWithUsers
+import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.screenmodel.TaskScreenModel
 import com.teamschedulerapp.ui.components.tasks.AddTaskModal
 import com.teamschedulerapp.ui.components.tasks.TaskCard
@@ -180,7 +182,17 @@ fun TasksScreen (
             screenModel = screenModel,
             onDismiss = { showAddTaskModal = false },
             onSave = { title, description, status, priority, assignedUserIds, dueDate ->
-                screenModel.createTask(title, description, status, priority, assignedUserIds, dueDate)
+                screenModel.createTask(
+                    Task(
+                        title = title,
+                        teamId = TeamManager.currentTeam.value?.id!!,
+                        description = description,
+                        status = status,
+                        priority = priority,
+                        dueDate = dueDate
+                    ),
+                    assignedUserIds,
+                )
                 showAddTaskModal = false
             }
         )
@@ -201,13 +213,15 @@ fun TasksScreen (
             onSave = { title, description, status, priority, assignedUserIds, dueDate ->
                 if (task.task.id != null) {
                     screenModel.updateTask(
-                        taskId = task.task.id,
-                        title = title,
-                        description = description,
-                        status = status,
-                        priority = priority,
-                        assignedUserIds = assignedUserIds,
-                        dueDate = dueDate
+                        Task(
+                            title = title,
+                            teamId = TeamManager.currentTeam.value?.id!!,
+                            description = description,
+                            status = status,
+                            priority = priority,
+                            dueDate = dueDate
+                        ),
+                        assignedUserIds,
                     )
                 }
 
