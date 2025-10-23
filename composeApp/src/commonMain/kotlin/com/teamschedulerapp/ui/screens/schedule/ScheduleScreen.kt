@@ -9,6 +9,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
@@ -20,10 +23,6 @@ import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.screenmodel.ScheduleScreenModel
 import com.teamschedulerapp.repositories.UserRepository
-import com.teamschedulerapp.model.TeamMemberWithUser
-import com.teamschedulerapp.ui.components.schedule.DaysOfWeekTitle
-import com.teamschedulerapp.ui.components.schedule.DayCell
-import com.teamschedulerapp.ui.components.schedule.MonthHeader
 
 import kotlinx.datetime.*
 import kotlin.time.Clock
@@ -32,9 +31,7 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
-import com.teamschedulerapp.ui.components.NoTeamsEmptyState
-import com.teamschedulerapp.utils.showErrorSnackbar
-import com.teamschedulerapp.utils.showSuccessSnackbar
+import com.teamschedulerapp.model.TeamMemberWithUser
 
 
 @OptIn(ExperimentalTime::class)
@@ -44,8 +41,6 @@ fun ScheduleScreen(
     userRepository: UserRepository,
     userId: String,
     currentUserDisplayName: String,
-    snackbarHostState: SnackbarHostState? = null,
-    onCreateTeam: () -> Unit = {}
 ) {
     // time anchors
     // today (for highlighting)
@@ -78,19 +73,15 @@ fun ScheduleScreen(
     // delete dialog trigger
     var pendingDelete by remember { mutableStateOf<Attendee?>(null) }
 
-    val currentTeam by TeamManager.currentTeam.collectAsState()
+    // repo scopes (DB related) - can be removed later when TODO: create delete delegate also in screen model and access from there
+    val scope = rememberCoroutineScope()
+    var saving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
 
-    // Show empty state if no team is selected
-    if (currentTeam == null) {
-        NoTeamsEmptyState(
-            onCreateTeam = onCreateTeam
-        )
-        return
-    }
-
-    val teamId = currentTeam?.id!!
+    val teamWithMembers by TeamManager.currentTeam.collectAsState()
+    val teamId = teamWithMembers?.id ?: return
     // wire team members
-    val teamMembers: List<TeamMemberWithUser> = currentTeam?.members ?: emptyList()
+    val teamMembers: List<TeamMemberWithUser> = teamWithMembers?.members ?: emptyList()
 
     // bring in screen model
     val screenModel = remember(availabilityRepository, userRepository, userId) {
@@ -101,27 +92,11 @@ fun ScheduleScreen(
     val isLoading by screenModel.isLoading.collectAsState()
     val error by screenModel.error.collectAsState()
 
-    val headcounts by screenModel.headcounts.collectAsState()
-
-    val scope = rememberCoroutineScope()
-
     // Load whenever team or selected date changes
-    LaunchedEffect(currentTeam?.id, selected) {
+    LaunchedEffect(teamId, selected) {
         selected?.let { date ->
-            screenModel.loadDay(teamId = currentTeam?.id!!, date = date, teamMembers = teamMembers)
+            screenModel.loadDay(teamId = teamId, date = date, teamMembers = teamMembers)
         }
-    }
-
-    // plug in headcount load
-    val visibleMonth by remember(state) { derivedStateOf { state.firstVisibleMonth.yearMonth } }
-
-    LaunchedEffect(teamId, visibleMonth) {
-        screenModel.loadHeadcountsForMonth(currentTeam?.id!!, visibleMonth)
-    }
-
-    // reset to current month on screen re-entry
-    LaunchedEffect(Unit) {
-        state.scrollToMonth(currentMonth)
     }
 
     Column(Modifier.fillMaxSize().padding(3.dp)) {
@@ -149,7 +124,7 @@ fun ScheduleScreen(
                 val isOverflow = day.position != DayPosition.MonthDate
                 val isSelected = selected == day.date
                 val isToday = day.date == today
-                val headcount = if (!isOverflow) (headcounts[day.date] ?: 0) else 0
+                val headcount = if (!isOverflow && selected == day.date) attendeesPairs.size else 0
 
                 DayCell(
                     day = day,
@@ -227,21 +202,10 @@ fun ScheduleScreen(
                 initialFrom = editTarget?.from,
                 initialTo = editTarget?.to,
                 onConfirm = { name, from, to ->
-                    scope.launch {
-                        try {
-                            val attendee = Attendee(displayName = name, from = from, to = to)
-                            screenModel.saveAttendance(currentTeam?.id!!, date, attendee, teamMembers) {
-                                // close dialog on success
-                                editTarget = null
-                                showDialogFor = null
-                            }
-                            // only one snackbar at a time
-                            snackbarHostState?.currentSnackbarData?.dismiss()
-                            snackbarHostState?.showSuccessSnackbar("Attendance saved successfully")
-                        } catch (e: Exception) {
-                            snackbarHostState?.currentSnackbarData?.dismiss()
-                            snackbarHostState?.showErrorSnackbar(e.message ?: "Failed to save attendance")
-                        }
+                    val attendee = Attendee(displayName = name, from = from, to = to)
+                    screenModel.saveAttendance(teamId, date, attendee, teamMembers) {
+                        editTarget = null
+                        showDialogFor = null
                     }
                 },
                 onDismiss = {
@@ -258,15 +222,15 @@ fun ScheduleScreen(
             onConfirmation =  {
                 val date = selected ?: return@DeleteDialog
                 scope.launch {
-                    try {
-                        screenModel.deleteAttendance(currentTeam?.id!!, userId, date, teamMembers)
-                        pendingDelete = null
-                        snackbarHostState?.showSuccessSnackbar("Attendance deleted successfully")
-                    } catch (e: Exception) {
-                        snackbarHostState?.showErrorSnackbar(
-                            e.message ?: "Failed to delete attendance"
-                        )
-                    }
+                    // delete via repo
+                    availabilityRepository.deleteAvailabilityByKeys(
+                        userId = userId,
+                        teamId = teamId,
+                        dateIso = date.toString()
+                    )
+                    // reload UI from DB
+                    screenModel.loadDay(teamId, date, teamMembers)
+                    pendingDelete = null
                 }
             },
             dialogTitle = "Remove attendance",
@@ -274,3 +238,94 @@ fun ScheduleScreen(
         )
     }
 }
+
+@Composable
+fun DayCell(
+    day: CalendarDay,
+    isOverflow: Boolean,
+    isSelected: Boolean,
+    isToday: Boolean,
+    headcount: Int,
+    onClick: () -> Unit
+) {
+    // cell bg colors
+    val bg = when {
+        isOverflow -> MaterialTheme.colorScheme.surface
+        isSelected -> MaterialTheme.colorScheme.primaryContainer
+        isToday    -> MaterialTheme.colorScheme.surfaceVariant
+        else       -> MaterialTheme.colorScheme.surface
+    }
+
+    // text color for calendar days (dim overflow)
+    val dayNumberColor = if (isOverflow)
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+    else
+        MaterialTheme.colorScheme.onSurface
+
+    Surface(
+        color = bg,
+        shape = MaterialTheme.shapes.medium,
+        tonalElevation = if (isSelected && !isOverflow) 2.dp else 0.dp,
+        modifier = Modifier.aspectRatio(1f).clickable(enabled = !isOverflow, onClick = onClick)
+    ) {
+        Box(Modifier.fillMaxSize().padding(6.dp)) {
+            Text(
+                day.date.day.toString(),
+                modifier = Modifier.align(Alignment.Center),
+                color = dayNumberColor
+            )
+            if (!isOverflow && headcount > 0) {
+                Text(
+                    headcount.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.align(Alignment.BottomEnd))
+            }
+        }
+    }
+}
+
+// setup days of week titles lib
+@Composable
+fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>, modifier: Modifier = Modifier) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        daysOfWeek.forEach { dow ->
+            Text(
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center,
+                text = dow.name.lowercase().replaceFirstChar { it.titlecase() }.take(3),
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
+    }
+}
+
+@Composable
+fun MonthHeader(state: CalendarState, modifier: Modifier = Modifier) {
+    // visible month as user swipes - reactive
+    val visibleMonth by remember(state) {
+        derivedStateOf { state.firstVisibleMonth.yearMonth }
+    }
+
+    val monthTitle = "${visibleMonth.month.name.lowercase().replaceFirstChar { it.titlecase() }} • ${visibleMonth.year}"
+
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        tonalElevation = 1.dp,
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp, bottom = 6.dp)
+    ) {
+        Row (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+            ) { Text(monthTitle, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+
