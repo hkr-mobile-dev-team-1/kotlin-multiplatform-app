@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.components
+package com.teamschedulerapp.ui.components.tasks
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

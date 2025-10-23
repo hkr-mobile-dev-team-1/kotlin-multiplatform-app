@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.components
+package com.teamschedulerapp.ui.components.tasks
 
 import com.teamschedulerapp.model.User
 import androidx.compose.foundation.layout.*
@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TaskWithUsers
+import com.teamschedulerapp.ui.components.DateRange
+import com.teamschedulerapp.ui.components.UserLabel
 import kotlinx.datetime.*
 
 @Composable

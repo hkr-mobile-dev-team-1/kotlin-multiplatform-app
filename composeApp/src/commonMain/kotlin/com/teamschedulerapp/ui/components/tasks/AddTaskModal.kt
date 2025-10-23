@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.components
+package com.teamschedulerapp.ui.components.tasks
 
 import com.teamschedulerapp.model.User
 import androidx.compose.foundation.layout.*
@@ -16,10 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.screenmodel.TaskScreenModel
+import com.teamschedulerapp.ui.components.UserLabel
 import kotlinx.datetime.*
 
 @Composable
 fun AddTaskModal(
+    screenModel: TaskScreenModel,
     onDismiss: () -> Unit,
     onSave: (
         title: String,
@@ -30,6 +33,7 @@ fun AddTaskModal(
         dueDate: String?
     ) -> Unit
 ) {
+    val teamMembers by screenModel.teamMembers.collectAsState()
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("Pending") }
@@ -40,48 +44,6 @@ fun AddTaskModal(
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
-
-    // Mock users
-    val availableUsers = remember {
-        listOf(
-            User(
-                id = "1",
-                firstName = "Elina",
-                lastName = "Rosato",
-                email = "elinarosato@gmail.com"
-            ),
-            User(
-                id = "2",
-                firstName = "Dimple",
-                lastName = "Narkhede",
-                email = "dimplenarkhede@gmail.com"
-            ),
-            User(
-                id = "3",
-                firstName = "Dario",
-                lastName = "Ostojic",
-                email = "darioostojic@gmail.com"
-            ),
-            User(
-                id = "4",
-                firstName = "Andre",
-                lastName = "Sandblom",
-                email = "andresandblom@gmail.com"
-            ),
-            User(
-                id = "5",
-                firstName = "Kate",
-                lastName = "Arvay",
-                email = "katearvay@gmail.com"
-            ),
-            User(
-                id = "6",
-                firstName = "Dani",
-                lastName = "Marcarini",
-                email = "danimarcarini@gmail.com"
-            )
-        )
-    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -292,7 +254,7 @@ fun AddTaskModal(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        availableUsers.forEach { user ->
+                        teamMembers.forEach { user ->
                             val isSelected = selectedUserIds.contains(user.id)
 
                             UserLabel(

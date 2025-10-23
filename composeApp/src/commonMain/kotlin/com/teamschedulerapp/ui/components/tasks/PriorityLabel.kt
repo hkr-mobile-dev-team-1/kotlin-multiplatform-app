@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.components
+package com.teamschedulerapp.ui.components.tasks
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
