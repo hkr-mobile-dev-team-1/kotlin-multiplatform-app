@@ -16,14 +16,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TaskWithUsers
-import com.teamschedulerapp.screenmodel.TasksScreenModel
-import com.teamschedulerapp.ui.components.AddTaskModal
-import com.teamschedulerapp.ui.components.TaskCard
-import com.teamschedulerapp.ui.components.TaskDetailModal
+import com.teamschedulerapp.screenmodel.TaskScreenModel
+import com.teamschedulerapp.ui.components.tasks.AddTaskModal
+import com.teamschedulerapp.ui.components.tasks.TaskCard
+import com.teamschedulerapp.ui.components.tasks.TaskDetailModal
 
 @Composable
 fun TasksScreen (
-    screenModel: TasksScreenModel
+    screenModel: TaskScreenModel
 ) {
     val tasksWithUsers by screenModel.tasksWithUsers.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
@@ -155,7 +155,7 @@ fun TasksScreen (
                 ),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                items(filteredTasks, key = { it.task.id }) { taskWithUsers ->
+                items(filteredTasks, key = { it.task.id!! }) { taskWithUsers ->
                     TaskCard(
                         taskWithUsers = taskWithUsers,
                         openTaskDetail = {
@@ -177,10 +177,11 @@ fun TasksScreen (
     // Add Task Modal
     if (showAddTaskModal) {
         AddTaskModal(
+            screenModel = screenModel,
             onDismiss = { showAddTaskModal = false },
             onSave = { title, description, status, priority, assignedUserIds, dueDate ->
-                // TODO: Call screenModel to create the task
-                // screenModel.createTask(title, description, status, priority, assignedUserIds)
+                screenModel.createTask(title, description, status, priority, assignedUserIds, dueDate)
+                showAddTaskModal = false
             }
         )
     }
@@ -192,11 +193,24 @@ fun TasksScreen (
             isEditMode = editMode,
             onDismiss = { selectedTask = null },
             onDelete = {
-                // TODO: Delete task
+                if (task.task.id != null) {
+                    screenModel.deleteTask(task.task.id)
+                }
                 selectedTask = null
             },
             onSave = { title, description, status, priority, assignedUserIds, dueDate ->
-                // TODO: Update task
+                if (task.task.id != null) {
+                    screenModel.updateTask(
+                        taskId = task.task.id,
+                        title = title,
+                        description = description,
+                        status = status,
+                        priority = priority,
+                        assignedUserIds = assignedUserIds,
+                        dueDate = dueDate
+                    )
+                }
+
                 selectedTask = null
             }
         )

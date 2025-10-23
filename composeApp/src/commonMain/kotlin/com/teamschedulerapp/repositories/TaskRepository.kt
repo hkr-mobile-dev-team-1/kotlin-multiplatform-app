@@ -1,6 +1,7 @@
 package com.teamschedulerapp.repositories
 
 import com.teamschedulerapp.model.Task
+import com.teamschedulerapp.model.Team
 import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -8,21 +9,23 @@ import kotlinx.coroutines.withContext
 
 class TaskRepository(private val postgrest: Postgrest) {
 
-    suspend fun createTask(task: Task): Boolean{
+    suspend fun createTask(task: Task): Task? {
         return try {
             withContext(Dispatchers.IO){
                 postgrest
                     .from("tasks")
-                    .insert(task)
+                    .insert(task){
+                        select()
+                    }
+                    .decodeSingle<Task>()
             }
-            true
-        }catch (e: Exception){
+        } catch (e: Exception){
             println("Error creating task: ${e.message}")
-            false
+            null
         }
     }
 
-    suspend fun getTaskForTeam(teamId: String): List<Task>{
+    suspend fun getTasksForTeam(teamId: String): List<Task>{
         return try {
             withContext(Dispatchers.IO){
                 postgrest
@@ -56,12 +59,14 @@ class TaskRepository(private val postgrest: Postgrest) {
         }
     }
 
-    suspend fun updateTask(taskId: String,
-                           title: String?,
-                           description: String?,
-                           status: String?,
-                           priority: String?,
-                           dueDate: String?): Boolean {
+    suspend fun updateTask(
+        taskId: String,
+       title: String?,
+       description: String?,
+       status: String?,
+       priority: String?,
+       dueDate: String?
+    ): Boolean {
         return try {
             withContext(Dispatchers.IO) {
                 postgrest
