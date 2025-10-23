@@ -10,6 +10,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 
 import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
@@ -22,6 +24,7 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
+import com.teamschedulerapp.ui.components.schedule.DeleteDialog
 
 @OptIn(ExperimentalTime::class)
 @Composable
@@ -59,6 +62,10 @@ fun ScheduleScreen() {
     var editTarget by remember { mutableStateOf<Attendee?>(null) }
     // dialog trigger
     var showDialogFor by remember { mutableStateOf<LocalDate?>(null) }
+
+    // delete dialog trigger
+    var pendingDelete by remember { mutableStateOf<Attendee?>(null) }
+
 
     Column(Modifier.fillMaxSize().padding(3.dp)) {
         TopAppBar(
@@ -122,14 +129,7 @@ fun ScheduleScreen() {
                     showDialogFor = selected
                 },
                 onDelete = { a ->
-                    val date = selected ?: return@AttendeeList
-                    attendanceByDate = attendanceByDate.toMutableMap().apply {
-                        val updated = (this[date] ?: emptyList()).filterNot {
-                            it.displayName.equals(a.displayName, ignoreCase = true)
-                        }
-                        this[date] = updated
-                    }
-
+                   pendingDelete = a
                 }
 
             )
@@ -181,6 +181,25 @@ fun ScheduleScreen() {
             )
             }
         }
+
+    pendingDelete?.let { toDelete ->
+        DeleteDialog(
+            onDismissRequest = { pendingDelete = null },
+            onConfirmation =  {
+                val date = selected
+                if (date != null) {
+                    attendanceByDate = attendanceByDate.toMutableMap().apply {
+                        val updated = (this[date] ?: emptyList())
+                            .filterNot { it.displayName.equals(toDelete.displayName, true) }
+                        this[date] = updated
+                    }
+                }
+                pendingDelete = null
+            },
+            dialogTitle = "Remove attendance",
+            dialogText = "Are you sure you want to remove your attendance?",
+        )
+    }
 }
 
 @Composable
@@ -259,7 +278,7 @@ fun MonthHeader(state: CalendarState, modifier: Modifier = Modifier) {
         shape = MaterialTheme.shapes.medium,
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 8.dp)
+            .padding(top = 10.dp, bottom = 6.dp)
     ) {
         Row (
             modifier = Modifier
