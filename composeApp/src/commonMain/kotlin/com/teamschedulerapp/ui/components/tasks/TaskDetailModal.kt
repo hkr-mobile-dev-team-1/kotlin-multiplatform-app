@@ -21,7 +21,9 @@ import com.teamschedulerapp.model.TaskWithUsers
 import com.teamschedulerapp.ui.components.DateRange
 import com.teamschedulerapp.ui.components.UserLabel
 import kotlinx.datetime.*
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun TaskDetailModal(
     task: TaskWithUsers,

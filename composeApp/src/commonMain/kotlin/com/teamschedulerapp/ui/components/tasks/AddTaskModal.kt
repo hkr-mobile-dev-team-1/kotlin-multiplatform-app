@@ -20,7 +20,9 @@ import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.screenmodel.TaskScreenModel
 import com.teamschedulerapp.ui.components.UserLabel
 import kotlinx.datetime.*
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun AddTaskModal(
     screenModel: TaskScreenModel,
