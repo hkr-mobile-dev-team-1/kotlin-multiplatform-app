@@ -6,6 +6,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
@@ -54,10 +56,21 @@ fun ScheduleScreen() {
     var attendanceByDate by remember {
         mutableStateOf<Map<LocalDate, List<Attendee>>>(emptyMap())
     }
+    var editTarget by remember { mutableStateOf<Attendee?>(null) }
     // dialog trigger
     var showDialogFor by remember { mutableStateOf<LocalDate?>(null) }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    Column(Modifier.fillMaxSize().padding(3.dp)) {
+        TopAppBar(
+            title = {
+                Text(
+                    "Schedule",
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        )
         // month header - follow swipe
         MonthHeader(state)
         // Calendar grid lib
@@ -102,7 +115,24 @@ fun ScheduleScreen() {
             // Attendee tiles for selected day
             Spacer(Modifier.height(12.dp))
             val attendees = attendanceByDate[selected] ?: emptyList()
-            AttendeeList(attendees)
+            AttendeeList(
+                attendees,
+                onEdit = { a ->
+                    editTarget = a
+                    showDialogFor = selected
+                },
+                onDelete = { a ->
+                    val date = selected ?: return@AttendeeList
+                    attendanceByDate = attendanceByDate.toMutableMap().apply {
+                        val updated = (this[date] ?: emptyList()).filterNot {
+                            it.displayName.equals(a.displayName, ignoreCase = true)
+                        }
+                        this[date] = updated
+                    }
+
+                }
+
+            )
 
             Spacer(Modifier.height(12.dp))
 
@@ -119,25 +149,38 @@ fun ScheduleScreen() {
         }
 
         // Dialog
-        val dateForDialog = showDialogFor
-        if (dateForDialog != null) {
+        showDialogFor?.let { date ->
+            //passing the prefilled for edit - FIX
+            androidx.compose.runtime.key(date to (editTarget?.displayName ?: "")) {
             AttendanceDialog(
-                date = dateForDialog,
+                date = date,
+                initialName = editTarget?.displayName,
+                initialFrom = editTarget?.from,
+                initialTo = editTarget?.to,
                 onConfirm = { name, from, to ->
                     // Upsert attendee for this date (demo uses name as unique key) - TODO: wire to DB
                     attendanceByDate = attendanceByDate.toMutableMap().apply {
-                        val list = (this[dateForDialog] ?: emptyList()).toMutableList()
+                        val list = (this[date] ?: emptyList()).toMutableList()
                         val idx =
                             list.indexOfFirst { it.displayName.equals(name, ignoreCase = true) }
-                        val newA = Attendee(displayName = name, from = from, to = to)
+                        val newA = Attendee(
+                            displayName = name,
+                            from = from,
+                            to = to
+                        )
                         if (idx >= 0) list[idx] = newA else list += newA
-                        this[dateForDialog] = list
+                        this[date] = list
                     }
+                    editTarget = null
                     showDialogFor = null
                 },
-                onDismiss = { showDialogFor = null }
+                onDismiss = {
+                    editTarget = null
+                    showDialogFor = null
+                }
             )
-    }
+            }
+        }
 }
 
 @Composable
@@ -228,4 +271,5 @@ fun MonthHeader(state: CalendarState, modifier: Modifier = Modifier) {
         }
     }
 }
+
 

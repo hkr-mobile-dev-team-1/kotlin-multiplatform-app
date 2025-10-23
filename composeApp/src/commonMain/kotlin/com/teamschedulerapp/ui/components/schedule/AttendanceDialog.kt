@@ -14,19 +14,23 @@ import kotlinx.datetime.LocalTime
 @Composable
 fun AttendanceDialog(
     date: LocalDate,
+    initialName: String? = null,
+    initialFrom: LocalTime? = null,
+    initialTo: LocalTime? = null,
     onConfirm: (name: String, from: LocalTime?, to: LocalTime?) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var fromText by remember { mutableStateOf("") }
-    var toText by remember { mutableStateOf("") }
+    var name by remember(date, initialName) { mutableStateOf(initialName.orEmpty()) }
+    var fromText by remember(date, initialFrom) { mutableStateOf(initialFrom?.formatHm().orEmpty()) }
+    var toText   by remember(date, initialTo)   { mutableStateOf(initialTo?.formatHm().orEmpty()) }
+
 
     // validation flags
-    val fromTime = remember(fromText) { parseTimeOrNull(fromText) }
-    val toTime   = remember(toText)   { parseTimeOrNull(toText) }
-    val fromErr  = fromText.isNotBlank() && fromTime == null
-    val toErr    = toText.isNotBlank() && toTime == null
-    val orderErr = (fromTime != null && toTime != null && fromTime > toTime)
+    val fromTimeParsed = remember(fromText) { parseTimeOrNull(fromText) }
+    val toTimeParsed   = remember(toText)   { parseTimeOrNull(toText) }
+    val fromErr  = fromText.isNotBlank() && fromTimeParsed == null
+    val toErr    = toText.isNotBlank() && toTimeParsed == null
+    val orderErr = (fromTimeParsed != null && toTimeParsed != null && fromTimeParsed > toTimeParsed)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -69,7 +73,7 @@ fun AttendanceDialog(
             val canConfirm = name.isNotBlank() && !fromErr && !toErr && !orderErr
             TextButton(
                 enabled = canConfirm,
-                onClick = { onConfirm(name.trim(), fromTime, toTime) }
+                onClick = { onConfirm(name.trim(), fromTimeParsed, toTimeParsed) }
             ) { Text("Confirm") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
@@ -85,3 +89,6 @@ private fun parseTimeOrNull(text: String): LocalTime? {
     val (h, min) = m.destructured
     return LocalTime(h.toInt(), min.toInt())
 }
+
+private fun LocalTime.formatHm(): String =
+    "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
