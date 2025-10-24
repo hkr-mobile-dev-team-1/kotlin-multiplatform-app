@@ -37,7 +37,7 @@ import com.teamschedulerapp.screenmodel.MainScreenModel
 import com.teamschedulerapp.ui.components.team.CreateTeamModal
 import com.teamschedulerapp.ui.components.team.TeamSelectorModal
 import com.teamschedulerapp.ui.components.team.TeamTile
-import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import com.teamschedulerapp.repositories.TaskAssignmentRepository

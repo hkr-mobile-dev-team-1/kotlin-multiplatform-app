@@ -11,7 +11,7 @@ import com.teamschedulerapp.ui.MainScreen
 import com.teamschedulerapp.ui.screens.login.LoginScreen
 import com.teamschedulerapp.ui.screens.signup.SignupScreen
 import com.teamschedulerapp.ui.screens.tasks.TasksScreen
-import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 
