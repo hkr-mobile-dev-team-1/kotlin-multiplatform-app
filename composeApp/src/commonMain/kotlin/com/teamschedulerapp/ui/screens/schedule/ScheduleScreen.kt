@@ -22,7 +22,6 @@ import kotlin.time.ExperimentalTime
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
 import com.teamschedulerapp.ui.components.schedule.DeleteDialog
-
 @OptIn(ExperimentalTime::class)
 @Composable
 fun ScheduleScreen() {
