@@ -18,8 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TaskWithUsers
+import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.ui.components.DateRange
 import com.teamschedulerapp.ui.components.UserLabel
+import com.teamschedulerapp.utils.DateUtils.formatDateForDisplay
 import kotlinx.datetime.*
 import kotlin.time.ExperimentalTime
 
@@ -44,54 +46,14 @@ fun TaskDetailModal(
     var selectedStatus by remember { mutableStateOf(task.task.status) }
     var selectedPriority by remember { mutableStateOf(task.task.priority) }
     var selectedUserIds by remember { mutableStateOf(task.assignedUsers.map { it -> it.id }) }
-    var selectedDueDate by remember { mutableStateOf<String?>(task.task.dueDate ?: "") }
+    var selectedDueDate by remember { mutableStateOf<String?>(task.task.dueDate) }
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(isEditMode) }
 
-    // Mock users
-    val availableUsers = remember {
-        listOf(
-            User(
-                id = "1",
-                firstName = "Elina",
-                lastName = "Rosato",
-                email = "elinarosato@gmail.com"
-            ),
-            User(
-                id = "2",
-                firstName = "Dimple",
-                lastName = "Narkhede",
-                email = "dimplenarkhede@gmail.com"
-            ),
-            User(
-                id = "3",
-                firstName = "Dario",
-                lastName = "Ostojic",
-                email = "darioostojic@gmail.com"
-            ),
-            User(
-                id = "4",
-                firstName = "Andre",
-                lastName = "Sandblom",
-                email = "andresandblom@gmail.com"
-            ),
-            User(
-                id = "5",
-                firstName = "Kate",
-                lastName = "Arvay",
-                email = "katearvay@gmail.com"
-            ),
-            User(
-                id = "6",
-                firstName = "Dani",
-                lastName = "Marcarini",
-                email = "danimarcarini@gmail.com"
-            )
-        )
-    }
+    val currentTeamMembers by TeamManager.currentTeamMembers.collectAsState()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -187,10 +149,10 @@ fun TaskDetailModal(
                             containerColor = Color.White
                         ) {
                             listOf<String>(
-                                "Pending",
-                                "In progress",
-                                "Blocked",
-                                "Done"
+                                "pending",
+                                "in progress",
+                                "blocked",
+                                "done"
                             ).forEach { status ->
                                 DropdownMenuItem(
                                     text = { StatusLabel(status = status) },
@@ -233,7 +195,7 @@ fun TaskDetailModal(
                             onDismissRequest = { priorityExpanded = false },
                             containerColor = Color.White
                         ) {
-                            listOf<String>("High", "Medium", "Low").forEach { priority ->
+                            listOf<String>("high", "medium", "low").forEach { priority ->
                                 DropdownMenuItem(
                                     text = { PriorityLabel(priority = priority) },
                                     onClick = {
@@ -247,13 +209,7 @@ fun TaskDetailModal(
 
                     // Due Date Field
                     OutlinedTextField(
-                        value = selectedDueDate?.let { dateString ->
-                            val date = LocalDate.parse(dateString)
-                            "${
-                                date.month.name.lowercase().replaceFirstChar { c -> c.uppercase() }
-                                    .take(3)
-                            } ${date.dayOfMonth}, ${date.year}"
-                        } ?: "",
+                        value = formatDateForDisplay(selectedDueDate),
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Due Date") },
@@ -310,7 +266,7 @@ fun TaskDetailModal(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            availableUsers.forEach { user ->
+                            currentTeamMembers?.forEach { user ->
                                 val isSelected = selectedUserIds.contains(user.id)
 
                                 UserLabel(

@@ -27,6 +27,11 @@ class MainScreenModel(
 
     init {
         loadUserTeams()
+        screenModelScope.launch {
+            TeamManager.currentTeam.collect { team ->
+                team?.let { getTeamMembers(it.id!!) }
+            }
+        }
     }
 
     fun loadUserTeams() {

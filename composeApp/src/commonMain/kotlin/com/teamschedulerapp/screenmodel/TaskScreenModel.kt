@@ -45,8 +45,12 @@ class TaskScreenModel(
         try {
             val tasks = taskRepository.getTasksForTeam(teamId)
 
-            val tasksWithUsers = tasks.map { task ->
-                val taskId = task.id ?: return
+            val tasksWithUsers = tasks.mapNotNull { task ->
+                val taskId = task.id
+                if (taskId == null) {
+                    println("Warning: Task has no ID, skipping: $task")
+                    return@mapNotNull null
+                }
                 val assignments = taskAssignmentRepository.getAssignmentsForTask(taskId)
                 val users = assignments.mapNotNull { assignment ->
                     userRepository.getUserById(assignment.userId)
@@ -66,6 +70,8 @@ class TaskScreenModel(
     fun createTask(task: Task, assignedUserIds: List<String>) {
         screenModelScope.launch {
             try {
+                println("Created task with $task ")
+
                 val createdTask = taskRepository.createTask(
                     Task(
                         teamId = task.teamId,
@@ -78,6 +84,7 @@ class TaskScreenModel(
                 )
 
                 if (createdTask != null && createdTask.id != null) {
+                    println("Created Task: $createdTask")
                     val taskId = createdTask.id
 
                     assignedUserIds.forEach { userId ->

@@ -14,9 +14,10 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun PriorityLabel(priority: String) {
-    val (backgroundColor, textColor) = when (priority) {
-        "High" -> Color(0xFFf3d4fc) to Color(0xFFa832cb)
-        "Medium" -> Color(0xFFd1f6f0) to Color(0xFF00aca3)
+    val (backgroundColor, textColor) = when (priority.lowercase()) {
+        "high" -> Color(0xFFf3d4fc) to Color(0xFFa832cb)
+        "medium" -> Color(0xFFd1f6f0) to Color(0xFF00aca3)
+        "low" -> Color(0xFFd9d6fd) to Color(0xFF4231f3)
         else -> Color(0xFFd9d6fd) to Color(0xFF4231f3)
     }
     Surface(
@@ -35,7 +36,7 @@ fun PriorityLabel(priority: String) {
                 modifier = Modifier.size(14.dp)
             )
             Text(
-                text = priority,
+                text = priority.replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = textColor

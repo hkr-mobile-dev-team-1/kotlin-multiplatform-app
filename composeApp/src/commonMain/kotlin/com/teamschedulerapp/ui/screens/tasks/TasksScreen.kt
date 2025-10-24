@@ -168,7 +168,12 @@ fun TasksScreen (
                             selectedTask = taskWithUsers
                             editMode = true
                         },
-                        onDeleteClick = { /* Handle delete */ }
+                        onDeleteClick = {
+                            if (taskWithUsers.task.id != null) {
+                                screenModel.deleteTask(taskWithUsers.task.id)
+                            }
+                            selectedTask = null
+                        }
 
                     )
                 }
@@ -193,6 +198,8 @@ fun TasksScreen (
                     ),
                     assignedUserIds,
                 )
+                println("Created task with $status and $priority")
+
                 showAddTaskModal = false
             }
         )
@@ -214,12 +221,13 @@ fun TasksScreen (
                 if (task.task.id != null) {
                     screenModel.updateTask(
                         Task(
+                            id = task.task.id,
                             title = title,
-                            teamId = TeamManager.currentTeam.value?.id!!,
                             description = description,
                             status = status,
                             priority = priority,
-                            dueDate = dueDate
+                            dueDate = dueDate,
+                            teamId = ""
                         ),
                         assignedUserIds,
                     )

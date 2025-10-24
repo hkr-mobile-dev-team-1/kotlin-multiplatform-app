@@ -20,6 +20,7 @@ import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.screenmodel.TaskScreenModel
 import com.teamschedulerapp.ui.components.UserLabel
 import kotlinx.datetime.*
+import kotlin.time.Instant
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -39,8 +40,8 @@ fun AddTaskModal(
     val teamMembers by TeamManager.currentTeamMembers.collectAsState()
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var selectedStatus by remember { mutableStateOf("Pending") }
-    var selectedPriority by remember { mutableStateOf("Medium") }
+    var selectedStatus by remember { mutableStateOf("pending") }
+    var selectedPriority by remember { mutableStateOf<String>("medium") }
     var selectedUserIds by remember { mutableStateOf(emptyList<String>()) }
     var selectedDueDate by remember { mutableStateOf<String?>(null) }
 
@@ -141,7 +142,7 @@ fun AddTaskModal(
                         onDismissRequest = { statusExpanded = false },
                         containerColor = Color.White
                     ) {
-                       listOf<String>("Pending", "In progress", "Blocked", "Done").forEach { status ->
+                       listOf<String>("pending", "in progress", "blocked", "done").forEach { status ->
                             DropdownMenuItem(
                                 text = { StatusLabel(status = status) },
                                 onClick = {
@@ -183,7 +184,7 @@ fun AddTaskModal(
                         onDismissRequest = { priorityExpanded = false },
                         containerColor = Color.White
                     ) {
-                        listOf<String>("High", "Medium", "Low").forEach { priority ->
+                        listOf<String>("high", "medium", "low").forEach { priority ->
                             DropdownMenuItem(
                                 text = { PriorityLabel(priority = priority) },
                                 onClick = {
