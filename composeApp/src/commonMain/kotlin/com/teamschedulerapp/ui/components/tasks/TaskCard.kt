@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.components
+package com.teamschedulerapp.ui.components.tasks
 
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.*
@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TaskWithUsers
+import com.teamschedulerapp.ui.components.DateRange
 
 @Composable
 fun TaskCard(

@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.components
+package com.teamschedulerapp.ui.components.tasks
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,10 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.User
-import kotlin.random.Random
+import com.teamschedulerapp.ui.components.UserTile
 
 @Composable
 fun AssigneesTiles (assignedUsers: List<User>) {
