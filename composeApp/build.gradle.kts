@@ -60,12 +60,6 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
             implementation(libs.compose.material.icons.extended)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
@@ -73,8 +67,7 @@ kotlin {
             implementation(libs.bundles.voyager.common)
             implementation(libs.bundles.supabase.common)
             implementation(libs.bundles.ktor.common)
-            implementation("com.kizitonwose.calendar:compose-multiplatform:2.9.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+            implementation(libs.kizitonwoseCalendar)
         }
         iosMain.dependencies{
             implementation(libs.ktor.client.darwin)

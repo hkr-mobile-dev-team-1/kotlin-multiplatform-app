@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.components
+package com.teamschedulerapp.ui.components.tasks
 
 import com.teamschedulerapp.model.User
 import androidx.compose.foundation.layout.*
@@ -16,12 +16,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.navigation.TeamManager
+import com.teamschedulerapp.screenmodel.TaskScreenModel
+import com.teamschedulerapp.ui.components.UserLabel
 import kotlinx.datetime.*
+import kotlin.time.Instant
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 @Composable
 fun AddTaskModal(
+    screenModel: TaskScreenModel,
     onDismiss: () -> Unit,
     onSave: (
         title: String,
@@ -32,58 +37,17 @@ fun AddTaskModal(
         dueDate: String?
     ) -> Unit
 ) {
+    val teamMembers by TeamManager.currentTeamMembers.collectAsState()
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var selectedStatus by remember { mutableStateOf("Pending") }
-    var selectedPriority by remember { mutableStateOf("Medium") }
+    var selectedStatus by remember { mutableStateOf("pending") }
+    var selectedPriority by remember { mutableStateOf<String>("medium") }
     var selectedUserIds by remember { mutableStateOf(emptyList<String>()) }
     var selectedDueDate by remember { mutableStateOf<String?>(null) }
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
-
-    // Mock users
-    val availableUsers = remember {
-        listOf(
-            User(
-                id = "1",
-                firstName = "Elina",
-                lastName = "Rosato",
-                email = "elinarosato@gmail.com"
-            ),
-            User(
-                id = "2",
-                firstName = "Dimple",
-                lastName = "Narkhede",
-                email = "dimplenarkhede@gmail.com"
-            ),
-            User(
-                id = "3",
-                firstName = "Dario",
-                lastName = "Ostojic",
-                email = "darioostojic@gmail.com"
-            ),
-            User(
-                id = "4",
-                firstName = "Andre",
-                lastName = "Sandblom",
-                email = "andresandblom@gmail.com"
-            ),
-            User(
-                id = "5",
-                firstName = "Kate",
-                lastName = "Arvay",
-                email = "katearvay@gmail.com"
-            ),
-            User(
-                id = "6",
-                firstName = "Dani",
-                lastName = "Marcarini",
-                email = "danimarcarini@gmail.com"
-            )
-        )
-    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -178,7 +142,7 @@ fun AddTaskModal(
                         onDismissRequest = { statusExpanded = false },
                         containerColor = Color.White
                     ) {
-                       listOf<String>("Pending", "In progress", "Blocked", "Done").forEach { status ->
+                       listOf<String>("pending", "in progress", "blocked", "done").forEach { status ->
                             DropdownMenuItem(
                                 text = { StatusLabel(status = status) },
                                 onClick = {
@@ -220,7 +184,7 @@ fun AddTaskModal(
                         onDismissRequest = { priorityExpanded = false },
                         containerColor = Color.White
                     ) {
-                        listOf<String>("High", "Medium", "Low").forEach { priority ->
+                        listOf<String>("high", "medium", "low").forEach { priority ->
                             DropdownMenuItem(
                                 text = { PriorityLabel(priority = priority) },
                                 onClick = {
@@ -294,7 +258,7 @@ fun AddTaskModal(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        availableUsers.forEach { user ->
+                        teamMembers?.forEach { user ->
                             val isSelected = selectedUserIds.contains(user.id)
 
                             UserLabel(

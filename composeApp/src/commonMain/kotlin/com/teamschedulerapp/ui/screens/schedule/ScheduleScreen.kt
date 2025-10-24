@@ -14,8 +14,8 @@ import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
 import com.teamschedulerapp.ui.components.schedule.AttendeeList
 
-import kotlin.time.Clock
 import kotlinx.datetime.*
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 // lib
@@ -30,8 +30,7 @@ fun ScheduleScreen() {
     // today (for highlighting)
     val today = Clock.System.now()
         .toLocalDateTime(TimeZone.currentSystemDefault())
-        .let { LocalDate(it.year, it.month.number, it.day) }
-
+        .date
     // current month - which showing first
     val currentMonth = remember { YearMonth.now() }
 

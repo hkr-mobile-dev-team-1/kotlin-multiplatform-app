@@ -15,13 +15,13 @@ junit = "4.13.2"
 kotlin = "2.2.20"
 navigation-compose = "2.7.0-alpha07"
 compose-material-icons = "1.6.11"
-datetime = "0.6.1"
+datetime = "0.7.1"
 kotlinx-coroutines = "1.10.2"
-serialization-json = "1.6.0"
+serialization-json = "1.7.3"
 voyager = "1.1.0-beta03"
 buildKonfig = "0.17.1"
-supabase = "2.5.3"
-ktor = "2.3.7"
+supabase = "3.2.3"
+ktor = "3.2.2"
 
 [libraries]
 kizitonwoseCalendar= { module = "com.kizitonwose.calendar:compose-multiplatform", version.ref = "kizitonwoseCalendarVersion" }
@@ -55,7 +55,7 @@ supabase-composeAuth = { module = "io.github.jan-tennert.supabase:compose-auth",
 supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase"}
 supabase-realtime-kt = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "supabase"}
 supabase-storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "supabase"}
-supabase-gotrue-kt = { module = "io.github.jan-tennert.supabase:gotrue-kt", version.ref = "supabase"}
+supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabase"}
 
 # Ktor client
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor"}
@@ -86,7 +86,7 @@ supabase-common = [
     "supabase-postgrest-kt",
     "supabase-realtime-kt",
     "supabase-storage-kt",
-    "supabase-gotrue-kt"
+    "supabase-auth-kt"
 ]
 
 ktor-common = [

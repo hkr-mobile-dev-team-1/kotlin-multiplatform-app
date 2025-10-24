@@ -11,19 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.datetime.LocalDate
-
-fun formatDueDate(dueDateString: String): String {
-    val localDate = LocalDate.parse(dueDateString)
-    val month = localDate.month.name
-        .lowercase()
-        .replaceFirstChar { it.uppercase() }
-        .take(3)
-    val day = localDate.dayOfMonth
-    val year = localDate.year
-
-    return "$month $day, $year"
-}
+import com.teamschedulerapp.utils.DateUtils.formatDateForDisplay
 
 @Composable
 fun DateRange(
@@ -49,7 +37,7 @@ fun DateRange(
             )
         } else if (startDate != null && endDate != null) {
             Text(
-                text = formatDueDate(startDate),
+                text = formatDateForDisplay(startDate),
                 style = if (big) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -60,7 +48,7 @@ fun DateRange(
                 modifier = Modifier.size(if (big) 20.dp else 14.dp)
             )
             Text(
-                text = formatDueDate(endDate),
+                text = formatDateForDisplay(endDate),
                 style = if (big) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -71,7 +59,7 @@ fun DateRange(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = formatDueDate(endDate),
+                text = formatDateForDisplay(endDate),
                 style = if (big) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -82,7 +70,7 @@ fun DateRange(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = formatDueDate(startDate),
+                text = formatDateForDisplay(startDate),
                 style = if (big) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

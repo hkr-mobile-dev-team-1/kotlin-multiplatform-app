@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.components
+package com.teamschedulerapp.ui.components.tasks
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,10 +16,11 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun StatusLabel(status: String) {
-    val (backgroundColor, textColor) = when (status) {
-        "Pending" -> Color(0xFFf2f2f2) to Color(0xFF797979)
-        "In progress" -> Color(0xFFffeecf) to Color(0xFFd98d00)
-        "Done" -> Color(0xFFcffcdb) to Color(0xFF189f3c)
+    val (backgroundColor, textColor) = when (status.lowercase()) {
+        "pending" -> Color(0xFFf2f2f2) to Color(0xFF797979)
+        "in progress" -> Color(0xFFffeecf) to Color(0xFFd98d00)
+        "done" -> Color(0xFFcffcdb) to Color(0xFF189f3c)
+        "blocked" -> Color(0xFFf8d9d6) to Color(0xFFcb2050)
         else -> Color(0xFFf8d9d6) to Color(0xFFcb2050)
     }
 
@@ -39,7 +40,7 @@ fun StatusLabel(status: String) {
                 modifier = Modifier.size(8.dp)
             )
             Text(
-                text = status,
+                text = status.replaceFirstChar { it.uppercase() },
                 color = textColor,
                 style = MaterialTheme.typography.labelSmall
             )
