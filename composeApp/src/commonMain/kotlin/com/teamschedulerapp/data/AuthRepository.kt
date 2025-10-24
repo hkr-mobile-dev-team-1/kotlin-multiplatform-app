@@ -71,4 +71,13 @@ class AuthRepository(private val supabase: SupabaseClient) {
                 Result.failure(e)
             }
         }
+
+    suspend fun logoutUser(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            supabase.auth.signOut()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
