@@ -2,6 +2,8 @@ package com.teamschedulerapp.ui.components.team
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,114 +25,128 @@ fun TeamSelectorModal(
     onCreateTeam: () -> Unit,
     onDismiss: () -> Unit
 ) {
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        containerColor = Color.White
+        containerColor = Color.White,
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
         ) {
+            // Title
             Text(
                 text = "Select Team",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
             )
 
-            // Team list
-            teams.forEach { team ->
-                val isSelected = team.id == currentTeam?.id
+            // Scrollable team list
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 250.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                items(teams) { team ->
+                    val isSelected = team.id == currentTeam?.id
 
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onTeamSelected(team) }
-                        .padding(vertical = 4.dp),
-                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                    else Color.Transparent,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Row(
+                    Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .clickable { onTeamSelected(team) }
+                            .padding(vertical = 4.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                        else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        // Left side: TeamTile and name
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TeamTile(team)
+                            // Left side: TeamTile and name
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                TeamTile(team)
 
-                            Column {
-                                Text(
-                                    text = team.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                team.description?.let {
+                                Column {
                                     Text(
-                                        text = it,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = team.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
                                     )
+                                    team.description?.let {
+                                        Text(
+                                            text = it,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        // Right side: Check icon
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Selected",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            // Right side: Check icon
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Create New Team Button
-            Button(
-                onClick = onCreateTeam,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Create New Team")
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Manage Teams Link
-            Text(
-                text = "Manage teams",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
+            // Fixed bottom section
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        // TODO: Navigate to settings screen
-                        onDismiss()
-                    }
-                    .padding(vertical = 8.dp),
-                fontWeight = FontWeight.Medium
-            )
+                    .padding(16.dp)
+            ) {
+                // Create New Team Button
+                Button(
+                    onClick = onCreateTeam,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Create New Team")
+                }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Manage Teams Link
+                Text(
+                    text = "Manage teams",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            // TODO: Navigate to settings screen
+                            onDismiss()
+                        }
+                        .padding(vertical = 8.dp),
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
