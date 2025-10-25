@@ -142,19 +142,28 @@ fun SignupScreen(
 
             Button(
                 onClick = {
-                    scope.launch {
-                        isLoading = true
-                        error = null
-                        successMessage = null
-                        val result = SupabaseClientManager.authRepository.registerUser(email, password, firstName, lastName)
-                        if (result.isSuccess) {
-                            successMessage = "Registration Successful!"
-                            delay(1500)
-                            onSignupSuccess()
-                        } else {
-                            error = result.exceptionOrNull()?.message
+                    if (password.length < 8) {
+                        error = "Password must be at least 8 characters long."
+                    } else {
+                        scope.launch {
+                            isLoading = true
+                            error = null
+                            successMessage = null
+                            val result = SupabaseClientManager.authRepository.registerUser(
+                                email,
+                                password,
+                                firstName,
+                                lastName
+                            )
+                            if (result.isSuccess) {
+                                successMessage = "Registration Successful!"
+                                delay(1500)
+                                onSignupSuccess()
+                            } else {
+                                error = result.exceptionOrNull()?.message
+                            }
+                            isLoading = false
                         }
-                        isLoading = false
                     }
                 },
                 modifier = Modifier
