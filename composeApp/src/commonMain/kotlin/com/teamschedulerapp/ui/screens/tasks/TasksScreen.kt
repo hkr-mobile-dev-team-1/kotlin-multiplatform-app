@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.model.Task
 import com.teamschedulerapp.model.TaskWithUsers
 import com.teamschedulerapp.navigation.TeamManager
@@ -22,6 +23,7 @@ import com.teamschedulerapp.screenmodel.TaskScreenModel
 import com.teamschedulerapp.ui.components.tasks.AddTaskModal
 import com.teamschedulerapp.ui.components.tasks.TaskCard
 import com.teamschedulerapp.ui.components.tasks.TaskDetailModal
+import io.github.jan.supabase.auth.auth
 
 @Composable
 fun TasksScreen (
@@ -29,7 +31,7 @@ fun TasksScreen (
 ) {
     val tasksWithUsers by screenModel.tasksWithUsers.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
-    val currentUserId = "1"
+    val currentUserId = SupabaseClientManager.client.auth.currentUserOrNull()?.id
     var showAddTaskModal by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<TaskWithUsers?>(null) }
     var editMode by remember { mutableStateOf(false) }
