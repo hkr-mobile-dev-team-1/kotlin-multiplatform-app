@@ -13,14 +13,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
+
 import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
 import com.teamschedulerapp.ui.components.schedule.AttendeeList
 import com.teamschedulerapp.ui.components.schedule.DeleteDialog
 import com.teamschedulerapp.repositories.AvailabilityRepository
 import com.teamschedulerapp.navigation.TeamManager
+import com.teamschedulerapp.domain.toAvailability
 import com.teamschedulerapp.model.Attendee
-import com.teamschedulerapp.screenmodel.ScheduleScreenModel
-import com.teamschedulerapp.repositories.UserRepository
 
 import kotlinx.datetime.*
 import kotlin.time.Clock
@@ -29,14 +29,12 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
-import com.teamschedulerapp.model.TeamMemberWithUser
 
 
 @OptIn(ExperimentalTime::class)
 @Composable
 fun ScheduleScreen(
     availabilityRepository: AvailabilityRepository,
-    userRepository: UserRepository,
     userId: String,
     currentUserDisplayName: String,
 ) {
@@ -65,37 +63,28 @@ fun ScheduleScreen(
 
     // UI events - dialog, attendance edit
     var selected by remember { mutableStateOf<LocalDate?>(null) }
+    // attendance state
+    var attendanceByDate by remember {
+        mutableStateOf<Map<LocalDate, List<Attendee>>>(emptyMap())
+    }
     var editTarget by remember { mutableStateOf<Attendee?>(null) }
     // dialog trigger
     var showDialogFor by remember { mutableStateOf<LocalDate?>(null) }
+
     // delete dialog trigger
     var pendingDelete by remember { mutableStateOf<Attendee?>(null) }
 
-    // repo scopes (DB related) - can be removed later when TODO: create delete delegate also in screen model and access from there
+
+    // repo scopes (DB related)
     val scope = rememberCoroutineScope()
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
 
-    val teamWithMembers by TeamManager.currentTeam.collectAsState()
-    val teamId = teamWithMembers?.id ?: return
-    // wire team members
-    val teamMembers: List<TeamMemberWithUser> = teamWithMembers?.members ?: emptyList()
+    val team by TeamManager.currentTeam.collectAsState()
+    val teamId = team?.id ?: return
+    // members related to a specific manager (later for reading)
+    val members by TeamManager.currentTeamMembers.collectAsState()
 
-    // bring in screen model
-    val screenModel = remember(availabilityRepository, userRepository, userId) {
-        ScheduleScreenModel(availabilityRepository, userRepository, userId)
-    }
-    // pair attendee + owner
-    val attendeesPairs by screenModel.attendeesForDay.collectAsState()
-    val isLoading by screenModel.isLoading.collectAsState()
-    val error by screenModel.error.collectAsState()
-
-    // Load whenever team or selected date changes
-    LaunchedEffect(teamId, selected) {
-        selected?.let { date ->
-            screenModel.loadDay(teamId = teamId, date = date, teamMembers = teamMembers)
-        }
-    }
 
     Column(Modifier.fillMaxSize().padding(3.dp)) {
         TopAppBar(
@@ -122,7 +111,7 @@ fun ScheduleScreen(
                 val isOverflow = day.position != DayPosition.MonthDate
                 val isSelected = selected == day.date
                 val isToday = day.date == today
-                val headcount = if (!isOverflow && selected == day.date) attendeesPairs.size else 0
+                val headcount = attendanceByDate[day.date]?.size ?: 0
 
                 DayCell(
                     day = day,
@@ -149,31 +138,19 @@ fun ScheduleScreen(
         }
         // show attendees and button when day is selected
         if (selected != null) {
-            // Attendee tiles for selected day (wire owners to get "editability")
+            // Attendee tiles for selected day
             Spacer(Modifier.height(12.dp))
-            val attendees = attendeesPairs.map { it.first }
-            val owners    = attendeesPairs.map { it.second }
+            val attendees = attendanceByDate[selected] ?: emptyList()
             AttendeeList(
-                attendees = attendees,
-                canEdit = { a ->
-                    val idx = attendees.indexOf(a)
-                    owners.getOrNull(idx) == userId
-                },
+                attendees,
                 onEdit = { a ->
-                    val idx = attendees.indexOf(a)
-                    if (owners.getOrNull(idx) == userId) {
-                        editTarget = a
-                        showDialogFor = selected
-                    }
+                    editTarget = a
+                    showDialogFor = selected
                 },
                 onDelete = { a ->
-                    val idx = attendees.indexOf(a)
-                    if (owners.getOrNull(idx) == userId) {
-                        pendingDelete = a
-                    }
-                },
-                // scrollable
-                modifier = Modifier.weight(1f)
+                   pendingDelete = a
+                }
+
             )
 
             Spacer(Modifier.height(12.dp))
@@ -192,18 +169,51 @@ fun ScheduleScreen(
 
         // Dialog
         showDialogFor?.let { date ->
-            //collecting data, passing the prefilled first last name
+            //passing the prefilled for edit - FIX
             androidx.compose.runtime.key(date to (editTarget?.displayName ?: "")) {
             AttendanceDialog(
                 date = date,
-                initialName = currentUserDisplayName,
+                initialName = editTarget?.displayName,
                 initialFrom = editTarget?.from,
                 initialTo = editTarget?.to,
                 onConfirm = { name, from, to ->
-                    val attendee = Attendee(displayName = name, from = from, to = to)
-                    screenModel.saveAttendance(teamId, date, attendee, teamMembers) {
-                        editTarget = null
-                        showDialogFor = null
+                    saving = true
+                    saveError = null
+                    scope.launch {
+                        try {
+                            // build UI model Attendee
+                            val attendee = Attendee(displayName = name, from = from, to = to)
+                            // map DB row
+                            val row = attendee.toAvailability(
+                                userId = userId,
+                                teamId = teamId,
+                                date   = date
+                            )
+                            // upsert to DB
+                            val ok = availabilityRepository.setAvailability(row)
+                            if (!ok) throw IllegalStateException("Insert/upsert failed")
+                            // local UI state mirrors change
+                            attendanceByDate = attendanceByDate.toMutableMap().apply {
+                            val list = (this[date] ?: emptyList()).toMutableList()
+                            val idx =
+                                list.indexOfFirst { it.displayName.equals(name, ignoreCase = true) }
+                            val newA = Attendee(
+                                displayName = name,
+                                from = from,
+                                to = to
+                            )
+                            if (idx >= 0) list[idx] = newA else list += newA
+                            this[date] = list
+                        }
+                            // bye bye dialog
+                            editTarget = null
+                            showDialogFor = null
+
+                        } catch (t: Throwable) {
+                            saveError = t.message ?: "Unknown error"
+                        } finally {
+                            saving = false
+                        }
                     }
                 },
                 onDismiss = {
@@ -218,18 +228,15 @@ fun ScheduleScreen(
         DeleteDialog(
             onDismissRequest = { pendingDelete = null },
             onConfirmation =  {
-                val date = selected ?: return@DeleteDialog
-                scope.launch {
-                    // delete via repo
-                    availabilityRepository.deleteAvailabilityByKeys(
-                        userId = userId,
-                        teamId = teamId,
-                        dateIso = date.toString()
-                    )
-                    // reload UI from DB
-                    screenModel.loadDay(teamId, date, teamMembers)
-                    pendingDelete = null
+                val date = selected
+                if (date != null) {
+                    attendanceByDate = attendanceByDate.toMutableMap().apply {
+                        val updated = (this[date] ?: emptyList())
+                            .filterNot { it.displayName.equals(toDelete.displayName, true) }
+                        this[date] = updated
+                    }
                 }
+                pendingDelete = null
             },
             dialogTitle = "Remove attendance",
             dialogText = "Are you sure you want to remove your attendance?",
