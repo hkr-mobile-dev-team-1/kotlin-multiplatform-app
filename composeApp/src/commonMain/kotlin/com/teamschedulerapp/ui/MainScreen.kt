@@ -9,9 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.ViewAgenda
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import cafe.adriel.voyager.navigator.tab.*
 import com.teamschedulerapp.model.User
@@ -40,18 +40,20 @@ import com.teamschedulerapp.ui.components.team.TeamTile
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import cafe.adriel.voyager.core.model.rememberScreenModel
+import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.repositories.TaskAssignmentRepository
 import com.teamschedulerapp.repositories.TaskRepository
 import com.teamschedulerapp.repositories.TeamMemberRepository
 import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
+import com.teamschedulerapp.ui.screens.analytics.AnalyticsScreen
 
 object ScheduleTab : Tab {
     override val options: TabOptions
         @Composable
         get() {
             val title = "Schedule"
-            val icon: Painter? = rememberVectorPainter(Icons.Default.DateRange)
+            val icon: Painter? = rememberVectorPainter(Icons.Rounded.CalendarMonth)
             return remember { TabOptions(index = 0u, title = title, icon = icon) }
         }
 
@@ -66,15 +68,14 @@ object TasksTab : Tab {
         @Composable
         get() {
             val title = "Tasks"
-            val icon = rememberVectorPainter(Icons.Default.CheckCircle)
+            val icon = rememberVectorPainter(Icons.Rounded.ViewAgenda)
             return remember { TabOptions(index = 1u, title = title, icon = icon) }
         }
 
     @Composable
     override fun Content() {
-        val supabase = com.teamschedulerapp.data.SupabaseClientManager.client
+        val supabase = SupabaseClientManager.client
         val taskRepository = remember { TaskRepository(supabase.postgrest) }
-        val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest) }
         val userRepository = remember { UserRepository(supabase.postgrest) }
         val taskAssignmentRepository = remember { TaskAssignmentRepository(supabase.postgrest) }
         val screenModel = rememberScreenModel {
@@ -88,12 +89,27 @@ object TasksTab : Tab {
     }
 }
 
+object AnalyticsTab : Tab {
+    override val options: TabOptions
+        @Composable
+        get() {
+            val title = "Analytics"
+            val icon = rememberVectorPainter(Icons.Rounded.BarChart)
+            return remember { TabOptions(index = 2u, title = title, icon = icon) }
+        }
+
+    @Composable
+    override fun Content() {
+        AnalyticsScreen()
+    }
+}
+
 object SettingsTab : Tab {
     override val options: TabOptions
         @Composable
         get() {
             val title = "Settings"
-            val icon = rememberVectorPainter(Icons.Default.Settings)
+            val icon = rememberVectorPainter(Icons.Rounded.Settings)
             return remember { TabOptions(index = 2u, title = title, icon = icon) }
         }
 
@@ -120,7 +136,7 @@ fun MainScreen() {
     var showTeamSelector by remember { mutableStateOf(false) }
     var showCreateTeamModal by remember { mutableStateOf(false) }
 
-    val supabase = com.teamschedulerapp.data.SupabaseClientManager.client
+    val supabase = SupabaseClientManager.client
     val userId = supabase.auth.currentUserOrNull()?.id ?: return
     val teamRepository = remember { TeamRepository(supabase.postgrest) }
     val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest) }
@@ -162,6 +178,7 @@ fun MainScreen() {
                 NavigationBar {
                     TabNavigationItem(ScheduleTab)
                     TabNavigationItem(TasksTab)
+                    TabNavigationItem(AnalyticsTab)
                     TabNavigationItem(SettingsTab)
                 }
             }
@@ -207,8 +224,12 @@ private fun RowScope.TabNavigationItem(tab: Tab) {
         selected = tabNavigator.current == tab,
         onClick = { tabNavigator.current = tab },
         icon = {
-            val icon = tab.options.icon as? ImageVector
-            icon?.let { Icon(it, contentDescription = tab.options.title) }
+            tab.options.icon?.let { painter ->
+                Icon(
+                    painter = painter,
+                    contentDescription = tab.options.title
+                )
+            }
         },
         label = { Text(tab.options.title) }
     )
