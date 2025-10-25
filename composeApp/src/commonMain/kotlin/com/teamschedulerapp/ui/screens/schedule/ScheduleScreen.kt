@@ -10,9 +10,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-import com.teamschedulerapp.model.Attendee
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+
+
 import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
 import com.teamschedulerapp.ui.components.schedule.AttendeeList
+import com.teamschedulerapp.ui.components.schedule.DeleteDialog
+import com.teamschedulerapp.repositories.AvailabilityRepository
+import com.teamschedulerapp.navigation.TeamManager
+import com.teamschedulerapp.domain.toAvailability
+import com.teamschedulerapp.model.Attendee
 
 import kotlinx.datetime.*
 import kotlin.time.Clock
@@ -21,10 +29,15 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
-import com.teamschedulerapp.ui.components.schedule.DeleteDialog
+
+
 @OptIn(ExperimentalTime::class)
 @Composable
-fun ScheduleScreen() {
+fun ScheduleScreen(
+    availabilityRepository: AvailabilityRepository,
+    userId: String,
+    currentUserDisplayName: String,
+) {
     // time anchors
     // today (for highlighting)
     val today = Clock.System.now()
@@ -60,6 +73,17 @@ fun ScheduleScreen() {
 
     // delete dialog trigger
     var pendingDelete by remember { mutableStateOf<Attendee?>(null) }
+
+
+    // repo scopes (DB related)
+    val scope = rememberCoroutineScope()
+    var saving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
+
+    val team by TeamManager.currentTeam.collectAsState()
+    val teamId = team?.id ?: return
+    // members related to a specific manager (later for reading)
+    val members by TeamManager.currentTeamMembers.collectAsState()
 
 
     Column(Modifier.fillMaxSize().padding(3.dp)) {
@@ -153,21 +177,44 @@ fun ScheduleScreen() {
                 initialFrom = editTarget?.from,
                 initialTo = editTarget?.to,
                 onConfirm = { name, from, to ->
-                    // Upsert attendee for this date (demo uses name as unique key) - TODO: wire to DB
-                    attendanceByDate = attendanceByDate.toMutableMap().apply {
-                        val list = (this[date] ?: emptyList()).toMutableList()
-                        val idx =
-                            list.indexOfFirst { it.displayName.equals(name, ignoreCase = true) }
-                        val newA = Attendee(
-                            displayName = name,
-                            from = from,
-                            to = to
-                        )
-                        if (idx >= 0) list[idx] = newA else list += newA
-                        this[date] = list
+                    saving = true
+                    saveError = null
+                    scope.launch {
+                        try {
+                            // build UI model Attendee
+                            val attendee = Attendee(displayName = name, from = from, to = to)
+                            // map DB row
+                            val row = attendee.toAvailability(
+                                userId = userId,
+                                teamId = teamId,
+                                date   = date
+                            )
+                            // upsert to DB
+                            val ok = availabilityRepository.setAvailability(row)
+                            if (!ok) throw IllegalStateException("Insert/upsert failed")
+                            // local UI state mirrors change
+                            attendanceByDate = attendanceByDate.toMutableMap().apply {
+                            val list = (this[date] ?: emptyList()).toMutableList()
+                            val idx =
+                                list.indexOfFirst { it.displayName.equals(name, ignoreCase = true) }
+                            val newA = Attendee(
+                                displayName = name,
+                                from = from,
+                                to = to
+                            )
+                            if (idx >= 0) list[idx] = newA else list += newA
+                            this[date] = list
+                        }
+                            // bye bye dialog
+                            editTarget = null
+                            showDialogFor = null
+
+                        } catch (t: Throwable) {
+                            saveError = t.message ?: "Unknown error"
+                        } finally {
+                            saving = false
+                        }
                     }
-                    editTarget = null
-                    showDialogFor = null
                 },
                 onDismiss = {
                     editTarget = null

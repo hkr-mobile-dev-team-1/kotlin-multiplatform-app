@@ -32,4 +32,16 @@ class AvailabilityRepository(private val postgrest: Postgrest) {
             emptyList()
         }
     }
+
+    suspend fun upsertAvailability(availability: Availability): Boolean {
+        return try {
+            withContext(Dispatchers.IO) {
+                postgrest.from("availability").upsert(availability)
+            }
+            true
+        } catch (e: Exception) {
+            println("Error upserting availability: ${e.message}")
+            false
+        }
+    }
 }
