@@ -10,10 +10,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.model.User
+import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(user: User) {
+fun SettingsScreen(
+    user: User,
+    authRepository: AuthRepository,
+    onBack: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -78,7 +85,15 @@ fun SettingsScreen(user: User) {
             item {
                 SettingsSection(
                     title = "Account",
-                    content = { LogoutSection(onLogout = { /* TODO: hook up Supabase logout */ }) }
+                    content = {
+                        LogoutSection(onLogout = {
+                            scope.launch {
+                                authRepository.logoutUser().onSuccess {
+                                    onBack()
+                                }
+                            }
+                        })
+                    }
                 )
             }
         }
