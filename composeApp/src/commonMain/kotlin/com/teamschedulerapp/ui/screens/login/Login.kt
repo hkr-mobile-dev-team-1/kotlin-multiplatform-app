@@ -129,7 +129,7 @@ fun LoginScreen(
                             delay(1500)
                             onLoginSuccess()
                         } else {
-                            error = result.exceptionOrNull()?.message
+                            error = "Invalid Login Credentials"
                         }
                         isLoading = false
                     }

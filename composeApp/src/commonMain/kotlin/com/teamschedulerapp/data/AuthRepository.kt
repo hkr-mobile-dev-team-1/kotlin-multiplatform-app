@@ -5,11 +5,26 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Count
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
 class AuthRepository(private val supabase: SupabaseClient) {
+
+    suspend fun doesUserExist(email: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val result = supabase.postgrest.from("users").select {
+                count(Count.EXACT)
+                filter {
+                    eq("email", email)
+                }
+            }
+            result.countOrNull()?.let { it > 0 } ?: false
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     /* The 'registerUser' function creates a new user in the private 'auth.users' table.
        We use that user's unique ID as a foreign key in our own 'users' table to create
@@ -46,10 +61,12 @@ class AuthRepository(private val supabase: SupabaseClient) {
                 email = email
             )
 
-            // Insert the "userProfile" object into the "users" table in the database
+            // Upsert the "userProfile" object into the "users" table in the database.
+            // If a user with the ID already exists, it updates their information.
+            // Otherwise, it creates a new user record.
             supabase.postgrest
                 .from("users")
-                .insert(userProfile)
+                .upsert(userProfile)
 
             return@withContext Result.success(Unit)
 
