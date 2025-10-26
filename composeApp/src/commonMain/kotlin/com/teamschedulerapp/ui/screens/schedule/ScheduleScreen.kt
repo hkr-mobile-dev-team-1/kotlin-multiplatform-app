@@ -173,7 +173,7 @@ fun ScheduleScreen(
             androidx.compose.runtime.key(date to (editTarget?.displayName ?: "")) {
             AttendanceDialog(
                 date = date,
-                initialName = editTarget?.displayName,
+                initialName = currentUserDisplayName,
                 initialFrom = editTarget?.from,
                 initialTo = editTarget?.to,
                 onConfirm = { name, from, to ->
@@ -190,20 +190,15 @@ fun ScheduleScreen(
                                 date   = date
                             )
                             // upsert to DB
-                            val ok = availabilityRepository.setAvailability(row)
+                            val ok = availabilityRepository.upsertAvailability(row)
                             if (!ok) throw IllegalStateException("Insert/upsert failed")
                             // local UI state mirrors change
                             attendanceByDate = attendanceByDate.toMutableMap().apply {
                             val list = (this[date] ?: emptyList()).toMutableList()
                             val idx =
                                 list.indexOfFirst { it.displayName.equals(name, ignoreCase = true) }
-                            val newA = Attendee(
-                                displayName = name,
-                                from = from,
-                                to = to
-                            )
-                            if (idx >= 0) list[idx] = newA else list += newA
-                            this[date] = list
+                                if (idx >= 0) list[idx] = attendee else list += attendee
+                                this[date] = list
                         }
                             // bye bye dialog
                             editTarget = null
