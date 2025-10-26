@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -23,6 +24,11 @@ import com.teamschedulerapp.screenmodel.TaskScreenModel
 import com.teamschedulerapp.ui.components.tasks.AddTaskModal
 import com.teamschedulerapp.ui.components.tasks.TaskCard
 import com.teamschedulerapp.ui.components.tasks.TaskDetailModal
+import com.teamschedulerapp.ui.components.tasks.FilterDropdown
+import com.teamschedulerapp.ui.components.tasks.FilterOption
+import com.teamschedulerapp.ui.components.tasks.SortDropdown
+import com.teamschedulerapp.ui.components.tasks.applyFilters
+import com.teamschedulerapp.ui.components.tasks.applySorting
 import io.github.jan.supabase.auth.auth
 
 @Composable
@@ -35,11 +41,18 @@ fun TasksScreen (
     var showAddTaskModal by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<TaskWithUsers?>(null) }
     var editMode by remember { mutableStateOf(false) }
-
+    var selectedFilter by remember { mutableStateOf<FilterOption>(FilterOption(emptySet<String>(),emptySet<String>())) }
+    var selectedSort by remember { mutableStateOf<String>("due_date_nearest") }
 
     val tabs = listOf("All Tasks", "My Tasks", "Unassigned")
 
-    val filteredTasks = when (selectedTab) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(selectedSort, selectedFilter) {
+        listState.animateScrollToItem(0)
+    }
+
+    val tabFilteredTasks = when (selectedTab) {
         0 -> tasksWithUsers
         1 -> tasksWithUsers.filter { taskWithUsers ->
             taskWithUsers.assignedUsers.any { it.id == currentUserId }
@@ -47,6 +60,8 @@ fun TasksScreen (
         2 -> tasksWithUsers.filter { it.assignedUsers.isEmpty() }
         else -> tasksWithUsers
     }
+    val filteredTasks = applyFilters(tabFilteredTasks, selectedFilter)
+    val sortedTasks = applySorting(filteredTasks, selectedSort)
 
     Column(
         modifier = Modifier
@@ -107,13 +122,33 @@ fun TasksScreen (
             }
         }
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFF5F5F5))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilterDropdown(
+                selectedFilter = selectedFilter,
+                onFilterChange = { selectedFilter = it },
+                modifier = Modifier.weight(1f)
+            )
+
+            SortDropdown(
+                selectedSort = selectedSort,
+                onSortChange = { selectedSort = it },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
         HorizontalDivider(
             thickness = 1.dp,
             color = MaterialTheme.colorScheme.outlineVariant
         )
 
         // Content Area
-        if (filteredTasks.isEmpty()) {
+        if (sortedTasks.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -148,8 +183,10 @@ fun TasksScreen (
                     )
                 }
             }
-        } else {
+        }
+        else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
                     start = 16.dp,
@@ -159,7 +196,7 @@ fun TasksScreen (
                 ),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                items(filteredTasks, key = { it.task.id!! }) { taskWithUsers ->
+                items(sortedTasks, key = { it.task.id!! }) { taskWithUsers ->
                     TaskCard(
                         taskWithUsers = taskWithUsers,
                         openTaskDetail = {
