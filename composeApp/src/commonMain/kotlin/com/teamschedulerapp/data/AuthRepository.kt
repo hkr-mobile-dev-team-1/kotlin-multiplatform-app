@@ -61,10 +61,12 @@ class AuthRepository(private val supabase: SupabaseClient) {
                 email = email
             )
 
-            // Insert the "userProfile" object into the "users" table in the database
+            // Upsert the "userProfile" object into the "users" table in the database.
+            // If a user with the ID already exists, it updates their information.
+            // Otherwise, it creates a new user record.
             supabase.postgrest
                 .from("users")
-                .insert(userProfile)
+                .upsert(userProfile)
 
             return@withContext Result.success(Unit)
 
