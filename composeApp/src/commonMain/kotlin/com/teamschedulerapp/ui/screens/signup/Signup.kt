@@ -142,28 +142,35 @@ fun SignupScreen(
 
             Button(
                 onClick = {
-                    if (password.length < 8) {
-                        error = "Password must be at least 8 characters long."
-                    } else {
-                        scope.launch {
-                            isLoading = true
-                            error = null
-                            successMessage = null
-                            val result = SupabaseClientManager.authRepository.registerUser(
-                                email,
-                                password,
-                                firstName,
-                                lastName
-                            )
-                            if (result.isSuccess) {
-                                successMessage = "Registration Successful!"
-                                delay(1500)
-                                onSignupSuccess()
-                            } else {
-                                error = result.exceptionOrNull()?.message
-                            }
-                            isLoading = false
+                    scope.launch {
+                        if (password.length < 8) {
+                            error = "Password must be at least 8 characters long."
+                            return@launch
                         }
+                        isLoading = true
+                        error = null
+                        successMessage = null
+
+                        if (SupabaseClientManager.authRepository.doesUserExist(email)) {
+                            error = "A user with this email already exists."
+                            isLoading = false
+                            return@launch
+                        }
+
+                        val result = SupabaseClientManager.authRepository.registerUser(
+                            email,
+                            password,
+                            firstName,
+                            lastName
+                        )
+                        if (result.isSuccess) {
+                            successMessage = "Registration Successful!"
+                            delay(1500)
+                            onSignupSuccess()
+                        } else {
+                            error = result.exceptionOrNull()?.message
+                        }
+                        isLoading = false
                     }
                 },
                 modifier = Modifier
