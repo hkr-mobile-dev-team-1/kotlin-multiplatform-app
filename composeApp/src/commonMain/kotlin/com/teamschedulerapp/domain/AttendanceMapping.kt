@@ -17,7 +17,6 @@ fun Attendee.toAvailability(
     date: LocalDate
 ): Availability {
     return Availability(
-        id = "",
         userId = userId,
         teamId = teamId,
         date = date.toString(),
