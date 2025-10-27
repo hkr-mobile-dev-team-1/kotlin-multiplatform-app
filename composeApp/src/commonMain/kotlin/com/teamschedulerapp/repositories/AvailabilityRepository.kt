@@ -44,4 +44,16 @@ class AvailabilityRepository(private val postgrest: Postgrest) {
             false
         }
     }
+
+    suspend fun getAvailabilityForTeamOnDate(
+        teamId: String,
+        date: String
+    ): List<Availability> = withContext(Dispatchers.IO) {
+        postgrest.from("availability").select {
+            filter {
+                eq("team_id", teamId)
+                eq("date", date)
+            }
+        }.decodeList<Availability>()
+    }
 }
