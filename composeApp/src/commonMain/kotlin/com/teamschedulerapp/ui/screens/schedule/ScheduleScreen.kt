@@ -29,6 +29,7 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
+import com.teamschedulerapp.domain.toAttendee
 
 
 @OptIn(ExperimentalTime::class)
@@ -80,11 +81,16 @@ fun ScheduleScreen(
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
 
+
+    var loading by remember { mutableStateOf(false) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    // cache maybe?
+    val loadedDays = remember { mutableSetOf<LocalDate>() }
+
     val team by TeamManager.currentTeam.collectAsState()
     val teamId = team?.id ?: return
     // members related to a specific manager (later for reading)
     val members by TeamManager.currentTeamMembers.collectAsState()
-
 
     Column(Modifier.fillMaxSize().padding(3.dp)) {
         TopAppBar(
@@ -135,6 +141,28 @@ fun ScheduleScreen(
                 text = "Selected: $it",
                 style = MaterialTheme.typography.bodyMedium
             )
+        }
+        // retrieve team members for selected date from DB and map to show on UI (tiny caching)
+        LaunchedEffect(selected, teamId) {
+            val date = selected ?: return@LaunchedEffect
+            if (loadedDays.contains(date)) return@LaunchedEffect
+            loading = true
+            loadError = null
+            try {
+                val rows = availabilityRepository.getAvailabilityForTeamOnDate(
+                    teamId = teamId,
+                    date = date.toString()
+                )
+                val list = rows.map {
+                    it.toAttendee(displayName = currentUserDisplayName ?: "Member")
+                }
+                attendanceByDate = attendanceByDate.toMutableMap().apply { this[date] = list }
+                loadedDays += date
+            } catch (t: Throwable) {
+                loadError = t.message
+            } finally {
+                loading = false
+            }
         }
         // show attendees and button when day is selected
         if (selected != null) {
