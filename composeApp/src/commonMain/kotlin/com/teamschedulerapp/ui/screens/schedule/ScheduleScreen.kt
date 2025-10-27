@@ -169,7 +169,7 @@ fun ScheduleScreen(
 
         // Dialog
         showDialogFor?.let { date ->
-            //passing the prefilled for edit - FIX
+            //collecting data, passing the prefilled first last name
             androidx.compose.runtime.key(date to (editTarget?.displayName ?: "")) {
             AttendanceDialog(
                 date = date,
