@@ -249,13 +249,33 @@ fun ScheduleScreen(
             onConfirmation =  {
                 val date = selected
                 if (date != null) {
-                    attendanceByDate = attendanceByDate.toMutableMap().apply {
-                        val updated = (this[date] ?: emptyList())
-                            .filterNot { it.displayName.equals(toDelete.displayName, true) }
-                        this[date] = updated
+                    // upsert to DB
+                    saving = true
+                    saveError = null
+                    scope.launch {
+                        try {
+                            val ok = availabilityRepository.deleteAvailabilityByKeys(
+                                userId = userId,
+                                teamId = teamId,
+                                dateIso = date.toString()
+                            )
+                            if (!ok) throw IllegalStateException("Delete failed")
+                            // update UI
+                             attendanceByDate = attendanceByDate.toMutableMap().apply {
+                            val updated = (this[date] ?: emptyList())
+                                .filterNot { it.displayName.equals(toDelete.displayName, true) }
+                            this[date] = updated
+                             }
+                        } catch (t: Throwable) {
+                            saveError = t.message ?: "Unknown error"
+                        } finally {
+                            saving = false
+                            pendingDelete = null
+                        }
                     }
+                } else {
+                    pendingDelete = null
                 }
-                pendingDelete = null
             },
             dialogTitle = "Remove attendance",
             dialogText = "Are you sure you want to remove your attendance?",
