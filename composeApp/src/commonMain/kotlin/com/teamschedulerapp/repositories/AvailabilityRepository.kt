@@ -56,4 +56,25 @@ class AvailabilityRepository(private val postgrest: Postgrest) {
             }
         }.decodeList<Availability>()
     }
+
+
+    suspend fun deleteAvailabilityByKeys(
+        userId: String,
+        teamId: String,
+        dateIso: String, // "YYYY-MM-DD"
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            postgrest.from("availability").delete {
+                filter {
+                    eq("user_id", userId)
+                    eq("team_id", teamId)
+                    eq("date", dateIso)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            println("Error deleting availability: ${e.message}")
+            false
+        }
+    }
 }
