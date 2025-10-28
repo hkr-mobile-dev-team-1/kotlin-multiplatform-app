@@ -84,8 +84,6 @@ fun ScheduleScreen(
 
     var loading by remember { mutableStateOf(false) }
     var loadError by remember { mutableStateOf<String?>(null) }
-    // cache maybe?
-    val loadedDays = remember { mutableSetOf<LocalDate>() }
 
     val team by TeamManager.currentTeam.collectAsState()
     val teamId = team?.id ?: return
@@ -145,7 +143,6 @@ fun ScheduleScreen(
         // retrieve team members for selected date from DB and map to show on UI (tiny caching)
         LaunchedEffect(selected, teamId) {
             val date = selected ?: return@LaunchedEffect
-            if (loadedDays.contains(date)) return@LaunchedEffect
             loading = true
             loadError = null
             try {
@@ -157,7 +154,6 @@ fun ScheduleScreen(
                     it.toAttendee(displayName = currentUserDisplayName ?: "Member")
                 }
                 attendanceByDate = attendanceByDate.toMutableMap().apply { this[date] = list }
-                loadedDays += date
             } catch (t: Throwable) {
                 loadError = t.message
             } finally {
