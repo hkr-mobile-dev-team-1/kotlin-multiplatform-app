@@ -19,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +43,7 @@ import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
 import com.teamschedulerapp.screenmodel.MainScreenModel
 import com.teamschedulerapp.screenmodel.TaskScreenModel
+import com.teamschedulerapp.ui.components.CustomSnackbarHost
 import com.teamschedulerapp.ui.components.team.CreateTeamModal
 import com.teamschedulerapp.ui.components.team.TeamSelectorModal
 import com.teamschedulerapp.ui.components.team.TeamTile
@@ -68,6 +70,7 @@ object ScheduleTab : Tab {
 }
 
 object TasksTab : Tab {
+    var snackbarHostState: SnackbarHostState? = null
     override val options: TabOptions
         @Composable
         get() {
@@ -89,7 +92,10 @@ object TasksTab : Tab {
                 taskAssignmentRepository = taskAssignmentRepository
             )
         }
-        TasksScreen(screenModel = screenModel)
+        TasksScreen(
+            screenModel = screenModel,
+            snackbarHostState = snackbarHostState
+        )
     }
 }
 
@@ -127,7 +133,7 @@ object SettingsTab : Tab {
                 email = "jane.doe@example.com"
             )
         }
-        val supabase = com.teamschedulerapp.data.SupabaseClientManager.client
+        val supabase = SupabaseClientManager.client
         val authRepository = remember { AuthRepository(supabase) }
         val tabNavigator = LocalNavigator.currentOrThrow
         val rootNavigator = tabNavigator.parent ?: tabNavigator
@@ -150,6 +156,12 @@ fun MainScreen() {
     var showTeamSelector by remember { mutableStateOf(false) }
     var showCreateTeamModal by remember { mutableStateOf(false) }
 
+    // Snackbar
+    val snackbarHostState = remember { SnackbarHostState() }
+    TasksTab.snackbarHostState = snackbarHostState
+
+
+    // Supabase
     val supabase = SupabaseClientManager.client
     val userId = supabase.auth.currentUserOrNull()?.id ?: return
     val teamRepository = remember { TeamRepository(supabase.postgrest) }
@@ -195,7 +207,8 @@ fun MainScreen() {
                     TabNavigationItem(AnalyticsTab)
                     TabNavigationItem(SettingsTab)
                 }
-            }
+            },
+            snackbarHost = { CustomSnackbarHost(snackbarHostState) }
         ) { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
                 CurrentTab()

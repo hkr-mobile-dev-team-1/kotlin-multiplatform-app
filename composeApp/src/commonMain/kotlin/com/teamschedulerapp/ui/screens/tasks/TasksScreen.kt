@@ -29,11 +29,16 @@ import com.teamschedulerapp.ui.components.tasks.FilterOption
 import com.teamschedulerapp.ui.components.tasks.SortDropdown
 import com.teamschedulerapp.ui.components.tasks.applyFilters
 import com.teamschedulerapp.ui.components.tasks.applySorting
+import com.teamschedulerapp.utils.showErrorSnackbar
+import com.teamschedulerapp.utils.showSuccessSnackbar
 import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
 
 @Composable
 fun TasksScreen (
-    screenModel: TaskScreenModel
+    screenModel: TaskScreenModel,
+    snackbarHostState: SnackbarHostState? = null
+
 ) {
     val tasksWithUsers by screenModel.tasksWithUsers.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
@@ -44,6 +49,7 @@ fun TasksScreen (
     var selectedFilter by remember { mutableStateOf<FilterOption>(FilterOption(emptySet<String>(),emptySet<String>())) }
     var selectedSort by remember { mutableStateOf<String>("due_date_nearest") }
 
+    val scope = rememberCoroutineScope()
     val tabs = listOf("All Tasks", "My Tasks", "Unassigned")
 
     val listState = rememberLazyListState()
@@ -209,7 +215,17 @@ fun TasksScreen (
                         },
                         onDeleteClick = {
                             if (taskWithUsers.task.id != null) {
-                                screenModel.deleteTask(taskWithUsers.task.id)
+                                scope.launch {
+                                    try {
+                                        screenModel.deleteTask(taskWithUsers.task.id)
+
+                                        // Show success snackbar
+                                        snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
+                                    } catch (e: Exception) {
+                                        // Show error snackbar
+                                        snackbarHostState?.showErrorSnackbar("Failed to delete task")
+                                    }
+                                }
                             }
                             selectedTask = null
                         }
@@ -226,52 +242,82 @@ fun TasksScreen (
             screenModel = screenModel,
             onDismiss = { showAddTaskModal = false },
             onSave = { title, description, status, priority, assignedUserIds, dueDate ->
-                screenModel.createTask(
-                    Task(
-                        title = title,
-                        teamId = TeamManager.currentTeam.value?.id!!,
-                        description = description,
-                        status = status,
-                        priority = priority,
-                        dueDate = dueDate
-                    ),
-                    assignedUserIds,
-                )
-                println("Created task with $status and $priority")
+                scope.launch {
+                    try {
+                        screenModel.createTask(
+                            Task(
+                                title = title,
+                                teamId = TeamManager.currentTeam.value?.id!!,
+                                description = description,
+                                status = status,
+                                priority = priority,
+                                dueDate = dueDate
+                            ),
+                            assignedUserIds,
+                        )
 
-                showAddTaskModal = false
+                        showAddTaskModal = false
+
+                        // Show success snackbar
+                        snackbarHostState?.showSuccessSnackbar("Task created successfully")
+                    } catch (e: Exception) {
+                        // Show error snackbar
+                        snackbarHostState?.showErrorSnackbar("Failed to create task")
+                    }
+                }
             }
         )
     }
 
     // Task Description Modal
-    selectedTask?.let { task ->
+    selectedTask?.let { taskWithUsers ->
         TaskDetailModal(
-            task = task,
+            taskWithUsers = taskWithUsers,
             isEditMode = editMode,
             onDismiss = { selectedTask = null },
             onDelete = {
-                if (task.task.id != null) {
-                    screenModel.deleteTask(task.task.id)
+                if (taskWithUsers.task.id != null) {
+                    scope.launch {
+                        try {
+                            screenModel.deleteTask(taskWithUsers.task.id)
+
+                            // Show success snackbar
+                            snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
+                        } catch (e: Exception) {
+                            // Show error snackbar
+                            snackbarHostState?.showErrorSnackbar("Failed to delete task")
+                        }
+                    }
                 }
                 selectedTask = null
             },
             onSave = { title, description, status, priority, assignedUserIds, dueDate ->
-                if (task.task.id != null) {
-                    screenModel.updateTask(
-                        Task(
-                            id = task.task.id,
-                            title = title,
-                            description = description,
-                            status = status,
-                            priority = priority,
-                            dueDate = dueDate,
-                            teamId = ""
-                        ),
-                        assignedUserIds,
-                    )
-                }
+                if (taskWithUsers.task.id != null) {
+                    scope.launch {
+                        try {
+                            screenModel.updateTask(
+                                Task(
+                                    id = taskWithUsers.task.id,
+                                    title = title,
+                                    description = description,
+                                    status = status,
+                                    priority = priority,
+                                    dueDate = dueDate,
+                                    teamId = ""
+                                ),
+                                assignedUserIds,
+                            )
 
+                            showAddTaskModal = false
+
+                            // Show success snackbar
+                            snackbarHostState?.showSuccessSnackbar("Task updated successfully")
+                        } catch (e: Exception) {
+                            // Show error snackbar
+                            snackbarHostState?.showErrorSnackbar("Failed to update task")
+                        }
+                    }
+                }
                 selectedTask = null
             }
         )
