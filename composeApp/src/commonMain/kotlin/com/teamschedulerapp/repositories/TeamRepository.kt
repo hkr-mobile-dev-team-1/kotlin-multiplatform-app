@@ -6,14 +6,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
-class TeamRepository(private val postgrest: Postgrest) {
+class TeamRepository(
+    private val postgrest: Postgrest) {
 
-    suspend fun createTeam(team: Team): Boolean {
+    suspend fun createTeam(name: String, description: String?): Boolean {
         return try {
             withContext(Dispatchers.IO) {
                 postgrest
                     .from("teams")
-                    .insert(team)
+                    .insert(
+                        mapOf(
+                            "name" to name,
+                            "description" to description
+                        )
+                    )
             }
             true
         }catch(e: Exception) {
@@ -38,15 +44,13 @@ class TeamRepository(private val postgrest: Postgrest) {
         }
     }
 
-    suspend fun getTeamsForUser(userId: String): List<Team> {
+    suspend fun getTeamsForUser(): List<Team> {
         return try {
             withContext(Dispatchers.IO) {
-                postgrest.from("team_members")
-                    .select {
-                    filter {
-                        eq("user_id", userId)
-                    }
-                }.decodeList<Team>()
+                postgrest
+                    .from("teams")
+                    .select()
+                    .decodeList<Team>()
             }
         } catch (e: Exception) {
             println("Error fetching teams for user: ${e.message}")
