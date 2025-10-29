@@ -1,6 +1,5 @@
 package com.teamschedulerapp.ui.components.tasks
 
-import com.teamschedulerapp.model.User
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,7 +27,7 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class)
 @Composable
 fun TaskDetailModal(
-    task: TaskWithUsers,
+    taskWithUsers: TaskWithUsers,
     isEditMode: Boolean,
     onDismiss: () -> Unit,
     onDelete: () -> Unit,
@@ -41,12 +40,12 @@ fun TaskDetailModal(
         dueDate: String?
     ) -> Unit
 ) {
-    var title by remember { mutableStateOf(task.task.title) }
-    var description by remember { mutableStateOf(task.task.description ?: "") }
-    var selectedStatus by remember { mutableStateOf(task.task.status) }
-    var selectedPriority by remember { mutableStateOf(task.task.priority) }
-    var selectedUserIds by remember { mutableStateOf(task.assignedUsers.map { it -> it.id }) }
-    var selectedDueDate by remember { mutableStateOf<String?>(task.task.dueDate) }
+    var title by remember { mutableStateOf(taskWithUsers.task.title) }
+    var description by remember { mutableStateOf(taskWithUsers.task.description ?: "") }
+    var selectedStatus by remember { mutableStateOf(taskWithUsers.task.status) }
+    var selectedPriority by remember { mutableStateOf(taskWithUsers.task.priority) }
+    var selectedUserIds by remember { mutableStateOf(taskWithUsers.assignedUsers.map { it -> it.id }) }
+    var selectedDueDate by remember { mutableStateOf<String?>(taskWithUsers.task.dueDate) }
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
@@ -385,7 +384,7 @@ fun TaskDetailModal(
                             fontWeight = FontWeight.SemiBold,
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        if (task.assignedUsers.isEmpty()) {
+                        if (taskWithUsers.assignedUsers.isEmpty()) {
                             Text(
                                 text = "No team member was assigned to this task.",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -396,7 +395,7 @@ fun TaskDetailModal(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                task.assignedUsers.forEach { user ->
+                                taskWithUsers.assignedUsers.forEach { user ->
                                     UserLabel(
                                         user = user,
                                         isSelected = false,
