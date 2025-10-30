@@ -204,6 +204,7 @@ fun MainScreen() {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = currentTeam?.name ?: "Select team")
                             if (isCurrentTeamAdmin) {
+                                Spacer(modifier = Modifier.width(8.dp))
                                 AdminBadge()
                             }
                             Icon(
@@ -250,7 +251,6 @@ fun MainScreen() {
             },
             onDeleteTeam = { team ->
                 scope.launch {
-
                     try {
                         mainScreenModel.deleteTeam(team.id ?: "")
                         // Show success snackbar
@@ -260,6 +260,7 @@ fun MainScreen() {
                         snackbarHostState.showErrorSnackbar("Failed to delete team")
                     }
                 }
+                showTeamSelector = false
             },
             onDismiss = { showTeamSelector = false }
         )
