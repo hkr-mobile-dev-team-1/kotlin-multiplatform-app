@@ -12,9 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import com.teamschedulerapp.domain.toAttendee
+import com.teamschedulerapp.repositories.UserRepository
 
 class ScheduleScreenModel(
     private val availabilityRepository: AvailabilityRepository,
+    private val userRepository: UserRepository,
     private val userId: String,
 ) : ScreenModel {
 
@@ -73,16 +75,20 @@ class ScheduleScreenModel(
                     teamId = teamId,
                     date   = date.toString()
                 )
-
                 // 2) name map from TeamManager’s members (fallback to “Member”)
-                val nameMap: Map<String, String> = teamMembers
-                    .mapNotNull { u ->
-                        val id = u.id ?: return@mapNotNull null
-                        val full = listOfNotNull(u.firstName, u.lastName)
-                            .joinToString(" ")
-                            .ifBlank { u.email ?: "Member" }
-                        id to full
-                    }.toMap()
+                // from teamMembers
+                val baseMap: Map<String, String> = teamMembers
+                    .mapNotNull { u -> u.id?.let { it to displayNameOf(u) } }
+                    .toMap()
+
+                // resolve missing IDs
+                val missingIds = rows.map { it.userId }.distinct().filter { it !in baseMap }
+                val fetchedMap: Map<String, String> = missingIds.associateWith { id ->
+                    val u = userRepository.getUserById(id)
+                    if (u != null) displayNameOf(u) else "Member"
+                }
+
+                val nameMap = baseMap + fetchedMap
 
                 // 3) map to UI: Pair(Attendee, ownerId)
                 val list = rows.map { row ->
@@ -140,4 +146,17 @@ class ScheduleScreenModel(
             }
         }
     }
+
+    private fun displayNameOf(u: User): String {
+        fun String?.clean() = this?.trim().takeUnless { it.isNullOrBlank() }
+        val first = u.firstName.clean()
+        val last  = u.lastName.clean()
+        val full  = listOfNotNull(first, last).joinToString(" ").trim()
+        return when {
+            full.isNotBlank() -> full
+            !u.email.isNullOrBlank() -> u.email!!
+            else -> "Member"
+        }
+    }
+
 }
