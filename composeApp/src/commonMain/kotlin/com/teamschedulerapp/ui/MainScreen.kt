@@ -19,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +34,7 @@ import cafe.adriel.voyager.navigator.tab.*
 import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.model.User
+import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.Login
 import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.repositories.TaskAssignmentRepository
@@ -42,6 +44,7 @@ import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
 import com.teamschedulerapp.screenmodel.MainScreenModel
 import com.teamschedulerapp.screenmodel.TaskScreenModel
+import com.teamschedulerapp.ui.components.team.AdminBadge
 import com.teamschedulerapp.ui.components.team.CreateTeamModal
 import com.teamschedulerapp.ui.components.team.TeamSelectorModal
 import com.teamschedulerapp.ui.components.team.TeamTile
@@ -51,6 +54,7 @@ import com.teamschedulerapp.ui.screens.settings.SettingsScreen
 import com.teamschedulerapp.ui.screens.tasks.TasksScreen
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.launch
 
 object ScheduleTab : Tab {
     override val options: TabOptions
@@ -147,8 +151,12 @@ object SettingsTab : Tab {
 fun MainScreen() {
     val currentTeam by TeamManager.currentTeam.collectAsState()
     val userTeams by TeamManager.userTeams.collectAsState()
+
     var showTeamSelector by remember { mutableStateOf(false) }
     var showCreateTeamModal by remember { mutableStateOf(false) }
+    var teamToEdit by remember { mutableStateOf<TeamWithMembers?>(null) }
+
+    val scope = rememberCoroutineScope()
 
     val supabase = SupabaseClientManager.client
     val userId = supabase.auth.currentUserOrNull()?.id ?: return
@@ -156,7 +164,9 @@ fun MainScreen() {
     val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest) }
     val userRepository = remember { UserRepository(supabase.postgrest) }
 
-    val teamScreenModel = remember {
+    val isCurrentTeamAdmin = currentTeam?.members?.find { it.id == userId }?.isAdmin ?: false
+
+    val mainScreenModel = remember {
         MainScreenModel(
             teamRepository = teamRepository,
             teamMemberRepository = teamMemberRepository,
@@ -180,6 +190,9 @@ fun MainScreen() {
                             TeamTile(currentTeam)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = currentTeam?.name ?: "Select team")
+                            if (isCurrentTeamAdmin) {
+                                AdminBadge()
+                            }
                             Icon(
                                 Icons.Default.ArrowDropDown,
                                 contentDescription = "Change team"
@@ -206,6 +219,7 @@ fun MainScreen() {
     // Team selector modal
     if (showTeamSelector) {
         TeamSelectorModal(
+            userId = userId,
             teams = userTeams,
             currentTeam = currentTeam,
             onTeamSelected = { team ->
@@ -216,16 +230,56 @@ fun MainScreen() {
                 showTeamSelector = false
                 showCreateTeamModal = true
             },
+            onEditTeam = { team ->
+                teamToEdit = team
+                showTeamSelector = false
+            },
+            onDeleteTeam = { team ->
+                scope.launch {
+
+                    try {
+                        mainScreenModel.deleteTeam(team.id ?: "")
+                    } catch (e: Exception) {
+                        println("Error")
+                    }
+                }
+                showTeamSelector = false
+            },
             onDismiss = { showTeamSelector = false }
         )
     }
 
     if (showCreateTeamModal) {
         CreateTeamModal(
+            teamToEdit = teamToEdit,
             onDismiss = { showCreateTeamModal = false },
             onSave = { name, description ->
-                teamScreenModel.createTeam(name, description)
+                scope.launch {
+                    try {
+                        mainScreenModel.createTeam(name, description)
+                    } catch (e: Exception) {
+                        println("Error")
+                    }
+                }
                 showCreateTeamModal = false
+            }
+        )
+    }
+
+    // Edit team modal
+    teamToEdit?.let { team ->
+        CreateTeamModal(
+            teamToEdit = team,
+            onDismiss = { teamToEdit = null },
+            onSave = { name, description ->
+                scope.launch {
+                    try {
+                        mainScreenModel.updateTeam(team.id ?: "", name, description)
+                    } catch (e: Exception) {
+                        println("Error")
+                    }
+                }
+                teamToEdit = null
             }
         )
     }

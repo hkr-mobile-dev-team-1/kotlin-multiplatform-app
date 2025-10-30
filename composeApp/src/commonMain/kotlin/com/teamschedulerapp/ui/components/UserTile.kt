@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.User
+import com.teamschedulerapp.model.TeamMemberWithUser
 import kotlin.random.Random
 
 fun getColorForUser(userId: String): Color {
@@ -27,19 +27,19 @@ fun getColorForUser(userId: String): Color {
     return Color(red, green, blue)
 }
 @Composable
-fun UserTile (user: User) {
+fun UserTile (member: TeamMemberWithUser) {
     Box(
         modifier = Modifier
             .size(28.dp)
             .clip(CircleShape)
-            .background(getColorForUser(user.id)),
+            .background(getColorForUser(member.id)),
         contentAlignment = Alignment.Center
     ) {
         // If we have a user.profileImageUrl, we can use AsyncImage (from Coil)
         // For now, just show initials
-        if (user.firstName != null) {
+        if (member.firstName != null) {
             Text(
-                text = user.firstName.firstOrNull()?.uppercase() ?: "",
+                text = member.firstName.firstOrNull()?.uppercase() ?: "",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )

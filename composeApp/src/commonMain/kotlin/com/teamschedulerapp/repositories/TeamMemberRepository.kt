@@ -33,6 +33,22 @@ class TeamMemberRepository(private val postgrest: Postgrest) {
         }
     }
 
+    suspend fun getMember(teamId: String, userId: String): TeamMember? {
+        return try {
+            withContext(Dispatchers.IO) {
+                postgrest.from("team_members").select {
+                    filter {
+                        eq("team_id", teamId)
+                        eq("user_id", userId)
+                    }
+                }.decodeSingle<TeamMember>()
+            }
+        } catch (e: Exception) {
+            println("Error fetching member: ${e.message}")
+            null
+        }
+    }
+
     suspend fun setMemberAdmin(teamId: String, userId: String, isAdmin: Boolean): Boolean {
         return try {
             withContext(Dispatchers.IO) {
