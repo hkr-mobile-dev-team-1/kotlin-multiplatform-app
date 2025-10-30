@@ -2,7 +2,6 @@ package com.teamschedulerapp.screenmodel
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.teamschedulerapp.model.Team
 import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.TeamManager

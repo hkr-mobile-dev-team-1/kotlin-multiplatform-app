@@ -53,6 +53,8 @@ import com.teamschedulerapp.ui.screens.analytics.AnalyticsScreen
 import com.teamschedulerapp.ui.screens.schedule.ScheduleScreen
 import com.teamschedulerapp.ui.screens.settings.SettingsScreen
 import com.teamschedulerapp.ui.screens.tasks.TasksScreen
+import com.teamschedulerapp.utils.showErrorSnackbar
+import com.teamschedulerapp.utils.showSuccessSnackbar
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
@@ -251,11 +253,13 @@ fun MainScreen() {
 
                     try {
                         mainScreenModel.deleteTeam(team.id ?: "")
+                        // Show success snackbar
+                        snackbarHostState.showSuccessSnackbar("Team deleted successfully")
                     } catch (e: Exception) {
-                        println("Error")
+                        // Show error snackbar
+                        snackbarHostState.showErrorSnackbar("Failed to delete team")
                     }
                 }
-                showTeamSelector = false
             },
             onDismiss = { showTeamSelector = false }
         )
@@ -269,8 +273,11 @@ fun MainScreen() {
                 scope.launch {
                     try {
                         mainScreenModel.createTeam(name, description)
+                        // Show success snackbar
+                        snackbarHostState.showSuccessSnackbar("Team created successfully")
                     } catch (e: Exception) {
-                        println("Error")
+                        // Show error snackbar
+                        snackbarHostState.showErrorSnackbar("Failed to create team")
                     }
                 }
                 showCreateTeamModal = false
@@ -287,8 +294,11 @@ fun MainScreen() {
                 scope.launch {
                     try {
                         mainScreenModel.updateTeam(team.id ?: "", name, description)
+                        // Show success snackbar
+                        snackbarHostState.showSuccessSnackbar("Team updated successfully")
                     } catch (e: Exception) {
-                        println("Error")
+                        // Show error snackbar
+                        snackbarHostState.showErrorSnackbar("Failed to update team")
                     }
                 }
                 teamToEdit = null
