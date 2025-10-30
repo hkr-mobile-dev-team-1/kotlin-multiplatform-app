@@ -29,7 +29,7 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class)
 @Composable
 fun TaskDetailModal(
-    task: TaskWithAssignments,
+    taskWithAssignment: TaskWithAssignments,
     isEditMode: Boolean,
     onDismiss: () -> Unit,
     onDelete: () -> Unit,
@@ -42,12 +42,12 @@ fun TaskDetailModal(
         dueDate: String?
     ) -> Unit
 ) {
-    var title by remember { mutableStateOf(task.task.title) }
-    var description by remember { mutableStateOf(task.task.description ?: "") }
-    var selectedStatus by remember { mutableStateOf(task.task.status) }
-    var selectedPriority by remember { mutableStateOf(task.task.priority) }
-    var selectedMembers by remember { mutableStateOf(task.assignedMembers) }
-    var selectedDueDate by remember { mutableStateOf<String?>(task.task.dueDate) }
+    var title by remember { mutableStateOf(taskWithAssignment.task.title) }
+    var description by remember { mutableStateOf(taskWithAssignment.task.description ?: "") }
+    var selectedStatus by remember { mutableStateOf(taskWithAssignment.task.status) }
+    var selectedPriority by remember { mutableStateOf(taskWithAssignment.task.priority) }
+    var selectedMembers by remember { mutableStateOf(taskWithAssignment.assignedMembers) }
+    var selectedDueDate by remember { mutableStateOf<String?>(taskWithAssignment.task.dueDate) }
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
@@ -388,7 +388,7 @@ fun TaskDetailModal(
                             fontWeight = FontWeight.SemiBold,
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        if (task.assignedMembers.isEmpty()) {
+                        if (taskWithAssignment.assignedMembers.isEmpty()) {
                             Text(
                                 text = "No team member was assigned to this task.",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -399,7 +399,7 @@ fun TaskDetailModal(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                task.assignedMembers.forEach { member ->
+                                taskWithAssignment.assignedMembers.forEach { member ->
                                     UserLabel(
                                         member = member,
                                         isSelected = false,

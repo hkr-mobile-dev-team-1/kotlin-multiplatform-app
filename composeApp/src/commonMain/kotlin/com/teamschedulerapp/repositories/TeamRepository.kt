@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 class TeamRepository(
     private val postgrest: Postgrest) {
 
-    suspend fun createTeam(name: String, description: String?): Boolean {
+    suspend fun createTeam(name: String, description: String?): Team? {
         return try {
             withContext(Dispatchers.IO) {
                 postgrest
@@ -19,12 +19,13 @@ class TeamRepository(
                             "name" to name,
                             "description" to description
                         )
-                    )
+                    ){
+                        select()
+                    }.decodeSingle<Team>()
             }
-            true
         }catch(e: Exception) {
             println("Error creating team: ${e.message}")
-            false
+            null
         }
     }
 

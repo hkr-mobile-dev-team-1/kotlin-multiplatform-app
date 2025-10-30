@@ -172,8 +172,8 @@ fun MainScreen() {
     val supabase = SupabaseClientManager.client
     val userId = supabase.auth.currentUserOrNull()?.id ?: return
     val teamRepository = remember { TeamRepository(supabase.postgrest) }
-    val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest) }
     val userRepository = remember { UserRepository(supabase.postgrest) }
+    val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
 
     val isCurrentTeamAdmin = currentTeam?.members?.find { it.id == userId }?.isAdmin ?: false
 

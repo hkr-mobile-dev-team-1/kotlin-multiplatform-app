@@ -20,11 +20,6 @@ object Login : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val scope = rememberCoroutineScope()
-        val supabase = SupabaseClientManager.client
-        val teamRepository = TeamRepository(supabase.postgrest)
-        val teamMemberRepository = TeamMemberRepository(supabase.postgrest)
-
 
         LoginScreen(
             onNavigateToSignUp = { navigator.push(Register) },
@@ -37,10 +32,6 @@ object Register : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val scope = rememberCoroutineScope()
-        val supabase = SupabaseClientManager.client
-        val teamRepository = TeamRepository(supabase.postgrest)
-        val teamMemberRepository = TeamMemberRepository(supabase.postgrest)
 
         SignupScreen(
             onNavigateToLogin = { navigator.pop() },

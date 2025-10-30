@@ -37,7 +37,7 @@ class MainScreenModel(
 
             try {
                 // Get all teams for the user
-                val teams = teamRepository.getTeamsForUser(userId)
+                val teams = teamRepository.getTeamsForUser()
 
                 // For each team, fetch its members and compose UserTeamWithMembers
                 val teamsWithMembers = teams.map { team ->
@@ -84,10 +84,8 @@ class MainScreenModel(
 
         try {
             val createdTeam = teamRepository.createTeam(
-                Team(
-                    name = name,
-                    description = description.ifBlank { null }
-                )
+                name = name,
+                description = description.ifBlank { null }
             )
 
             if (createdTeam != null) {

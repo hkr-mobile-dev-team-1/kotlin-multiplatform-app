@@ -270,16 +270,16 @@ fun TasksScreen (
     }
 
     // Task Description Modal
-    selectedTask?.let { taskWithUsers ->
+    selectedTask?.let { taskWithAssignment ->
         TaskDetailModal(
-            taskWithUsers = taskWithUsers,
+            taskWithAssignment = taskWithAssignment,
             isEditMode = editMode,
             onDismiss = { selectedTask = null },
             onDelete = {
-                if (taskWithUsers.task.id != null) {
+                if (taskWithAssignment.task.id != null) {
                     scope.launch {
                         try {
-                            screenModel.deleteTask(taskWithUsers.task.id)
+                            screenModel.deleteTask(taskWithAssignment.task.id)
 
                             // Show success snackbar
                             snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
@@ -292,12 +292,12 @@ fun TasksScreen (
                 selectedTask = null
             },
             onSave = { title, description, status, priority, assignedMembers, dueDate ->
-                if (taskWithUsers.task.id != null) {
+                if (taskWithAssignment.task.id != null) {
                     scope.launch {
                         try {
                             screenModel.updateTask(
                                 Task(
-                                    id = taskWithUsers.task.id,
+                                    id = taskWithAssignment.task.id,
                                     title = title,
                                     description = description,
                                     status = status,
