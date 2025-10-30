@@ -22,6 +22,8 @@ import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.domain.toAvailability
 import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.screenmodel.ScheduleScreenModel
+import com.teamschedulerapp.domain.toAttendee
+import com.teamschedulerapp.repositories.UserRepository
 
 import kotlinx.datetime.*
 import kotlin.time.Clock
@@ -30,13 +32,13 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
-import com.teamschedulerapp.domain.toAttendee
 
 
 @OptIn(ExperimentalTime::class)
 @Composable
 fun ScheduleScreen(
     availabilityRepository: AvailabilityRepository,
+    userRepository: UserRepository,
     userId: String,
     currentUserDisplayName: String,
 ) {
@@ -82,7 +84,7 @@ fun ScheduleScreen(
     val members by TeamManager.currentTeamMembers.collectAsState()
 
     val screenModel = remember(availabilityRepository, userId) {
-        ScheduleScreenModel(availabilityRepository, userId)
+        ScheduleScreenModel(availabilityRepository, userRepository, userId)
     }
     val attendeesPairs by screenModel.attendeesForDay.collectAsState() // List<Pair<Attendee, ownerId>>
     val isLoading by screenModel.isLoading.collectAsState()
@@ -160,8 +162,6 @@ fun ScheduleScreen(
                         editTarget = a
                         showDialogFor = selected
                     }
-                    //editTarget = a
-                    //showDialogFor = selected
                 },
                 onDelete = { a ->
                     val idx = attendees.indexOf(a)
@@ -169,7 +169,6 @@ fun ScheduleScreen(
                     if (ownerId == userId) {
                         pendingDelete = a
                     }
-                   //pendingDelete = a
                 }
 
             )
