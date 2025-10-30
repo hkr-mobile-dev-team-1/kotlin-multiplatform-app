@@ -16,8 +16,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.unit.sp
+import com.teamschedulerapp.data.SupabaseClientManager
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @Preview
@@ -28,7 +30,13 @@ fun SignupScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -62,6 +70,28 @@ fun SignupScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedTextField(
+                value = firstName,
+                onValueChange = { firstName = it },
+                label = { Text("First Name") },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            OutlinedTextField(
+                value = lastName,
+                onValueChange = { lastName = it },
+                label = { Text("Last Name") },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
@@ -92,21 +122,75 @@ fun SignupScreen(
                 }
             )
 
+            error?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            successMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { onSignupSuccess() },
+                onClick = {
+                    scope.launch {
+                        if (password.length < 8) {
+                            error = "Password must be at least 8 characters long."
+                            return@launch
+                        }
+                        isLoading = true
+                        error = null
+                        successMessage = null
+
+                        if (SupabaseClientManager.authRepository.doesUserExist(email)) {
+                            error = "A user with this email already exists."
+                            isLoading = false
+                            return@launch
+                        }
+
+                        val result = SupabaseClientManager.authRepository.registerUser(
+                            email,
+                            password,
+                            firstName,
+                            lastName
+                        )
+                        if (result.isSuccess) {
+                            successMessage = "Registration Successful!"
+                            delay(1500)
+                            onSignupSuccess()
+                        } else {
+                            error = result.exceptionOrNull()?.message
+                        }
+                        isLoading = false
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                enabled = email.isNotBlank() && password.isNotBlank()
+                enabled = email.isNotBlank() && password.isNotBlank() && firstName.isNotBlank() && lastName.isNotBlank() && !isLoading
             ) {
-                Text("Register now")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Register now")
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextButton(onClick = { onNavigateToLogin() } ) {
+            TextButton(onClick = { onNavigateToLogin() }) {
                 Text("Already have an account? Sign in")
             }
 

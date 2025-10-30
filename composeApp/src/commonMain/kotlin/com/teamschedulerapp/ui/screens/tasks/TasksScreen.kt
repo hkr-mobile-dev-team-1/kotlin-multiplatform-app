@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -15,28 +16,58 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.screenmodel.TasksScreenModel
-import com.teamschedulerapp.ui.components.TaskCard
+import com.teamschedulerapp.data.SupabaseClientManager
+import com.teamschedulerapp.model.Task
+import com.teamschedulerapp.model.TaskWithUsers
+import com.teamschedulerapp.navigation.TeamManager
+import com.teamschedulerapp.screenmodel.TaskScreenModel
+import com.teamschedulerapp.ui.components.tasks.AddTaskModal
+import com.teamschedulerapp.ui.components.tasks.TaskCard
+import com.teamschedulerapp.ui.components.tasks.TaskDetailModal
+import com.teamschedulerapp.ui.components.tasks.FilterDropdown
+import com.teamschedulerapp.ui.components.tasks.FilterOption
+import com.teamschedulerapp.ui.components.tasks.SortDropdown
+import com.teamschedulerapp.ui.components.tasks.applyFilters
+import com.teamschedulerapp.ui.components.tasks.applySorting
+import com.teamschedulerapp.utils.showErrorSnackbar
+import com.teamschedulerapp.utils.showSuccessSnackbar
+import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
 
 @Composable
 fun TasksScreen (
-    screenModel: TasksScreenModel
+    screenModel: TaskScreenModel,
+    snackbarHostState: SnackbarHostState? = null
+
 ) {
     val tasksWithUsers by screenModel.tasksWithUsers.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
-    val currentUserId = 1
+    val currentUserId = SupabaseClientManager.client.auth.currentUserOrNull()?.id
+    var showAddTaskModal by remember { mutableStateOf(false) }
+    var selectedTask by remember { mutableStateOf<TaskWithUsers?>(null) }
+    var editMode by remember { mutableStateOf(false) }
+    var selectedFilter by remember { mutableStateOf<FilterOption>(FilterOption(emptySet<String>(),emptySet<String>())) }
+    var selectedSort by remember { mutableStateOf<String>("due_date_nearest") }
 
-
+    val scope = rememberCoroutineScope()
     val tabs = listOf("All Tasks", "My Tasks", "Unassigned")
 
-    val filteredTasks = when (selectedTab) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(selectedSort, selectedFilter) {
+        listState.animateScrollToItem(0)
+    }
+
+    val tabFilteredTasks = when (selectedTab) {
         0 -> tasksWithUsers
         1 -> tasksWithUsers.filter { taskWithUsers ->
-            taskWithUsers.assignedUsers.any { it.userId == currentUserId }
+            taskWithUsers.assignedUsers.any { it.id == currentUserId }
         }
         2 -> tasksWithUsers.filter { it.assignedUsers.isEmpty() }
         else -> tasksWithUsers
     }
+    val filteredTasks = applyFilters(tabFilteredTasks, selectedFilter)
+    val sortedTasks = applySorting(filteredTasks, selectedSort)
 
     Column(
         modifier = Modifier
@@ -53,7 +84,7 @@ fun TasksScreen (
                 )
             },
             actions = {
-                IconButton(onClick = { /* Handle add task click */ }) {
+                IconButton(onClick = { showAddTaskModal = true }) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Add Task",
@@ -97,13 +128,33 @@ fun TasksScreen (
             }
         }
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFF5F5F5))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilterDropdown(
+                selectedFilter = selectedFilter,
+                onFilterChange = { selectedFilter = it },
+                modifier = Modifier.weight(1f)
+            )
+
+            SortDropdown(
+                selectedSort = selectedSort,
+                onSortChange = { selectedSort = it },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
         HorizontalDivider(
             thickness = 1.dp,
             color = MaterialTheme.colorScheme.outlineVariant
         )
 
         // Content Area
-        if (filteredTasks.isEmpty()) {
+        if (sortedTasks.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -138,8 +189,10 @@ fun TasksScreen (
                     )
                 }
             }
-        } else {
+        }
+        else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
                     start = 16.dp,
@@ -149,11 +202,125 @@ fun TasksScreen (
                 ),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                items(filteredTasks, key = { it.task.id }) { taskWithUsers ->
-                    TaskCard(taskWithUsers = taskWithUsers)
+                items(sortedTasks, key = { it.task.id!! }) { taskWithUsers ->
+                    TaskCard(
+                        taskWithUsers = taskWithUsers,
+                        openTaskDetail = {
+                            selectedTask = taskWithUsers
+                            editMode = false
+                        },
+                        onEditClick = {
+                            selectedTask = taskWithUsers
+                            editMode = true
+                        },
+                        onDeleteClick = {
+                            if (taskWithUsers.task.id != null) {
+                                scope.launch {
+                                    try {
+                                        screenModel.deleteTask(taskWithUsers.task.id)
+
+                                        // Show success snackbar
+                                        snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
+                                    } catch (e: Exception) {
+                                        // Show error snackbar
+                                        snackbarHostState?.showErrorSnackbar("Failed to delete task")
+                                    }
+                                }
+                            }
+                            selectedTask = null
+                        }
+
+                    )
                 }
             }
         }
+    }
+
+    // Add Task Modal
+    if (showAddTaskModal) {
+        AddTaskModal(
+            screenModel = screenModel,
+            onDismiss = { showAddTaskModal = false },
+            onSave = { title, description, status, priority, assignedUserIds, dueDate ->
+                scope.launch {
+                    try {
+                        screenModel.createTask(
+                            Task(
+                                title = title,
+                                teamId = TeamManager.currentTeam.value?.id!!,
+                                description = description,
+                                status = status,
+                                priority = priority,
+                                dueDate = dueDate
+                            ),
+                            assignedUserIds,
+                        )
+
+                        showAddTaskModal = false
+
+                        // Show success snackbar
+                        snackbarHostState?.showSuccessSnackbar("Task created successfully")
+                    } catch (e: Exception) {
+                        // Show error snackbar
+                        snackbarHostState?.showErrorSnackbar("Failed to create task")
+                    }
+                }
+            }
+        )
+    }
+
+    // Task Description Modal
+    selectedTask?.let { taskWithUsers ->
+        TaskDetailModal(
+            taskWithUsers = taskWithUsers,
+            isEditMode = editMode,
+            onDismiss = { selectedTask = null },
+            onDelete = {
+                if (taskWithUsers.task.id != null) {
+                    scope.launch {
+                        try {
+                            screenModel.deleteTask(taskWithUsers.task.id)
+
+                            // Show success snackbar
+                            snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
+                        } catch (e: Exception) {
+                            // Show error snackbar
+                            snackbarHostState?.showErrorSnackbar("Failed to delete task")
+                        }
+                    }
+                }
+                selectedTask = null
+            },
+            onSave = { title, description, status, priority, assignedUserIds, dueDate ->
+                if (taskWithUsers.task.id != null) {
+                    scope.launch {
+                        try {
+                            screenModel.updateTask(
+                                Task(
+                                    id = taskWithUsers.task.id,
+                                    title = title,
+                                    description = description,
+                                    status = status,
+                                    priority = priority,
+                                    dueDate = dueDate,
+                                    teamId = ""
+                                ),
+                                assignedUserIds,
+                            )
+
+                            showAddTaskModal = false
+
+                            // Show success snackbar
+                            snackbarHostState?.showSuccessSnackbar("Task updated successfully")
+                        } catch (e: Exception) {
+                            // Show error snackbar
+                            snackbarHostState?.showErrorSnackbar("Failed to update task")
+                        }
+                    }
+                }
+                selectedTask = null
+            }
+        )
     }
 }
 

@@ -1,4 +1,4 @@
-package com.teamschedulerapp.ui.components
+package com.teamschedulerapp.ui.components.tasks
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,20 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.User
-import kotlin.random.Random
-
-fun getColorForUser(userId: Number): Color {
-    val seed = userId.hashCode()
-    val random = Random(seed)
-    val red = random.nextInt(100, 256)
-    val green = random.nextInt(100, 256)
-    val blue = random.nextInt(100, 256)
-    return Color(red, green, blue)
-}
-
+import com.teamschedulerapp.ui.components.UserTile
 
 @Composable
 fun AssigneesTiles (assignedUsers: List<User>) {
@@ -37,8 +26,7 @@ fun AssigneesTiles (assignedUsers: List<User>) {
             val visibleUsers = assignedUsers.take(4)
             visibleUsers.forEach { user ->
                 UserTile(
-                    text = user.userName.firstOrNull()?.uppercase() ?: "",
-                    color = getColorForUser(user.userId)
+                    user = user,
                 )
             }
 

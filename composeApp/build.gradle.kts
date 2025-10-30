@@ -60,12 +60,6 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
             implementation(libs.compose.material.icons.extended)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
@@ -73,7 +67,7 @@ kotlin {
             implementation(libs.bundles.voyager.common)
             implementation(libs.bundles.supabase.common)
             implementation(libs.bundles.ktor.common)
-
+            implementation(libs.kizitonwoseCalendar)
         }
         iosMain.dependencies{
             implementation(libs.ktor.client.darwin)

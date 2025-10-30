@@ -12,7 +12,7 @@ class TaskAssignmentRepository(private val postgrest: Postgrest) {
     suspend fun assignUserToTask(assignment: TaskAssignment): Boolean {
         return try {
             withContext(Dispatchers.IO) {
-                postgrest.from("task_assignments").insert(assignment)
+                postgrest.from("task_assignment").insert(assignment)
             }
             true
         } catch (e: Exception) {
@@ -24,7 +24,7 @@ class TaskAssignmentRepository(private val postgrest: Postgrest) {
     suspend fun getAssignmentsForTask(taskId: String): List<TaskAssignment> {
         return try {
             withContext(Dispatchers.IO) {
-                postgrest.from("task_assignments").select {
+                postgrest.from("task_assignment").select {
                     filter { eq("task_id", taskId) }
                 }.decodeList<TaskAssignment>()
             }
@@ -37,7 +37,7 @@ class TaskAssignmentRepository(private val postgrest: Postgrest) {
     suspend fun getAssignedTasksForUser(userId: String): List<TaskAssignment> {
         return try {
             withContext(Dispatchers.IO) {
-                postgrest.from("task_assignments").select {
+                postgrest.from("task_assignment").select {
                     filter { eq("user_id", userId) }
                 }.decodeList<TaskAssignment>()
             }
@@ -50,7 +50,7 @@ class TaskAssignmentRepository(private val postgrest: Postgrest) {
     suspend fun removeAssignment(taskId: String, userId: String): Boolean {
         return try {
             withContext(Dispatchers.IO) {
-                postgrest.from("task_assignments").delete {
+                postgrest.from("task_assignment").delete {
                     filter {
                         eq("task_id", taskId)
                         eq("user_id", userId)
