@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.teamschedulerapp.model.TeamWithMembers
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageTeamsScreen(
     userId: String,
