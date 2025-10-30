@@ -97,4 +97,26 @@ class AuthRepository(private val supabase: SupabaseClient) {
             Result.failure(e)
         }
     }
+
+    suspend fun getCurrentUser(): User? = withContext(Dispatchers.IO) {
+        try {
+            val supabaseUser = supabase.auth.currentUserOrNull() ?: return@withContext null
+            val userId = supabaseUser.id
+
+            val userRecord = supabase.postgrest
+                .from("users")
+                .select {
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+                .decodeSingleOrNull<User>() // ✅ Safely decode into your User model
+
+            userRecord
+        } catch (e: Exception) {
+            println("Error fetching current user: ${e.message}")
+            null
+        }
+    }
+
 }
