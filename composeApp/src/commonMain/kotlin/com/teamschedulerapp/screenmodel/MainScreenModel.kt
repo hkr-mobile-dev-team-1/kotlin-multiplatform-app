@@ -2,8 +2,8 @@ package com.teamschedulerapp.screenmodel
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.teamschedulerapp.model.Team
-import com.teamschedulerapp.model.User
+import com.teamschedulerapp.model.TeamMemberWithUser
+import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.repositories.TeamMemberRepository
 import com.teamschedulerapp.repositories.TeamRepository
@@ -27,11 +27,6 @@ class MainScreenModel(
 
     init {
         loadUserTeams()
-        screenModelScope.launch {
-            TeamManager.currentTeam.collect { team ->
-                team?.let { getTeamMembers(it.id!!) }
-            }
-        }
     }
 
     fun loadUserTeams() {
@@ -40,78 +35,141 @@ class MainScreenModel(
             _error.value = null
 
             try {
-                val teams = teamRepository.getTeamsForUser(userId)
-                println("TeamScreenModel - Loaded ${teams.size} teams")
-                TeamManager.setUserTeams(teams)
-            } catch (e: Exception) {
-                _error.value = "Failed to load teams: ${e.message}"
-                println("TeamScreenModel - Error: ${e.message}")
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
+                // Get all teams for the user
+                val teams = teamRepository.getTeamsForUser()
 
-    fun createTeam(name: String, description: String) {
-        screenModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
+                // For each team, fetch its members and compose UserTeamWithMembers
+                val teamsWithMembers = teams.map { team ->
+                    // Get team members (TeamMember objects with userId, teamId, isAdmin)
+                    val teamMembers = teamMemberRepository.getMembersForTeam(team.id ?: "")
 
-            try {
-                // Create team
-                val createdTeam = teamRepository.createTeam(
-                    Team(
-                        name = name,
-                        description = description.ifBlank { null }
-                    )
-                )
+                    // For each team member, fetch the user details and combine
+                    val membersWithUser = teamMembers.mapNotNull { teamMember ->
+                        // Fetch user details
+                        val user = userRepository.getUserById(teamMember.userId)
 
-                if (createdTeam != null) {
-                    println("Team created")
-                    loadUserTeams()
-                    TeamManager.selectTeam(createdTeam)
-                } else {
-                    _error.value = "Failed to create team"
-                }
-            } catch (e: Exception) {
-                _error.value = "Failed to create team: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun getTeamMembers(teamId : String) {
-        screenModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-
-            try {
-                val teamMembers = teamMemberRepository.getMembersForTeam(teamId)
-
-                if (teamMembers.isNotEmpty()) {
-                    println("Team Members fetched: ${teamMembers.size}")
-
-                    // Map each TeamMember to User
-                    val users = teamMembers.mapNotNull { teamMember ->
-                        userRepository.getUserById(teamMember.userId)
+                        // Combine user info with admin status
+                        user?.let {
+                            TeamMemberWithUser(
+                                id = it.id,
+                                firstName = it.firstName,
+                                lastName = it.lastName,
+                                email = it.email,
+                                isAdmin = teamMember.isAdmin
+                            )
+                        }
                     }
-
-                    println("Users fetched: ${users.size}")
-
-                    TeamManager.setCurrentTeamMembers(users)
-
-                } else {
-                    println("No team members found")
+                    TeamWithMembers(
+                        id = team.id,
+                        name = team.name,
+                        description = team.description,
+                        createdBy = team.createdBy,
+                        members = membersWithUser
+                    )
                 }
+                TeamManager.setUserTeams(teamsWithMembers)
+                println("MainScreenModel - Loaded ${teamsWithMembers.size} teams with members")
             } catch (e: Exception) {
-                _error.value = "Failed to fetch team members: ${e.message}"
-                println("Error fetching team members: ${e.message}")
-                e.printStackTrace()
+                println("MainScreenModel - Error: ${e.message}")
             } finally {
                 _isLoading.value = false
             }
         }
     }
+
+    suspend fun createTeam(name: String, description: String) {
+        _isLoading.value = true
+        _error.value = null
+
+        try {
+            val createdTeam = teamRepository.createTeam(
+                name = name,
+                description = description.ifBlank { null }
+            )
+
+            if (createdTeam != null) {
+                println("Team created")
+                loadUserTeams()
+                TeamManager.userTeams.value.find { it.id == createdTeam.id }?.let { team ->
+                    TeamManager.selectTeam(team)
+                }
+            } else {
+                throw Exception("Failed to create team")
+            }
+        } catch (e: Exception) {
+            println("MainScreenModel - Error creating team: ${e.message}")
+            throw e // Rethrow so UI can catch and display snackbar
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    suspend fun updateTeam(teamId: String, name: String, description: String) {
+        _isLoading.value = true
+        _error.value = null
+
+        try {
+            val success = teamRepository.updateTeam(
+                teamId = teamId,
+                name = name,
+                description = description.ifBlank { null }
+            )
+
+            if (success) {
+                println("Team updated: $teamId")
+                loadUserTeams()
+                TeamManager.currentTeam.value?.let { currentTeam ->
+                    if (currentTeam.id == teamId) {
+                        TeamManager.userTeams.value.find { it.id == teamId }?.let { updatedTeam ->
+                            TeamManager.selectTeam(updatedTeam)
+                        }
+                    }
+                }
+            } else {
+                throw Exception("Failed to update team")
+            }
+        } catch (e: Exception) {
+            println("MainScreenModel - Error updating team: ${e.message}")
+            throw e // Rethrow so UI can catch and display snackbar
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    suspend fun deleteTeam(teamId: String) {
+        _isLoading.value = true
+        _error.value = null
+
+        try {
+            val success = teamRepository.deleteTeam(teamId)
+
+            if (success) {
+                println("Team deleted: $teamId")
+
+                // If deleted team was the current team, clear it
+                if (TeamManager.currentTeam.value?.id == teamId) {
+                    TeamManager.clearTeam()
+                }
+
+                loadUserTeams()
+            } else {
+                throw Exception("Failed to delete team")
+            }
+        } catch (e: Exception) {
+            println("MainScreenModel - Error deleting team: ${e.message}")
+            throw e // Rethrow so UI can catch and display snackbar
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    fun isUserAdminOfTeam(teamId: String): Boolean {
+        return TeamManager.isUserAdminOfTeam(teamId, userId)
+    }
+
+    fun isUserAdminOfCurrentTeam(): Boolean {
+        return TeamManager.isUserAdminOfCurrentTeam(userId)
+    }
+
 
 }

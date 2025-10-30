@@ -1,15 +1,15 @@
 package com.teamschedulerapp.ui.components.tasks
 
-import com.teamschedulerapp.model.TaskWithUsers
+import com.teamschedulerapp.model.TaskWithAssignments
 import com.teamschedulerapp.utils.DateUtils
 
 /**
  * Apply filter options to a list of tasks
  */
 fun applyFilters(
-    tasks: List<TaskWithUsers>,
+    tasks: List<TaskWithAssignments>,
     filter: FilterOption
-): List<TaskWithUsers> {
+): List<TaskWithAssignments> {
     return tasks.filter { taskWithUsers ->
         val task = taskWithUsers.task
         val priorityMatch = filter.priority.isEmpty() || task.priority in filter.priority
@@ -22,9 +22,9 @@ fun applyFilters(
  * Apply sort option to a list of tasks
  */
 fun applySorting(
-    tasks: List<TaskWithUsers>,
+    tasks: List<TaskWithAssignments>,
     sortOption: String?
-): List<TaskWithUsers> {
+): List<TaskWithAssignments> {
     return when (sortOption) {
         "priority_high_low" -> tasks.sortedBy { task ->
             when (task.task.priority) {
