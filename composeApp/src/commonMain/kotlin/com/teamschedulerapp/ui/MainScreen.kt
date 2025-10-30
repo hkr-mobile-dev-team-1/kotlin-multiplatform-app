@@ -137,6 +137,11 @@ object SettingsTab : Tab {
             authRepository = authRepository,
             onBack = {
                 rootNavigator.replaceAll(Login)
+            },
+            onManageTeams = {
+                // For now, just show a placeholder action
+                // Later, we’ll replace this with navigation to ManageTeamsScreen
+                println("Manage Teams clicked!")
             }
         )
     }
