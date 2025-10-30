@@ -1,25 +1,30 @@
 package com.teamschedulerapp.repositories
 
 import com.teamschedulerapp.model.Team
-import com.teamschedulerapp.model.TeamMember
 import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
-class TeamRepository(private val postgrest: Postgrest) {
-    suspend fun createTeam(team: Team): Team? {
+class TeamRepository(
+    private val postgrest: Postgrest) {
+
+    suspend fun createTeam(name: String, description: String?): Boolean {
         return try {
             withContext(Dispatchers.IO) {
                 postgrest
                     .from("teams")
-                    .insert(team){
-                        select()
-                    }.decodeSingle<Team>()
+                    .insert(
+                        mapOf(
+                            "name" to name,
+                            "description" to description
+                        )
+                    )
             }
-        } catch(e: Exception) {
+            true
+        }catch(e: Exception) {
             println("Error creating team: ${e.message}")
-            null
+            false
         }
     }
 
@@ -39,18 +44,16 @@ class TeamRepository(private val postgrest: Postgrest) {
         }
     }
 
-    suspend fun getTeamsForUser(userId: String): List<Team> {
+    suspend fun getTeamsForUser(): List<Team> {
         return try {
             withContext(Dispatchers.IO) {
-                val teams = postgrest.from("teams")
-                    .select {}.decodeList<Team>()
-
-                println("Found ${teams.size} teams for user $userId")
-                teams
+                postgrest
+                    .from("teams")
+                    .select()
+                    .decodeList<Team>()
             }
         } catch (e: Exception) {
             println("Error fetching teams for user: ${e.message}")
-            e.printStackTrace()
             emptyList()
         }
     }

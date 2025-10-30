@@ -89,118 +89,113 @@ class TaskScreenModel(
         }
     }
 
-    fun createTask(task: Task, assignedMembers: List<TeamMemberWithUser>) {
-        screenModelScope.launch {
-            try {
-                println("Created task with $task ")
+    suspend fun createTask(task: Task, assignedMembers: List<TeamMemberWithUser>) {
+        try {
+            println("Created task with $task ")
 
-                val createdTask = taskRepository.createTask(
-                    Task(
-                        teamId = task.teamId,
-                        title = task.title,
-                        description = task.description,
-                        status = task.status,
-                        priority = task.priority,
-                        dueDate = task.dueDate
-                    )
-                )
-
-                if (createdTask != null && createdTask.id != null) {
-                    println("Created Task: $createdTask")
-                    val taskId = createdTask.id
-
-                    assignedMembers.forEach { member ->
-                        taskAssignmentRepository.assignUserToTask(
-                            TaskAssignment(taskId = taskId, userId = member.id)
-                        )
-                    }
-                    // Safe reload
-                    TeamManager.currentTeam.value?.id?.let { teamId ->
-                        loadTasksForTeam(teamId)
-                    }
-
-                } else {
-                    throw Exception("Failed to create task")
-                }
-            } catch (e: Exception) {
-                println("TaskScreenModel - Error creating task: ${e.message}")
-                throw e // Rethrow so UI can catch and display snackbar
-            }
-        }
-    }
-
-    fun updateTask(task: Task, assignedMembers: List<TeamMemberWithUser> ) {
-        screenModelScope.launch {
-            try {
-                val taskId = task.id
-                if (taskId == null) {
-                    _error.value = "Cannot update task without ID"
-                    throw Exception("Cannot update task without ID")
-                }
-
-                val success = taskRepository.updateTask(
-                    taskId = taskId,
+            val createdTask = taskRepository.createTask(
+                Task(
+                    teamId = task.teamId,
                     title = task.title,
                     description = task.description,
                     status = task.status,
                     priority = task.priority,
                     dueDate = task.dueDate
                 )
+            )
 
-                if (success) {
-                    // Handle user assignments
-                    val currentAssignments = taskAssignmentRepository.getAssignmentsForTask(task.id)
-                    val currentUserIds = currentAssignments.map { it.userId }
+            if (createdTask != null && createdTask.id != null) {
+                println("Created Task: $createdTask")
+                val taskId = createdTask.id
 
-                    // Remove users no longer assigned
-                    val usersToRemove = currentUserIds
-                        .filter { userId -> userId !in assignedMembers
-                            .map { member -> member.id } }
-                    usersToRemove.forEach { userId ->
-                        taskAssignmentRepository.removeAssignment(taskId, userId)
-                    }
-
-                    // Add new users
-                    val usersToAdd = assignedMembers
-                        .map { member -> member.id }
-                        .filter { userId -> userId !in currentUserIds }
-                    usersToAdd.forEach { userId ->
-                        taskAssignmentRepository.assignUserToTask(
-                            TaskAssignment(taskId = task.id, userId = userId)
-                        )
-                    }
-
-                    // Safe reload
-                    TeamManager.currentTeam.value?.id?.let { teamId ->
-                        loadTasksForTeam(teamId)
-                    }
-                } else {
-                    throw Exception("Failed to update task")
+                assignedMembers.forEach { member ->
+                    taskAssignmentRepository.assignUserToTask(
+                        TaskAssignment(taskId = taskId, userId = member.id)
+                    )
                 }
-            } catch (e: Exception) {
-                _error.value = "Failed to update task: ${e.message}"
-                println("TaskScreenModel - Error updating task: ${e.message}")
-                throw e // Rethrow so UI can catch and display snackbar            }
+                // Safe reload
+                TeamManager.currentTeam.value?.id?.let { teamId ->
+                    loadTasksForTeam(teamId)
+                }
+
+            } else {
+                throw Exception("Failed to create task")
             }
+        } catch (e: Exception) {
+            println("TaskScreenModel - Error creating task: ${e.message}")
+            throw e // Rethrow so UI can catch and display snackbar
         }
     }
 
-    fun deleteTask(taskId: String) {
-        screenModelScope.launch {
-            try {
-                val success = taskRepository.deleteTask(taskId)
-                if (success) {
-                    // Safe reload
-                    TeamManager.currentTeam.value?.id?.let { teamId ->
-                        loadTasksForTeam(teamId)
-                    }
-                } else {
-                    throw Exception("Failed to delete task")
-                }
-            } catch (e: Exception) {
-                _error.value = "Failed to delete task: ${e.message}"
-                throw e // Rethrow so UI can catch and display snackbar            }
+    suspend fun updateTask(task: Task, assignedMembers: List<TeamMemberWithUser> ) {
+        try {
+            val taskId = task.id
+            if (taskId == null) {
+                _error.value = "Cannot update task without ID"
+                throw Exception("Cannot update task without ID")
             }
+
+            val success = taskRepository.updateTask(
+                taskId = taskId,
+                title = task.title,
+                description = task.description,
+                status = task.status,
+                priority = task.priority,
+                dueDate = task.dueDate
+            )
+
+            if (!success) {
+                throw Exception("Failed to update task in database")
+            }
+
+            // Handle user assignments
+            val currentAssignments = taskAssignmentRepository.getAssignmentsForTask(task.id)
+            val currentUserIds = currentAssignments.map { it.userId }
+
+            // Remove users no longer assigned
+            val usersToRemove = currentUserIds
+                .filter { userId -> userId !in assignedMembers
+                    .map { member -> member.id } }
+            usersToRemove.forEach { userId ->
+                taskAssignmentRepository.removeAssignment(taskId, userId)
+            }
+
+            // Add new users
+            val usersToAdd = assignedMembers
+                .map { member -> member.id }
+                .filter { userId -> userId !in currentUserIds }
+            usersToAdd.forEach { userId ->
+                taskAssignmentRepository.assignUserToTask(
+                    TaskAssignment(taskId = task.id, userId = userId)
+                )
+            }
+
+            // Safe reload
+            TeamManager.currentTeam.value?.id?.let { teamId ->
+                loadTasksForTeam(teamId)
+            }
+        } catch (e: Exception) {
+            _error.value = "Failed to update task: ${e.message}"
+            println("TaskScreenModel - Error updating task: ${e.message}")
+            throw e // Rethrow so UI can catch and display snackbar            }
+
+        }
+    }
+
+    suspend fun deleteTask(taskId: String) {
+        try {
+            val success = taskRepository.deleteTask(taskId)
+            if (success) {
+                // Safe reload
+                TeamManager.currentTeam.value?.id?.let { teamId ->
+                    loadTasksForTeam(teamId)
+                }
+            } else {
+                throw Exception("Failed to delete task")
+            }
+        } catch (e: Exception) {
+            _error.value = "Failed to delete task: ${e.message}"
+            throw e // Rethrow so UI can catch and display snackbar            }
         }
     }
 }
