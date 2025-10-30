@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.Team
+import com.teamschedulerapp.model.TeamWithMembers
 import kotlin.random.Random
 
 fun getColorForUser(teamId: String): Color {
@@ -27,7 +27,7 @@ fun getColorForUser(teamId: String): Color {
     return Color(red, green, blue)
 }
 @Composable
-fun TeamTile (team: Team?) {
+fun TeamTile (team: TeamWithMembers?) {
     if (team != null) {
         if (team.id != null) {
             Box(

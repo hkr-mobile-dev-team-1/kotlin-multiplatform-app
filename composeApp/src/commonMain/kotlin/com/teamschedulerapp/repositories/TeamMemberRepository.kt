@@ -48,6 +48,22 @@ class TeamMemberRepository(
         }
     }
 
+    suspend fun getMember(teamId: String, userId: String): TeamMember? {
+        return try {
+            withContext(Dispatchers.IO) {
+                postgrest.from("team_members").select {
+                    filter {
+                        eq("team_id", teamId)
+                        eq("user_id", userId)
+                    }
+                }.decodeSingle<TeamMember>()
+            }
+        } catch (e: Exception) {
+            println("Error fetching member: ${e.message}")
+            null
+        }
+    }
+
     suspend fun getTeamWithUserInfo(teamId: String): List<User> {
         val teamMembers = getMembersForTeam(teamId)
         val users = mutableListOf<User>()

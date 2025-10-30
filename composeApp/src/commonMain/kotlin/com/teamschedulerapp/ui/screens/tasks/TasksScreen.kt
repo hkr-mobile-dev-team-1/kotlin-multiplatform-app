@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.model.Task
-import com.teamschedulerapp.model.TaskWithUsers
+import com.teamschedulerapp.model.TaskWithAssignments
 import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.screenmodel.TaskScreenModel
 import com.teamschedulerapp.ui.components.tasks.AddTaskModal
@@ -40,11 +40,11 @@ fun TasksScreen (
     snackbarHostState: SnackbarHostState? = null
 
 ) {
-    val tasksWithUsers by screenModel.tasksWithUsers.collectAsState()
+    val tasksWithAssignments by screenModel.tasksWithAssignments.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
     val currentUserId = SupabaseClientManager.client.auth.currentUserOrNull()?.id
     var showAddTaskModal by remember { mutableStateOf(false) }
-    var selectedTask by remember { mutableStateOf<TaskWithUsers?>(null) }
+    var selectedTask by remember { mutableStateOf<TaskWithAssignments?>(null) }
     var editMode by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf<FilterOption>(FilterOption(emptySet<String>(),emptySet<String>())) }
     var selectedSort by remember { mutableStateOf<String>("due_date_nearest") }
@@ -59,12 +59,12 @@ fun TasksScreen (
     }
 
     val tabFilteredTasks = when (selectedTab) {
-        0 -> tasksWithUsers
-        1 -> tasksWithUsers.filter { taskWithUsers ->
-            taskWithUsers.assignedUsers.any { it.id == currentUserId }
+        0 -> tasksWithAssignments
+        1 -> tasksWithAssignments.filter { taskWithAssignments ->
+            taskWithAssignments.assignedMembers.any { it.id == currentUserId }
         }
-        2 -> tasksWithUsers.filter { it.assignedUsers.isEmpty() }
-        else -> tasksWithUsers
+        2 -> tasksWithAssignments.filter { it.assignedMembers.isEmpty() }
+        else -> tasksWithAssignments
     }
     val filteredTasks = applyFilters(tabFilteredTasks, selectedFilter)
     val sortedTasks = applySorting(filteredTasks, selectedSort)
@@ -202,22 +202,22 @@ fun TasksScreen (
                 ),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                items(sortedTasks, key = { it.task.id!! }) { taskWithUsers ->
+                items(sortedTasks, key = { it.task.id!! }) { taskWithAssignments ->
                     TaskCard(
-                        taskWithUsers = taskWithUsers,
+                        taskWithAssignments = taskWithAssignments,
                         openTaskDetail = {
-                            selectedTask = taskWithUsers
+                            selectedTask = taskWithAssignments
                             editMode = false
                         },
                         onEditClick = {
-                            selectedTask = taskWithUsers
+                            selectedTask = taskWithAssignments
                             editMode = true
                         },
                         onDeleteClick = {
-                            if (taskWithUsers.task.id != null) {
+                            if (taskWithAssignments.task.id != null) {
                                 scope.launch {
                                     try {
-                                        screenModel.deleteTask(taskWithUsers.task.id)
+                                        screenModel.deleteTask(taskWithAssignments.task.id)
 
                                         // Show success snackbar
                                         snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
@@ -241,7 +241,7 @@ fun TasksScreen (
         AddTaskModal(
             screenModel = screenModel,
             onDismiss = { showAddTaskModal = false },
-            onSave = { title, description, status, priority, assignedUserIds, dueDate ->
+            onSave = { title, description, status, priority, assignedMembers, dueDate ->
                 scope.launch {
                     try {
                         screenModel.createTask(
@@ -253,7 +253,7 @@ fun TasksScreen (
                                 priority = priority,
                                 dueDate = dueDate
                             ),
-                            assignedUserIds,
+                            assignedMembers,
                         )
 
                         showAddTaskModal = false
@@ -270,16 +270,16 @@ fun TasksScreen (
     }
 
     // Task Description Modal
-    selectedTask?.let { taskWithUsers ->
+    selectedTask?.let { taskWithAssignment ->
         TaskDetailModal(
-            taskWithUsers = taskWithUsers,
+            taskWithAssignment = taskWithAssignment,
             isEditMode = editMode,
             onDismiss = { selectedTask = null },
             onDelete = {
-                if (taskWithUsers.task.id != null) {
+                if (taskWithAssignment.task.id != null) {
                     scope.launch {
                         try {
-                            screenModel.deleteTask(taskWithUsers.task.id)
+                            screenModel.deleteTask(taskWithAssignment.task.id)
 
                             // Show success snackbar
                             snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
@@ -291,13 +291,13 @@ fun TasksScreen (
                 }
                 selectedTask = null
             },
-            onSave = { title, description, status, priority, assignedUserIds, dueDate ->
-                if (taskWithUsers.task.id != null) {
+            onSave = { title, description, status, priority, assignedMembers, dueDate ->
+                if (taskWithAssignment.task.id != null) {
                     scope.launch {
                         try {
                             screenModel.updateTask(
                                 Task(
-                                    id = taskWithUsers.task.id,
+                                    id = taskWithAssignment.task.id,
                                     title = title,
                                     description = description,
                                     status = status,
@@ -305,7 +305,7 @@ fun TasksScreen (
                                     dueDate = dueDate,
                                     teamId = ""
                                 ),
-                                assignedUserIds,
+                                assignedMembers,
                             )
 
                             showAddTaskModal = false
