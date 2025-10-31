@@ -203,7 +203,7 @@ fun ScheduleScreen(
                 initialTo = editTarget?.to,
                 onConfirm = { name, from, to ->
                     val attendee = Attendee(displayName = name, from = from, to = to)
-                    screenModel.saveAttendance(teamId, date, attendee) {
+                    screenModel.saveAttendance(teamId, date, attendee, teamMembers) {
                         editTarget = null
                         showDialogFor = null
                     }
