@@ -1,5 +1,6 @@
 package com.teamschedulerapp.ui.components.tasks
 
+import com.teamschedulerapp.model.User
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,8 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.TaskWithAssignments
-import com.teamschedulerapp.model.TeamMemberWithUser
+import com.teamschedulerapp.model.TaskWithUsers
 import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.ui.components.DateRange
 import com.teamschedulerapp.ui.components.UserLabel
@@ -28,7 +28,7 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class)
 @Composable
 fun TaskDetailModal(
-    taskWithAssignment: TaskWithAssignments,
+    task: TaskWithUsers,
     isEditMode: Boolean,
     onDismiss: () -> Unit,
     onDelete: () -> Unit,
@@ -37,23 +37,23 @@ fun TaskDetailModal(
         description: String,
         status: String,
         priority: String,
-        assignedMembers: List<TeamMemberWithUser>,
+        assignedUserIds: List<String>,
         dueDate: String?
     ) -> Unit
 ) {
-    var title by remember { mutableStateOf(taskWithAssignment.task.title) }
-    var description by remember { mutableStateOf(taskWithAssignment.task.description ?: "") }
-    var selectedStatus by remember { mutableStateOf(taskWithAssignment.task.status) }
-    var selectedPriority by remember { mutableStateOf(taskWithAssignment.task.priority) }
-    var selectedMembers by remember { mutableStateOf(taskWithAssignment.assignedMembers) }
-    var selectedDueDate by remember { mutableStateOf<String?>(taskWithAssignment.task.dueDate) }
+    var title by remember { mutableStateOf(task.task.title) }
+    var description by remember { mutableStateOf(task.task.description ?: "") }
+    var selectedStatus by remember { mutableStateOf(task.task.status) }
+    var selectedPriority by remember { mutableStateOf(task.task.priority) }
+    var selectedUserIds by remember { mutableStateOf(task.assignedUsers.map { it -> it.id }) }
+    var selectedDueDate by remember { mutableStateOf<String?>(task.task.dueDate) }
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(isEditMode) }
 
-    val currentTeam by TeamManager.currentTeam.collectAsState()
+    val currentTeamMembers by TeamManager.currentTeamMembers.collectAsState()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -266,19 +266,17 @@ fun TaskDetailModal(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            currentTeam?.members?.forEach { member ->
-                                val isSelected = selectedMembers
-                                    .map { member -> member.id }
-                                    .contains(member.id)
+                            currentTeamMembers?.forEach { user ->
+                                val isSelected = selectedUserIds.contains(user.id)
 
                                 UserLabel(
-                                    member = member,
+                                    user = user,
                                     isSelected = isSelected,
                                     onClick = {
-                                        selectedMembers = if (isSelected) {
-                                            selectedMembers - member
+                                        selectedUserIds = if (isSelected) {
+                                            selectedUserIds - user.id
                                         } else {
-                                            selectedMembers + member
+                                            selectedUserIds + user.id
                                         }
                                     }
                                 )
@@ -387,7 +385,7 @@ fun TaskDetailModal(
                             fontWeight = FontWeight.SemiBold,
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        if (taskWithAssignment.assignedMembers.isEmpty()) {
+                        if (task.assignedUsers.isEmpty()) {
                             Text(
                                 text = "No team member was assigned to this task.",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -398,9 +396,9 @@ fun TaskDetailModal(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                taskWithAssignment.assignedMembers.forEach { member ->
+                                task.assignedUsers.forEach { user ->
                                     UserLabel(
-                                        member = member,
+                                        user = user,
                                         isSelected = false,
                                         onClick = { }
                                     )
@@ -438,7 +436,7 @@ fun TaskDetailModal(
                                     description,
                                     selectedStatus,
                                     selectedPriority,
-                                    selectedMembers,
+                                    selectedUserIds,
                                     selectedDueDate
                                 )
                                 onDismiss()

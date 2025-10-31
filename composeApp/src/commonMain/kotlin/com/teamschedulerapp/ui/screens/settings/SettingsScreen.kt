@@ -1,11 +1,9 @@
 package com.teamschedulerapp.ui.screens.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,9 +18,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     user: User,
     authRepository: AuthRepository,
-    onBack: () -> Unit,
-    onManageTeams: () -> Unit
-
+    onBack: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     Scaffold(
@@ -84,35 +80,6 @@ fun SettingsScreen(
             }
 
             item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp)) }
-
-            item {
-                SettingsSection(
-                    title = "Teams",
-                    content = {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onManageTeams() }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Manage Teams",
-                                style = MaterialTheme.typography.bodyLarge, // ✅ matches Dark Mode & Notifications
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = "Go to Manage Teams",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    })
-
-            }
-            item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp)) }
-
 
             // Account Section
             item {

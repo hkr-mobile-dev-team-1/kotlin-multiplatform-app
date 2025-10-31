@@ -7,33 +7,24 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.TeamWithMembers
+import com.teamschedulerapp.model.Team
 
 @Composable
 fun TeamSelectorModal(
-    userId: String,
-    teams: List<TeamWithMembers>,
-    currentTeam: TeamWithMembers?,
-    onTeamSelected: (TeamWithMembers) -> Unit,
+    teams: List<Team>,
+    currentTeam: Team?,
+    onTeamSelected: (Team) -> Unit,
     onCreateTeam: () -> Unit,
-    onEditTeam: (TeamWithMembers) -> Unit,
-    onDeleteTeam: (TeamWithMembers) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var teamToDelete by remember { mutableStateOf<TeamWithMembers?>(null) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -64,7 +55,6 @@ fun TeamSelectorModal(
             ) {
                 items(teams) { team ->
                     val isSelected = team.id == currentTeam?.id
-                    val userIsAdmin = team.members.find { it.id == userId }?.isAdmin ?: false
 
                     Surface(
                         modifier = Modifier
@@ -82,7 +72,7 @@ fun TeamSelectorModal(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Left side: TeamTile, name and admin badge
+                            // Left side: TeamTile and name
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -91,19 +81,11 @@ fun TeamSelectorModal(
                                 TeamTile(team)
 
                                 Column {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Text(
-                                            text = team.name,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        if (userIsAdmin) {
-                                            AdminBadge()
-                                        }
-                                    }
+                                    Text(
+                                        text = team.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
                                     team.description?.let {
                                         Text(
                                             text = it,
@@ -114,34 +96,13 @@ fun TeamSelectorModal(
                                 }
                             }
 
-                            // Right side: action buttons (only for admins)
-                            if (userIsAdmin) {
-                                IconButton(
-                                    onClick = {
-                                        onEditTeam(team)
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit team",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-
-                                // Delete button (only for admins)
-                                IconButton(
-                                    onClick = {
-                                        teamToDelete = team
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete team",
-                                        tint = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
+                            // Right side: Check icon
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
                             }
                         }
                     }
@@ -187,34 +148,5 @@ fun TeamSelectorModal(
                 )
             }
         }
-    }
-
-    // Delete confirmation dialog
-    teamToDelete?.let { team ->
-        AlertDialog(
-            onDismissRequest = { teamToDelete = null },
-            title = { Text("Delete Team") },
-            text = {
-                Text("Are you sure you want to delete \"${team.name}\"? This action cannot be undone.")
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDeleteTeam(team)
-                        teamToDelete = null
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { teamToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
     }
 }

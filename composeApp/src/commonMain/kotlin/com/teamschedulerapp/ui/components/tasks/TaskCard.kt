@@ -17,18 +17,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.TaskWithAssignments
+import com.teamschedulerapp.model.TaskWithUsers
 import com.teamschedulerapp.ui.components.DateRange
 
 @Composable
 fun TaskCard(
-    taskWithAssignments: TaskWithAssignments,
+    taskWithUsers: TaskWithUsers,
     openTaskDetail: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    val task = taskWithAssignments.task
-    val assignedMembers = taskWithAssignments.assignedMembers
+    val task = taskWithUsers.task
+    val assignedUsers = taskWithUsers.assignedUsers
     var showMenu by remember { mutableStateOf(false) }
 
     Card(
@@ -126,7 +126,7 @@ fun TaskCard(
                     PriorityLabel(priority = task.priority)
                 }
 
-                AssigneesTiles(assignedMembers = assignedMembers)
+                AssigneesTiles(assignedUsers = assignedUsers)
             }
 
             Spacer(modifier = Modifier.height(12.dp))

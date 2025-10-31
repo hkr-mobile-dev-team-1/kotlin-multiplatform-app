@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.screenmodel.TaskScreenModel
 import com.teamschedulerapp.ui.components.UserLabel
@@ -34,16 +33,16 @@ fun AddTaskModal(
         description: String,
         status: String,
         priority: String,
-        assignedMembers: List<TeamMemberWithUser>,
+        assignedUserIds: List<String>,
         dueDate: String?
     ) -> Unit
 ) {
-    val currentTeam by TeamManager.currentTeam.collectAsState()
+    val teamMembers by TeamManager.currentTeamMembers.collectAsState()
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("pending") }
     var selectedPriority by remember { mutableStateOf<String>("medium") }
-    var selectedMembers by remember { mutableStateOf(emptyList<TeamMemberWithUser>()) }
+    var selectedUserIds by remember { mutableStateOf(emptyList<String>()) }
     var selectedDueDate by remember { mutableStateOf<String?>(null) }
 
     var statusExpanded by remember { mutableStateOf(false) }
@@ -259,17 +258,17 @@ fun AddTaskModal(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        currentTeam?.members?.forEach { member ->
-                            val isSelected = selectedMembers.contains(member)
+                        teamMembers?.forEach { user ->
+                            val isSelected = selectedUserIds.contains(user.id)
 
                             UserLabel(
-                                member = member,
+                                user = user,
                                 isSelected = isSelected,
                                 onClick = {
-                                    selectedMembers = if (isSelected) {
-                                        selectedMembers - member
+                                    selectedUserIds = if (isSelected) {
+                                        selectedUserIds - user.id
                                     } else {
-                                        selectedMembers + member
+                                        selectedUserIds + user.id
                                     }
                                 }
                             )
@@ -300,7 +299,7 @@ fun AddTaskModal(
                                 description,
                                 selectedStatus,
                                 selectedPriority,
-                                selectedMembers,
+                                selectedUserIds,
                                 selectedDueDate
                             )
                             onDismiss()

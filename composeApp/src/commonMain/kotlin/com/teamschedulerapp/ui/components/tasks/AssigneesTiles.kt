@@ -13,25 +13,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.model.User
 import com.teamschedulerapp.ui.components.UserTile
 
 @Composable
-fun AssigneesTiles (assignedMembers: List<TeamMemberWithUser>) {
-    if (assignedMembers.isNotEmpty()) {
+fun AssigneesTiles (assignedUsers: List<User>) {
+    if (assignedUsers.isNotEmpty()) {
         Row(
             horizontalArrangement = Arrangement.spacedBy((-8).dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val visibleUsers = assignedMembers.take(4)
-            visibleUsers.forEach { member ->
+            val visibleUsers = assignedUsers.take(4)
+            visibleUsers.forEach { user ->
                 UserTile(
-                    member = member,
+                    user = user,
                 )
             }
 
-            if (assignedMembers.size > 4) {
+            if (assignedUsers.size > 4) {
                 Box(
                     modifier = Modifier
                         .size(28.dp)
@@ -44,7 +43,7 @@ fun AssigneesTiles (assignedMembers: List<TeamMemberWithUser>) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "+${assignedMembers.size - 4}",
+                        text = "+${assignedUsers.size - 4}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
