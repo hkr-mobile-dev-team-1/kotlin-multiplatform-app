@@ -75,22 +75,22 @@ fun ScheduleScreen(
     // delete dialog trigger
     var pendingDelete by remember { mutableStateOf<Attendee?>(null) }
 
-    // repo scopes (DB related) DELETE - DO NOT ACCESS DB DIRECTLY
+    // repo scopes (DB related) TODO: create delete delegate also in screen model and acces from there
     val scope = rememberCoroutineScope()
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
 
     val teamWithMembers by TeamManager.currentTeam.collectAsState()
     val teamId = teamWithMembers?.id ?: return
-
-    // Use members as-is
+    // wire team members
     val teamMembers: List<TeamMemberWithUser> = teamWithMembers?.members ?: emptyList()
 
-
+    // bring in screen model
     val screenModel = remember(availabilityRepository, userRepository, userId) {
         ScheduleScreenModel(availabilityRepository, userRepository, userId)
     }
-    val attendeesPairs by screenModel.attendeesForDay.collectAsState() // List<Pair<Attendee, ownerId>>
+    // pair attendee + owner
+    val attendeesPairs by screenModel.attendeesForDay.collectAsState()
     val isLoading by screenModel.isLoading.collectAsState()
     val error by screenModel.error.collectAsState()
 
@@ -175,7 +175,9 @@ fun ScheduleScreen(
                     if (owners.getOrNull(idx) == userId) {
                         pendingDelete = a
                     }
-                }
+                },
+                // scrollable
+                modifier = Modifier.weight(1f)
             )
 
             Spacer(Modifier.height(12.dp))
