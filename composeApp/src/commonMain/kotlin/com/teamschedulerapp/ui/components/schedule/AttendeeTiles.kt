@@ -2,6 +2,7 @@ package com.teamschedulerapp.ui.components.schedule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.model.initialsOf
 import kotlinx.datetime.LocalTime
+import androidx.compose.foundation.lazy.itemsIndexed
 
 private fun LocalTime.formatHm(): String =
     "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
@@ -29,13 +31,18 @@ fun AttendeeList(
     attendees: List<Attendee>,
     canEdit: (Attendee) -> Boolean,
     onEdit: (Attendee) -> Unit,
-    onDelete: (Attendee) -> Unit
-                 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    onDelete: (Attendee) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-        attendees.forEach { att ->
+        itemsIndexed(
+            attendees,
+            key = { idx, att -> "${att.displayName}:${att.from}-${att.to}:$idx" } // simple stable-ish key
+        ) { _, att ->
             AttendeeChip(
                 att,
                 showActions = canEdit(att),
@@ -53,7 +60,6 @@ private fun AttendeeChip(
     showActions: Boolean,
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {},
-
     ) {
     val initials = remember(att.displayName) { initialsOf(att.displayName) }
     val window = when {
