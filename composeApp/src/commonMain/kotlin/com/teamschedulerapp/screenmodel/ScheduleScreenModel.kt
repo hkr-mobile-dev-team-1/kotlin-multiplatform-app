@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import com.teamschedulerapp.domain.toAttendee
+import com.teamschedulerapp.model.TeamMemberWithUser
+import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.repositories.UserRepository
 
 class ScheduleScreenModel(
@@ -64,7 +66,7 @@ class ScheduleScreenModel(
     fun loadDay(
         teamId: String,
         date: LocalDate,
-        teamMembers: List<User> = emptyList()
+        teamMembers: List<TeamMemberWithUser> = emptyList()
     ) {
         screenModelScope.launch {
             _isLoading.value = true
@@ -75,21 +77,13 @@ class ScheduleScreenModel(
                     teamId = teamId,
                     date   = date.toString()
                 )
-                // 2) name map from TeamManager’s members (fallback to “Member”)
-                // from teamMembers
-                val baseMap: Map<String, String> = teamMembers
-                    .mapNotNull { u -> u.id?.let { it to displayNameOf(u) } }
-                    .toMap()
-
-                // resolve missing IDs
-                val missingIds = rows.map { it.userId }.distinct().filter { it !in baseMap }
-                val fetchedMap: Map<String, String> = missingIds.associateWith { id ->
-                    val u = userRepository.getUserById(id)
-                    if (u != null) displayNameOf(u) else "Member"
+                // 2) map team members using TeamMemberWithUser
+                val nameMap: Map<String, String> = teamMembers.associate { m ->
+                    val full = listOfNotNull(m.firstName, m.lastName)
+                        .joinToString(" ")
+                        .ifBlank { m.email ?: "Member" }
+                    m.id to full
                 }
-
-                val nameMap = baseMap + fetchedMap
-
                 // 3) map to UI: Pair(Attendee, ownerId)
                 val list = rows.map { row ->
                     val display = nameMap[row.userId] ?: "Member"

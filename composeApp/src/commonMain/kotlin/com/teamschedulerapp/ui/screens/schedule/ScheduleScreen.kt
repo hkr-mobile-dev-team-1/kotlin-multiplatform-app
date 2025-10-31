@@ -32,6 +32,8 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
+import com.teamschedulerapp.model.TeamMemberWithUser
+import com.teamschedulerapp.model.User
 
 
 @OptIn(ExperimentalTime::class)
@@ -78,12 +80,14 @@ fun ScheduleScreen(
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
 
-    val team by TeamManager.currentTeam.collectAsState()
-    val teamId = team?.id ?: return
-    // members related to a specific manager (later for reading)
-    val members by TeamManager.currentTeamMembers.collectAsState()
+    val teamWithMembers by TeamManager.currentTeam.collectAsState()
+    val teamId = teamWithMembers?.id ?: return
 
-    val screenModel = remember(availabilityRepository, userId) {
+    // Use members as-is
+    val teamMembers: List<TeamMemberWithUser> = teamWithMembers?.members ?: emptyList()
+
+
+    val screenModel = remember(availabilityRepository, userRepository, userId) {
         ScheduleScreenModel(availabilityRepository, userRepository, userId)
     }
     val attendeesPairs by screenModel.attendeesForDay.collectAsState() // List<Pair<Attendee, ownerId>>
@@ -93,7 +97,7 @@ fun ScheduleScreen(
     // Load whenever team or selected date changes
     LaunchedEffect(teamId, selected) {
         selected?.let { date ->
-            screenModel.loadDay(teamId = teamId, date = date, teamMembers = members ?: emptyList())
+            screenModel.loadDay(teamId = teamId, date = date, teamMembers = teamMembers)
         }
     }
 
@@ -149,28 +153,29 @@ fun ScheduleScreen(
         }
         // show attendees and button when day is selected
         if (selected != null) {
-            // Attendee tiles for selected day
+            // Attendee tiles for selected day (wire owners to get "editability")
             Spacer(Modifier.height(12.dp))
             val attendees = attendeesPairs.map { it.first }
             val owners    = attendeesPairs.map { it.second }
             AttendeeList(
-                attendees,
+                attendees = attendees,
+                canEdit = { a ->
+                    val idx = attendees.indexOf(a)
+                    owners.getOrNull(idx) == userId
+                },
                 onEdit = { a ->
                     val idx = attendees.indexOf(a)
-                    val ownerId = owners.getOrNull(idx)
-                    if (ownerId == userId) {
+                    if (owners.getOrNull(idx) == userId) {
                         editTarget = a
                         showDialogFor = selected
                     }
                 },
                 onDelete = { a ->
                     val idx = attendees.indexOf(a)
-                    val ownerId = owners.getOrNull(idx)
-                    if (ownerId == userId) {
+                    if (owners.getOrNull(idx) == userId) {
                         pendingDelete = a
                     }
                 }
-
             )
 
             Spacer(Modifier.height(12.dp))
@@ -224,7 +229,7 @@ fun ScheduleScreen(
                         dateIso = date.toString()
                     )
                     // reload UI from DB
-                    screenModel.loadDay(teamId, date, teamMembers = members ?: emptyList())
+                    screenModel.loadDay(teamId, date, teamMembers)
                     pendingDelete = null
                 }
             },
