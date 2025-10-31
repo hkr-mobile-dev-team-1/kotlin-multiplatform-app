@@ -27,6 +27,7 @@ private fun LocalTime.formatHm(): String =
 @Composable
 fun AttendeeList(
     attendees: List<Attendee>,
+    canEdit: (Attendee) -> Boolean,
     onEdit: (Attendee) -> Unit,
     onDelete: (Attendee) -> Unit
                  ) {
@@ -37,6 +38,7 @@ fun AttendeeList(
         attendees.forEach { att ->
             AttendeeChip(
                 att,
+                showActions = canEdit(att),
                 onEdit = { onEdit(att) },
                 onDelete = { onDelete(att) },
             )
@@ -48,6 +50,7 @@ fun AttendeeList(
 private fun AttendeeChip(
     att: Attendee,
     modifier: Modifier = Modifier,
+    showActions: Boolean,
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {},
 
@@ -101,11 +104,13 @@ private fun AttendeeChip(
                     )
                 }
             }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Filled.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.secondary)
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.secondary)
+            if (showActions) {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Filled.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.secondary)
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.secondary)
+                }
             }
         }
     }
