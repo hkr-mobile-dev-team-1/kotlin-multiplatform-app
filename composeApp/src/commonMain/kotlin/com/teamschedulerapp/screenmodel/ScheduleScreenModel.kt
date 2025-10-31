@@ -36,32 +36,6 @@ class ScheduleScreenModel(
     private val _attendeesForDay = MutableStateFlow<List<Pair<Attendee, String>>>(emptyList())
     val attendeesForDay = _attendeesForDay.asStateFlow()
 
-    fun submitAttendance(
-        teamId: String,
-        date: LocalDate,
-        attendee: Attendee
-    ) {
-        screenModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-            _success.value = false
-            try {
-                val availability = attendee.toAvailability(userId, teamId, date)
-                val ok = availabilityRepository.upsertAvailability(availability)
-                if (ok) {
-                    _success.value = true
-                    println("Attendance saved successfully")
-                } else {
-                    _error.value = "Failed to save attendance"
-                }
-            } catch (e: Exception) {
-                _error.value = e.message
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
     // load
     fun loadDay(
         teamId: String,
@@ -100,6 +74,7 @@ class ScheduleScreenModel(
         }
     }
 
+    // handles both save and edit
     fun saveAttendance(
         teamId: String,
         date: LocalDate,
@@ -142,6 +117,7 @@ class ScheduleScreenModel(
         }
     }
 
+    // optional helper (keeping for now)
     private fun displayNameOf(u: User): String {
         fun String?.clean() = this?.trim().takeUnless { it.isNullOrBlank() }
         val first = u.firstName.clean()
