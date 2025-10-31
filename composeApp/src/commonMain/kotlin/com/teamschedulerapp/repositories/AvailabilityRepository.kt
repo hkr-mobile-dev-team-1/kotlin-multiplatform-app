@@ -33,18 +33,6 @@ class AvailabilityRepository(private val postgrest: Postgrest) {
         }
     }
 
-    suspend fun upsertAvailability(availability: Availability): Boolean {
-        return try {
-            withContext(Dispatchers.IO) {
-                postgrest.from("availability").upsert(availability)
-            }
-            true
-        } catch (e: Exception) {
-            println("Error upserting availability: ${e.message}")
-            false
-        }
-    }
-
     suspend fun getAvailabilityForTeamOnDate(
         teamId: String,
         date: String
@@ -124,5 +112,4 @@ class AvailabilityRepository(private val postgrest: Postgrest) {
         println("Error fetching availability (one): ${e.message}")
         null
     }
-
 }

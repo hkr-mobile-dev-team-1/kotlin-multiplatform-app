@@ -13,16 +13,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
-
 import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
 import com.teamschedulerapp.ui.components.schedule.AttendeeList
 import com.teamschedulerapp.ui.components.schedule.DeleteDialog
 import com.teamschedulerapp.repositories.AvailabilityRepository
 import com.teamschedulerapp.navigation.TeamManager
-import com.teamschedulerapp.domain.toAvailability
 import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.screenmodel.ScheduleScreenModel
-import com.teamschedulerapp.domain.toAttendee
 import com.teamschedulerapp.repositories.UserRepository
 
 import kotlinx.datetime.*
@@ -33,7 +30,6 @@ import kotlin.time.ExperimentalTime
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
 import com.teamschedulerapp.model.TeamMemberWithUser
-import com.teamschedulerapp.model.User
 
 
 @OptIn(ExperimentalTime::class)
@@ -75,7 +71,7 @@ fun ScheduleScreen(
     // delete dialog trigger
     var pendingDelete by remember { mutableStateOf<Attendee?>(null) }
 
-    // repo scopes (DB related) TODO: create delete delegate also in screen model and acces from there
+    // repo scopes (DB related) - can be removed later when TODO: create delete delegate also in screen model and access from there
     val scope = rememberCoroutineScope()
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
