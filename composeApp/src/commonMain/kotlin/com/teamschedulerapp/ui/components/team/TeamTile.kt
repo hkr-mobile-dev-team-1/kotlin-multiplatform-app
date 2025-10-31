@@ -1,6 +1,7 @@
 package com.teamschedulerapp.ui.components.team
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -27,29 +28,31 @@ fun getColorForUser(teamId: String): Color {
     return Color(red, green, blue)
 }
 @Composable
-fun TeamTile (team: TeamWithMembers?) {
-    if (team != null) {
-        if (team.id != null) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(getColorForUser(team.id)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = team.name.firstOrNull()?.uppercase() ?: "",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
+fun TeamTile(
+    team: TeamWithMembers?,
+    onClick: (() -> Unit)? = null
+) {
+    val modifier = Modifier
+        .size(36.dp)
+        .clip(CircleShape)
+        .then(
+            if (onClick != null) Modifier.clickable { onClick() } else Modifier
+        )
+
+    if (team != null && team.id != null) {
+        Box(
+            modifier = modifier.background(getColorForUser(team.id)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = team.name.firstOrNull()?.uppercase() ?: "",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
         }
     } else {
         Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+            modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -60,5 +63,4 @@ fun TeamTile (team: TeamWithMembers?) {
             )
         }
     }
-
 }

@@ -36,6 +36,7 @@ import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.model.User
 import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.Login
+import com.teamschedulerapp.navigation.ManageTeamsScreenWrapper
 import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.repositories.TaskAssignmentRepository
 import com.teamschedulerapp.repositories.TaskRepository
@@ -51,6 +52,7 @@ import com.teamschedulerapp.ui.components.team.TeamSelectorModal
 import com.teamschedulerapp.ui.components.team.TeamTile
 import com.teamschedulerapp.ui.screens.analytics.AnalyticsScreen
 import com.teamschedulerapp.ui.screens.schedule.ScheduleScreen
+import com.teamschedulerapp.ui.screens.settings.ManageTeamsScreen
 import com.teamschedulerapp.ui.screens.settings.SettingsScreen
 import com.teamschedulerapp.ui.screens.tasks.TasksScreen
 import com.teamschedulerapp.utils.showErrorSnackbar
@@ -148,7 +150,11 @@ object SettingsTab : Tab {
             authRepository = authRepository,
             onBack = {
                 rootNavigator.replaceAll(Login)
+            },
+            onManageTeams = {
+                rootNavigator.push(ManageTeamsScreenWrapper)
             }
+
         )
     }
 }
