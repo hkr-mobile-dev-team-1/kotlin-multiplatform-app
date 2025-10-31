@@ -66,7 +66,7 @@ class ScheduleScreenModel(
     fun loadDay(
         teamId: String,
         date: LocalDate,
-        teamMembers: List<TeamMemberWithUser> = emptyList()
+        teamMembers: List<TeamMemberWithUser>
     ) {
         screenModelScope.launch {
             _isLoading.value = true
@@ -104,6 +104,7 @@ class ScheduleScreenModel(
         teamId: String,
         date: LocalDate,
         attendee: Attendee,
+        teamMembers: List<TeamMemberWithUser>,
         onDone: () -> Unit
     ) {
         screenModelScope.launch {
@@ -131,7 +132,7 @@ class ScheduleScreenModel(
 
                 _success.value = true
                 // reload to reflect the changes
-                loadDay(teamId, date, teamMembers = emptyList())
+                loadDay(teamId, date, teamMembers)
                 onDone()
             } catch (e: Exception) {
                 _error.value = e.message
