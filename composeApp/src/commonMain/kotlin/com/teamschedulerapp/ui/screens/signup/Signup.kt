@@ -54,7 +54,7 @@ fun SignupScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Create a new Manager account",
+                text = "Create a new User account",
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -191,34 +191,10 @@ fun SignupScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = { onNavigateToLogin() }) {
-                Text("Already have an account? Sign in")
+                Text("Already have an account? Sign in here")
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Info card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Are you an employee?",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Only managers can create an account, ask your manager to invite you to their team.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
         }
     }
 }
