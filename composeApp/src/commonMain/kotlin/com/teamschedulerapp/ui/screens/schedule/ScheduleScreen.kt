@@ -21,6 +21,9 @@ import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.screenmodel.ScheduleScreenModel
 import com.teamschedulerapp.repositories.UserRepository
 import com.teamschedulerapp.model.TeamMemberWithUser
+import com.teamschedulerapp.ui.components.schedule.DaysOfWeekTitle
+import com.teamschedulerapp.ui.components.schedule.DayCell
+import com.teamschedulerapp.ui.components.schedule.MonthHeader
 
 import kotlinx.datetime.*
 import kotlin.time.Clock
@@ -235,94 +238,3 @@ fun ScheduleScreen(
         )
     }
 }
-
-@Composable
-fun DayCell(
-    day: CalendarDay,
-    isOverflow: Boolean,
-    isSelected: Boolean,
-    isToday: Boolean,
-    headcount: Int,
-    onClick: () -> Unit
-) {
-    // cell bg colors
-    val bg = when {
-        isOverflow -> MaterialTheme.colorScheme.surface
-        isSelected -> MaterialTheme.colorScheme.primaryContainer
-        isToday    -> MaterialTheme.colorScheme.surfaceVariant
-        else       -> MaterialTheme.colorScheme.surface
-    }
-
-    // text color for calendar days (dim overflow)
-    val dayNumberColor = if (isOverflow)
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
-    else
-        MaterialTheme.colorScheme.onSurface
-
-    Surface(
-        color = bg,
-        shape = MaterialTheme.shapes.medium,
-        tonalElevation = if (isSelected && !isOverflow) 2.dp else 0.dp,
-        modifier = Modifier.aspectRatio(1f).clickable(enabled = !isOverflow, onClick = onClick)
-    ) {
-        Box(Modifier.fillMaxSize().padding(6.dp)) {
-            Text(
-                day.date.day.toString(),
-                modifier = Modifier.align(Alignment.Center),
-                color = dayNumberColor
-            )
-            if (!isOverflow && headcount > 0) {
-                Text(
-                    headcount.toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.align(Alignment.BottomEnd))
-            }
-        }
-    }
-}
-
-// setup days of week titles lib
-@Composable
-fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>, modifier: Modifier = Modifier) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        daysOfWeek.forEach { dow ->
-            Text(
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center,
-                text = dow.name.lowercase().replaceFirstChar { it.titlecase() }.take(3),
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
-    }
-}
-
-@Composable
-fun MonthHeader(state: CalendarState, modifier: Modifier = Modifier) {
-    // visible month as user swipes - reactive
-    val visibleMonth by remember(state) {
-        derivedStateOf { state.firstVisibleMonth.yearMonth }
-    }
-
-    val monthTitle = "${visibleMonth.month.name.lowercase().replaceFirstChar { it.titlecase() }} • ${visibleMonth.year}"
-
-    Surface(
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        tonalElevation = 1.dp,
-        shape = MaterialTheme.shapes.medium,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 10.dp, bottom = 6.dp)
-    ) {
-        Row (
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-            ) { Text(monthTitle, style = MaterialTheme.typography.titleMedium)
-        }
-    }
-}
-
-
