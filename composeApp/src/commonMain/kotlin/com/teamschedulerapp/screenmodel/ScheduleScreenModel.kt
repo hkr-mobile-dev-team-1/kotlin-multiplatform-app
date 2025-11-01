@@ -6,15 +6,15 @@ import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.repositories.AvailabilityRepository
 import com.teamschedulerapp.domain.toAvailability
 import com.teamschedulerapp.model.User
-import com.teamschedulerapp.navigation.TeamManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import com.teamschedulerapp.domain.toAttendee
 import com.teamschedulerapp.model.TeamMemberWithUser
-import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.repositories.UserRepository
+import kotlinx.datetime.*
+
 
 class ScheduleScreenModel(
     private val availabilityRepository: AvailabilityRepository,
@@ -35,6 +35,29 @@ class ScheduleScreenModel(
     // holds (Attendee, ownerId)
     private val _attendeesForDay = MutableStateFlow<List<Pair<Attendee, String>>>(emptyList())
     val attendeesForDay = _attendeesForDay.asStateFlow()
+
+    // headcounts
+    private val _headcounts = MutableStateFlow<Map<LocalDate, Int>>(emptyMap())
+    val headcounts = _headcounts.asStateFlow()
+
+    // headcount load
+    fun loadHeadcountsForMonth(teamId: String, ym: YearMonth) {
+        screenModelScope.launch {
+            try {
+                _isLoading.value = true
+                val start = LocalDate(ym.year, ym.month, 1)
+                // compute the end (next month - one day)
+                val end = start.plus(DatePeriod(months = 1)).minus(DatePeriod(days = 1))
+
+                val data = availabilityRepository.getHeadcountsForRange(teamId, start, end)
+                _headcounts.value = data
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 
     // load
     fun loadDay(
@@ -108,6 +131,10 @@ class ScheduleScreenModel(
                 _success.value = true
                 // reload to reflect the changes
                 loadDay(teamId, date, teamMembers)
+                // load headcount
+                _headcounts.value = _headcounts.value.toMutableMap().apply {
+                    this[date] = (this[date] ?: 0) + (if (exists == null) 1 else 0)
+                }
                 onDone()
             } catch (e: Exception) {
                 _error.value = e.message
