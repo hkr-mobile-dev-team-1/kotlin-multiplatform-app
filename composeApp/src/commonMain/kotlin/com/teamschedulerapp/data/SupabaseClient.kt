@@ -14,7 +14,10 @@ object SupabaseClientManager {
             supabaseUrl = BuildKonfig.SUPABASE_URL,
             supabaseKey = BuildKonfig.SUPABASE_ANON_KEY
         ) {
-            install(Auth)
+            install(Auth){
+                autoLoadFromStorage = true
+                autoSaveToStorage = true
+            }
             install(Postgrest)
             install(Storage)
             install(Realtime)

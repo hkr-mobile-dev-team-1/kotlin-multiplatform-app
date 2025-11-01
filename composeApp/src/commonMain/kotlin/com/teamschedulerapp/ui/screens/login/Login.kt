@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.teamschedulerapp.data.SupabaseClientManager
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -33,7 +34,37 @@ fun LoginScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+    var isCheckingSession by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
+
+    val supabase = SupabaseClientManager.client
+
+    LaunchedEffect(Unit) {
+        try {
+            // Ensure Supabase loads any stored session first
+            supabase.auth.loadFromStorage()
+
+            val existingSession = supabase.auth.currentSessionOrNull()
+            if (existingSession != null) {
+                onLoginSuccess()
+            } else {
+                isCheckingSession = false
+            }
+        } catch (e: Exception) {
+            println("Error restoring session: ${e.message}")
+            isCheckingSession = false
+        }
+    }
+
+    if (isCheckingSession) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     Scaffold(
         topBar = {
