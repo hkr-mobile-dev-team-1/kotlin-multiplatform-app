@@ -31,7 +31,6 @@ import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
 
 
-
 @OptIn(ExperimentalTime::class)
 @Composable
 fun ScheduleScreen(
@@ -90,11 +89,20 @@ fun ScheduleScreen(
     val isLoading by screenModel.isLoading.collectAsState()
     val error by screenModel.error.collectAsState()
 
+    val headcounts by screenModel.headcounts.collectAsState()
+
     // Load whenever team or selected date changes
     LaunchedEffect(teamId, selected) {
         selected?.let { date ->
             screenModel.loadDay(teamId = teamId, date = date, teamMembers = teamMembers)
         }
+    }
+
+    // plug in headcount load
+    val visibleMonth by remember(state) { derivedStateOf { state.firstVisibleMonth.yearMonth } }
+
+    LaunchedEffect(teamId, visibleMonth) {
+        screenModel.loadHeadcountsForMonth(teamId, visibleMonth)
     }
 
     // reset to current month on screen re-entry
@@ -127,7 +135,7 @@ fun ScheduleScreen(
                 val isOverflow = day.position != DayPosition.MonthDate
                 val isSelected = selected == day.date
                 val isToday = day.date == today
-                val headcount = if (!isOverflow && selected == day.date) attendeesPairs.size else 0
+                val headcount = if (!isOverflow) (headcounts[day.date] ?: 0) else 0
 
                 DayCell(
                     day = day,
