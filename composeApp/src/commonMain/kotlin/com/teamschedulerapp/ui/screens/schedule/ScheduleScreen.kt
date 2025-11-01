@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
@@ -21,6 +20,7 @@ import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.model.Attendee
 import com.teamschedulerapp.screenmodel.ScheduleScreenModel
 import com.teamschedulerapp.repositories.UserRepository
+import com.teamschedulerapp.model.TeamMemberWithUser
 
 import kotlinx.datetime.*
 import kotlin.time.Clock
@@ -29,7 +29,7 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
-import com.teamschedulerapp.model.TeamMemberWithUser
+
 
 
 @OptIn(ExperimentalTime::class)
@@ -95,6 +95,11 @@ fun ScheduleScreen(
         selected?.let { date ->
             screenModel.loadDay(teamId = teamId, date = date, teamMembers = teamMembers)
         }
+    }
+
+    // reset to current month on screen re-entry
+    LaunchedEffect(Unit) {
+        state.scrollToMonth(currentMonth)
     }
 
     Column(Modifier.fillMaxSize().padding(3.dp)) {
