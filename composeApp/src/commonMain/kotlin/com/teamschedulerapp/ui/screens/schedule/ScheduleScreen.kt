@@ -32,6 +32,8 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
+import com.teamschedulerapp.utils.showErrorSnackbar
+import com.teamschedulerapp.utils.showSuccessSnackbar
 
 
 @OptIn(ExperimentalTime::class)
@@ -41,6 +43,7 @@ fun ScheduleScreen(
     userRepository: UserRepository,
     userId: String,
     currentUserDisplayName: String,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     // time anchors
     // today (for highlighting)
@@ -107,6 +110,20 @@ fun ScheduleScreen(
     LaunchedEffect(Unit) {
         state.scrollToMonth(currentMonth)
     }
+
+    // react to UI events for snackbars to fire
+    LaunchedEffect(Unit) {
+        screenModel.uiEvents.collect { ev ->
+            when (ev) {
+                is ScheduleScreenModel.UiEvent.Success -> snackbarHostState.showSuccessSnackbar(ev.msg)
+                is ScheduleScreenModel.UiEvent.Error   -> snackbarHostState.showErrorSnackbar(ev.msg)
+            }
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { padding ->
 
     Column(Modifier.fillMaxSize().padding(3.dp)) {
         TopAppBar(
@@ -237,4 +254,5 @@ fun ScheduleScreen(
             dialogText = "Are you sure you want to remove your attendance?",
         )
     }
+}
 }
