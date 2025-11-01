@@ -183,7 +183,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = { onNavigateToSignUp() }) {
-                Text("Don't have an account? Sign Up as a Manager")
+                Text("Don't have an account? Sign Up here")
             }
 
         }
