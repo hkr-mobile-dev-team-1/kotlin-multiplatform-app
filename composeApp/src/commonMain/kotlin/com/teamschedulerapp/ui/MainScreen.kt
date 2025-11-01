@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.ViewAgenda
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +61,7 @@ import com.teamschedulerapp.utils.showSuccessSnackbar
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
+import com.teamschedulerapp.repositories.AvailabilityRepository
 
 object ScheduleTab : Tab {
     override val options: TabOptions
@@ -72,7 +74,39 @@ object ScheduleTab : Tab {
 
     @Composable
     override fun Content() {
-        ScheduleScreen()
+        // get Supabase client
+        val supabase = com.teamschedulerapp.data.SupabaseClientManager.client
+        val authUser = supabase.auth.currentUserOrNull() ?: return
+        val userId = authUser.id
+
+        // repositories
+        val availabilityRepository = remember { AvailabilityRepository(supabase.postgrest) }
+        val userRepository = remember { UserRepository(supabase.postgrest) }
+
+        // logged-in user
+        var appUser by remember { mutableStateOf<com.teamschedulerapp.model.User?>(null) }
+
+        LaunchedEffect(userId) {
+            appUser = userRepository.getUserById(userId)
+        }
+
+        //get a display user name
+        val displayName = listOfNotNull(
+            appUser?.firstName?.takeIf { it.isNotBlank() },
+            appUser?.lastName?.takeIf { it.isNotBlank() },
+        ).joinToString(" ")
+            .ifBlank {
+                // fallback to auth metadata then email
+                authUser.userMetadata?.get("full_name")?.toString()?.takeIf { it.isNotBlank() }
+                    ?: authUser.email ?: "You"
+            }
+
+        ScheduleScreen(
+            availabilityRepository = availabilityRepository,
+            userRepository = userRepository,
+            userId = userId,
+            currentUserDisplayName = displayName
+        )
     }
 }
 
