@@ -5,6 +5,8 @@ import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.YearMonth
 
 class AvailabilityRepository(private val postgrest: Postgrest) {
 
@@ -112,4 +114,35 @@ class AvailabilityRepository(private val postgrest: Postgrest) {
         println("Error fetching availability (one): ${e.message}")
         null
     }
+
+    // flexible availability fetch fetch or weekly (any range)
+    suspend fun getAvailabilityForTeamBetweenDates(
+        teamId: String,
+        startIso: String, // "YYYY-MM-DD"
+        endIso: String    // "YYYY-MM-DD"
+    ): List<Availability> = withContext(Dispatchers.IO) {
+        postgrest.from("availability").select {
+            filter {
+                eq("team_id", teamId)
+                gte("date", startIso)
+                lte("date", endIso)
+            }
+        }.decodeList<Availability>()
+    }
+
+    // headcount map for date range
+    suspend fun getHeadcountsForRange(
+        teamId: String,
+        start: LocalDate,
+        end: LocalDate
+    ): Map<LocalDate, Int> = withContext(Dispatchers.IO) {
+        val rows = getAvailabilityForTeamBetweenDates(
+            teamId = teamId,
+            startIso = start.toString(),
+            endIso   = end.toString()
+        )
+        // parsing
+        rows.groupingBy { LocalDate.parse(it.date) }.eachCount()
+    }
+
 }
