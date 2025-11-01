@@ -144,6 +144,35 @@ class ScheduleScreenModel(
         }
     }
 
+    fun deleteAttendance(teamId: String, userId: String, date: LocalDate, teamMembers: List<TeamMemberWithUser>) {
+        screenModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val ok = availabilityRepository.deleteAvailabilityByKeys(
+                    userId = userId,
+                    teamId = teamId,
+                    dateIso = date.toString()
+                )
+                if (ok) {
+                    // reload
+                    loadDay(teamId, date, teamMembers)
+                    // recompute headcount
+                    _headcounts.value = _headcounts.value.toMutableMap().apply {
+                        this[date] = (this[date] ?: 1).coerceAtLeast(1) - 1
+                    }
+                } else {
+                    _error.value = "Failed to delete attendance"
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+
     // optional helper (keeping for now)
     private fun displayNameOf(u: User): String {
         fun String?.clean() = this?.trim().takeUnless { it.isNullOrBlank() }

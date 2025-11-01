@@ -70,11 +70,6 @@ fun ScheduleScreen(
     // delete dialog trigger
     var pendingDelete by remember { mutableStateOf<Attendee?>(null) }
 
-    // repo scopes (DB related) - can be removed later when TODO: create delete delegate also in screen model and access from there
-    val scope = rememberCoroutineScope()
-    var saving by remember { mutableStateOf(false) }
-    var saveError by remember { mutableStateOf<String?>(null) }
-
     val teamWithMembers by TeamManager.currentTeam.collectAsState()
     val teamId = teamWithMembers?.id ?: return
     // wire team members
@@ -232,17 +227,8 @@ fun ScheduleScreen(
             onDismissRequest = { pendingDelete = null },
             onConfirmation =  {
                 val date = selected ?: return@DeleteDialog
-                scope.launch {
-                    // delete via repo
-                    availabilityRepository.deleteAvailabilityByKeys(
-                        userId = userId,
-                        teamId = teamId,
-                        dateIso = date.toString()
-                    )
-                    // reload UI from DB
-                    screenModel.loadDay(teamId, date, teamMembers)
-                    pendingDelete = null
-                }
+                screenModel.deleteAttendance(teamId, userId, date, teamMembers)
+                pendingDelete = null
             },
             dialogTitle = "Remove attendance",
             dialogText = "Are you sure you want to remove your attendance?",
