@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -25,7 +26,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
@@ -40,6 +40,7 @@ import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.Login
 import com.teamschedulerapp.navigation.ManageTeamsScreenWrapper
 import com.teamschedulerapp.navigation.TeamManager
+import com.teamschedulerapp.navigation.UserManager
 import com.teamschedulerapp.repositories.TaskAssignmentRepository
 import com.teamschedulerapp.repositories.TaskRepository
 import com.teamschedulerapp.repositories.TeamMemberRepository
@@ -49,12 +50,11 @@ import com.teamschedulerapp.screenmodel.MainScreenModel
 import com.teamschedulerapp.screenmodel.TaskScreenModel
 import com.teamschedulerapp.ui.components.team.AdminBadge
 import com.teamschedulerapp.ui.components.CustomSnackbarHost
-import com.teamschedulerapp.ui.components.team.CreateTeamModal
+import com.teamschedulerapp.ui.components.team.TeamDetailModal
 import com.teamschedulerapp.ui.components.team.TeamSelectorModal
 import com.teamschedulerapp.ui.components.team.TeamTile
 import com.teamschedulerapp.ui.screens.analytics.AnalyticsScreen
 import com.teamschedulerapp.ui.screens.schedule.ScheduleScreen
-import com.teamschedulerapp.ui.screens.settings.ManageTeamsScreen
 import com.teamschedulerapp.ui.screens.settings.SettingsScreen
 import com.teamschedulerapp.ui.screens.tasks.TasksScreen
 import com.teamschedulerapp.utils.showErrorSnackbar
@@ -66,6 +66,8 @@ import com.teamschedulerapp.repositories.AvailabilityRepository
 
 object ScheduleTab : Tab {
     var snackbarHostState: SnackbarHostState? = null
+    var onCreateTeam: (() -> Unit)? = null
+
     override val options: TabOptions
         @Composable
         get() {
@@ -77,7 +79,7 @@ object ScheduleTab : Tab {
     @Composable
     override fun Content() {
         // get Supabase client
-        val supabase = com.teamschedulerapp.data.SupabaseClientManager.client
+        val supabase = SupabaseClientManager.client
         val authUser = supabase.auth.currentUserOrNull() ?: return
         val userId = authUser.id
 
@@ -86,7 +88,7 @@ object ScheduleTab : Tab {
         val userRepository = remember { UserRepository(supabase.postgrest) }
 
         // logged-in user
-        var appUser by remember { mutableStateOf<com.teamschedulerapp.model.User?>(null) }
+        var appUser by remember { mutableStateOf<User?>(null) }
 
         LaunchedEffect(userId) {
             appUser = userRepository.getUserById(userId)
@@ -108,13 +110,16 @@ object ScheduleTab : Tab {
             userRepository = userRepository,
             userId = userId,
             currentUserDisplayName = displayName,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
+            onCreateTeam = { onCreateTeam?.invoke() }
         )
     }
 }
 
 object TasksTab : Tab {
     var snackbarHostState: SnackbarHostState? = null
+    var onCreateTeam: (() -> Unit)? = null
+
     override val options: TabOptions
         @Composable
         get() {
@@ -138,12 +143,15 @@ object TasksTab : Tab {
         }
         TasksScreen(
             screenModel = screenModel,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
+            onCreateTeam = { onCreateTeam?.invoke() }
         )
     }
 }
 
 object AnalyticsTab : Tab {
+    var onCreateTeam: (() -> Unit)? = null
+
     override val options: TabOptions
         @Composable
         get() {
@@ -154,7 +162,9 @@ object AnalyticsTab : Tab {
 
     @Composable
     override fun Content() {
-        AnalyticsScreen()
+        AnalyticsScreen(
+            onCreateTeam = { TasksTab.onCreateTeam?.invoke() }
+        )
     }
 }
 
@@ -199,8 +209,32 @@ object SettingsTab : Tab {
 
 @Composable
 fun MainScreen() {
+    // Supabase
+    val supabase = SupabaseClientManager.client
+    val teamRepository = remember { TeamRepository(supabase.postgrest) }
+    val userRepository = remember { UserRepository(supabase.postgrest) }
+    val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
+    val mainScreenModel = remember {
+        MainScreenModel(
+            teamRepository = teamRepository,
+            teamMemberRepository = teamMemberRepository,
+            userRepository = userRepository,
+        )
+    }
+    val userId = UserManager.getCurrentUserId()
     val currentTeam by TeamManager.currentTeam.collectAsState()
     val userTeams by TeamManager.userTeams.collectAsState()
+    val isTeamManagerInitialized by TeamManager.isInitialized.collectAsState()
+
+    if (!isTeamManagerInitialized) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     var showTeamSelector by remember { mutableStateOf(false) }
     var showCreateTeamModal by remember { mutableStateOf(false) }
@@ -208,29 +242,17 @@ fun MainScreen() {
 
     val scope = rememberCoroutineScope()
 
-    // Snackbar
+    // Snackbar setup
     val snackbarHostState = remember { SnackbarHostState() }
     TasksTab.snackbarHostState = snackbarHostState
     ScheduleTab.snackbarHostState = snackbarHostState
 
+    // Set onCreateTeam callbacks
+    TasksTab.onCreateTeam = { showCreateTeamModal = true }
+    // ScheduleTab.onCreateTeam = { showCreateTeamModal = true }
 
-    // Supabase
-    val supabase = SupabaseClientManager.client
-    val userId = supabase.auth.currentUserOrNull()?.id ?: return
-    val teamRepository = remember { TeamRepository(supabase.postgrest) }
-    val userRepository = remember { UserRepository(supabase.postgrest) }
-    val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
 
     val isCurrentTeamAdmin = currentTeam?.members?.find { it.id == userId }?.isAdmin ?: false
-
-    val mainScreenModel = remember {
-        MainScreenModel(
-            teamRepository = teamRepository,
-            teamMemberRepository = teamMemberRepository,
-            userRepository = userRepository,
-            userId = userId
-        )
-    }
 
     TabNavigator(ScheduleTab) {
         Scaffold(
@@ -303,7 +325,7 @@ fun MainScreen() {
             onDeleteTeam = { team ->
                 scope.launch {
                     try {
-                        mainScreenModel.deleteTeam(team.id ?: "")
+                        mainScreenModel.deleteTeam(team.id)
                         // Show success snackbar
                         snackbarHostState.showSuccessSnackbar("Team deleted successfully")
                     } catch (e: Exception) {
@@ -318,7 +340,7 @@ fun MainScreen() {
     }
 
     if (showCreateTeamModal) {
-        CreateTeamModal(
+        TeamDetailModal(
             teamToEdit = teamToEdit,
             onDismiss = { showCreateTeamModal = false },
             onSave = { name, description ->
@@ -339,7 +361,7 @@ fun MainScreen() {
 
     // Edit team modal
     teamToEdit?.let { team ->
-        CreateTeamModal(
+        TeamDetailModal(
             teamToEdit = team,
             onDismiss = { teamToEdit = null },
             onSave = { name, description ->
