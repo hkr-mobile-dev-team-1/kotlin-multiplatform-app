@@ -13,14 +13,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.teamschedulerapp.model.TeamWithMembers
 
 @Composable
 fun CreateTeamModal(
+    teamToEdit: TeamWithMembers? = null,
     onDismiss: () -> Unit,
     onSave: (name: String, description: String) -> Unit
 ) {
-    var teamName by remember { mutableStateOf("") }
-    var teamDescription by remember { mutableStateOf("") }
+    var teamName by remember { mutableStateOf(teamToEdit?.name ?: "") }
+    var teamDescription by remember { mutableStateOf(teamToEdit?.description ?: "") }
+    val isEditMode = teamToEdit != null
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -40,7 +43,7 @@ fun CreateTeamModal(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Create Team",
+                    text = if (isEditMode)"Edit Team" else "Create Team",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -105,7 +108,7 @@ fun CreateTeamModal(
                     modifier = Modifier.weight(1f),
                     enabled = teamName.isNotBlank()
                 ) {
-                    Text("Create")
+                    Text(if (isEditMode) "Update" else "Create")
                 }
             }
         }

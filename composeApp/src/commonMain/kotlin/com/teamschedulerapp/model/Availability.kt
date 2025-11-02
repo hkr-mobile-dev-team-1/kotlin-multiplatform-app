@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Availability(
-    val id: String,
+    val id: String? = null,
     @SerialName("user_id") val userId: String,
     @SerialName("team_id") val teamId: String,
     val date: String, // Maybe be Localdate??
