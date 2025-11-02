@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -198,9 +199,12 @@ object SettingsTab : Tab {
 
 @Composable
 fun MainScreen() {
+    val userId = UserManager.requireUserId()
     val currentTeam by TeamManager.currentTeam.collectAsState()
     val userTeams by TeamManager.userTeams.collectAsState()
-    val userId = UserManager.requireUserId()
+    val isTeamManagerInitialized by TeamManager.isInitialized.collectAsState()
+
+
 
     var showTeamSelector by remember { mutableStateOf(false) }
     var showCreateTeamModal by remember { mutableStateOf(false) }

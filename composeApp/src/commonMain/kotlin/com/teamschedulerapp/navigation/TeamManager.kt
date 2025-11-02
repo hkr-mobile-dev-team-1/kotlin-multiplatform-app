@@ -57,7 +57,8 @@ object TeamManager {
             started = SharingStarted.Eagerly,
             initialValue = null
         )
-
+    private val _isInitialized = MutableStateFlow(false)
+    val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
 
     fun selectTeam(team: TeamWithMembers) {
         team.id?.let { teamId ->
@@ -84,10 +85,17 @@ object TeamManager {
         } else if (_selectedTeamId.value == null && teams.isNotEmpty()) {
             // Fallback: Auto-select first team if no saved team
             selectTeam(teams.first())
-        } else if (!teams.any { it.id == _selectedTeamId.value }) {
-            // Current team no longer exists (was deleted), clear selection
-            clearTeam()
+        } else if (teams.isNotEmpty() && !teams.any { it.id == _selectedTeamId.value }) {
+            // Current team was deleted, select first available team
+            selectTeam(teams.first())
+        } else if (teams.isEmpty()) {
+            // No teams at all, just clear selection
+            _selectedTeamId.value = null
+            settings.remove(SELECTED_TEAM_ID_KEY)
         }
+
+        _isInitialized.value = true
+        println("TeamManager - Initialized with ${teams.size} teams")
     }
 
     fun isUserAdminOfTeam(teamId: String, userId: String): Boolean {
@@ -104,6 +112,18 @@ object TeamManager {
     fun clearTeam() {
         _selectedTeamId.value = null
         settings.remove(SELECTED_TEAM_ID_KEY)
+        println("TeamManager - Cleared selection")
+    }
+
+    /**
+     * Reset TeamManager completely (for logout)
+     */
+    fun reset() {
+        _selectedTeamId.value = null
+        _userTeams.value = emptyList()
+        _isInitialized.value = false
+        settings.remove(SELECTED_TEAM_ID_KEY)
+        println("TeamManager - Reset")
     }
 
     val hasTeams: Boolean

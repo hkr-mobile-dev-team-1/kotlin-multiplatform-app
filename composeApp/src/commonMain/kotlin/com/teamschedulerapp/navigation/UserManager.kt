@@ -8,6 +8,7 @@
  */
 package com.teamschedulerapp.navigation
 
+import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.model.User
 import io.github.jan.supabase.auth.auth
@@ -28,7 +29,7 @@ object UserManager {
      * Initialize user state from Supabase auth
      * Call this when app starts or user logs in
      */
-    suspend fun initialize(authRepository: com.teamschedulerapp.data.AuthRepository) {
+    suspend fun initialize(authRepository: AuthRepository) {
         val authUser = supabase.auth.currentUserOrNull()
         _currentUserId.value = authUser?.id
 
@@ -44,6 +45,8 @@ object UserManager {
     fun clear() {
         _currentUserId.value = null
         _currentUser.value = null
+        // Also reset TeamManager
+        TeamManager.reset()
     }
 
     /**
