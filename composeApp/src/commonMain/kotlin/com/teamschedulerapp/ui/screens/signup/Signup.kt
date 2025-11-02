@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.teamschedulerapp.data.SupabaseClientManager
+import com.teamschedulerapp.navigation.UserManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -164,6 +165,7 @@ fun SignupScreen(
                             lastName
                         )
                         if (result.isSuccess) {
+                            UserManager.initialize()
                             successMessage = "Registration Successful!"
                             delay(1500)
                             onSignupSuccess()

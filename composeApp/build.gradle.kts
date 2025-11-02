@@ -68,6 +68,8 @@ kotlin {
             implementation(libs.bundles.supabase.common)
             implementation(libs.bundles.ktor.common)
             implementation(libs.kizitonwoseCalendar)
+            implementation(libs.multiplatform.settings)
+            implementation(libs.multiplatform.settings.no.arg)
         }
         iosMain.dependencies{
             implementation(libs.ktor.client.darwin)

@@ -3,6 +3,9 @@ package com.teamschedulerapp.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Describes specification from table Teams
+ */
 @Serializable
 data class Team(
     val id: String? = null,

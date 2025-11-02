@@ -1,13 +1,17 @@
 package com.teamschedulerapp.screenmodel
 
+import androidx.compose.runtime.LaunchedEffect
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.TeamManager
+import com.teamschedulerapp.navigation.UserManager
 import com.teamschedulerapp.repositories.TeamMemberRepository
 import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,13 +21,14 @@ class MainScreenModel(
     private val teamRepository: TeamRepository,
     private val teamMemberRepository: TeamMemberRepository,
     private val userRepository: UserRepository,
-    private val userId: String
 ) : ScreenModel {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    val userId = UserManager.getCurrentUserId()
 
     init {
         loadUserTeams()
@@ -39,9 +44,12 @@ class MainScreenModel(
                 val teams = teamRepository.getTeamsForUser()
 
                 // For each team, fetch its members and compose UserTeamWithMembers
-                val teamsWithMembers = teams.map { team ->
+                val teamsWithMembers = teams.mapNotNull { team ->
+                    // Skip teams without an ID
+                    val teamId = team.id ?: return@mapNotNull null
+
                     // Get team members (TeamMember objects with userId, teamId, isAdmin)
-                    val teamMembers = teamMemberRepository.getMembersForTeam(team.id ?: "")
+                    val teamMembers = teamMemberRepository.getMembersForTeam(teamId)
 
                     // For each team member, fetch the user details and combine
                     val membersWithUser = teamMembers.mapNotNull { teamMember ->
@@ -60,7 +68,7 @@ class MainScreenModel(
                         }
                     }
                     TeamWithMembers(
-                        id = team.id,
+                        id = teamId,
                         name = team.name,
                         description = team.description,
                         createdBy = team.createdBy,
@@ -116,15 +124,8 @@ class MainScreenModel(
             )
 
             if (success) {
-                println("Team updated: $teamId")
+                println("MainScreenModel - Team updated: $teamId")
                 loadUserTeams()
-                TeamManager.currentTeam.value?.let { currentTeam ->
-                    if (currentTeam.id == teamId) {
-                        TeamManager.userTeams.value.find { it.id == teamId }?.let { updatedTeam ->
-                            TeamManager.selectTeam(updatedTeam)
-                        }
-                    }
-                }
             } else {
                 throw Exception("Failed to update team")
             }
@@ -147,7 +148,7 @@ class MainScreenModel(
                 println("Team deleted: $teamId")
 
                 // If deleted team was the current team, clear it
-                if (TeamManager.currentTeam.value?.id == teamId) {
+                if (TeamManager.selectedTeamId.value == teamId) {
                     TeamManager.clearTeam()
                 }
 
@@ -170,6 +171,4 @@ class MainScreenModel(
     fun isUserAdminOfCurrentTeam(): Boolean {
         return TeamManager.isUserAdminOfCurrentTeam(userId)
     }
-
-
 }

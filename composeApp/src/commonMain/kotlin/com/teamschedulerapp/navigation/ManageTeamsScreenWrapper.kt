@@ -12,8 +12,13 @@ import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.model.TeamWithMembers
-import com.teamschedulerapp.ui.components.team.CreateTeamModal
+import com.teamschedulerapp.repositories.TeamMemberRepository
+import com.teamschedulerapp.repositories.UserRepository
+import com.teamschedulerapp.screenmodel.MainScreenModel
+import com.teamschedulerapp.ui.components.team.TeamDetailModal
 import com.teamschedulerapp.ui.screens.settings.ManageTeamsScreen
+import com.teamschedulerapp.utils.showErrorSnackbar
+import com.teamschedulerapp.utils.showSuccessSnackbar
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
@@ -26,37 +31,22 @@ object ManageTeamsScreenWrapper : Screen {
         val supabase = SupabaseClientManager.client
         val authRepository = remember { AuthRepository(supabase) }
         val teamRepository = remember { TeamRepository(supabase.postgrest) }
-
-        var userId by remember { mutableStateOf<String?>(null) }
+        val userRepository = remember { UserRepository(supabase.postgrest) }
+        val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
+        var userId by remember { mutableStateOf<String>(UserManager.getCurrentUserId()) }
         var isLoading by remember { mutableStateOf(true) }
         var showCreateTeamModal by remember { mutableStateOf(false) }
 
+        val mainScreenModel = remember {
+            MainScreenModel(
+                teamRepository = teamRepository,
+                teamMemberRepository = teamMemberRepository,
+                userRepository = userRepository,
+            )
+        }
+
         val scope = rememberCoroutineScope()
         val userTeams by TeamManager.userTeams.collectAsState()
-
-        LaunchedEffect(Unit) {
-            scope.launch {
-                try {
-                    val currentUser = supabase.auth.currentUserOrNull()
-                    userId = currentUser?.id
-                    if (userId != null) {
-                        val fetchedTeams = teamRepository.getTeamsForUser().map { team ->
-                            TeamWithMembers(
-                                id = team.id,
-                                name = team.name,
-                                description = team.description ?: "",
-                                members = emptyList()
-                            )
-                        }
-                        TeamManager.setUserTeams(fetchedTeams)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                } finally {
-                    isLoading = false
-                }
-            }
-        }
 
         if (isLoading) {
             Box(
@@ -75,21 +65,16 @@ object ManageTeamsScreenWrapper : Screen {
             )
 
             if (showCreateTeamModal) {
-                CreateTeamModal(
+                TeamDetailModal(
                     onDismiss = { showCreateTeamModal = false },
                     onSave = { name, description ->
                         scope.launch {
-                            val newTeam = teamRepository.createTeam(name, description)
-                            if (newTeam != null) {
-                                val updatedTeams = userTeams + TeamWithMembers(
-                                    id = newTeam.id,
-                                    name = newTeam.name,
-                                    description = newTeam.description ?: "",
-                                    members = emptyList()
-                                )
-                                TeamManager.setUserTeams(updatedTeams)
+                            try {
+                                mainScreenModel.createTeam(name, description)
+                                // TODO: Show success snackbar
+                            } catch (e: Exception) {
+                                // TODO: Show error snackbar
                             }
-                            showCreateTeamModal = false
                         }
                     }
                 )
