@@ -32,6 +32,8 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
+import com.teamschedulerapp.utils.showErrorSnackbar
+import com.teamschedulerapp.utils.showSuccessSnackbar
 
 
 @OptIn(ExperimentalTime::class)
@@ -41,6 +43,7 @@ fun ScheduleScreen(
     userRepository: UserRepository,
     userId: String,
     currentUserDisplayName: String,
+    snackbarHostState: SnackbarHostState? = null
 ) {
     // time anchors
     // today (for highlighting)
@@ -88,6 +91,8 @@ fun ScheduleScreen(
     val error by screenModel.error.collectAsState()
 
     val headcounts by screenModel.headcounts.collectAsState()
+
+    val scope = rememberCoroutineScope()
 
     // Load whenever team or selected date changes
     LaunchedEffect(teamId, selected) {
@@ -211,10 +216,21 @@ fun ScheduleScreen(
                 initialFrom = editTarget?.from,
                 initialTo = editTarget?.to,
                 onConfirm = { name, from, to ->
-                    val attendee = Attendee(displayName = name, from = from, to = to)
-                    screenModel.saveAttendance(teamId, date, attendee, teamMembers) {
-                        editTarget = null
-                        showDialogFor = null
+                    scope.launch {
+                        try {
+                            val attendee = Attendee(displayName = name, from = from, to = to)
+                            screenModel.saveAttendance(teamId, date, attendee, teamMembers) {
+                                // close dialog on success
+                                editTarget = null
+                                showDialogFor = null
+                            }
+                            // only one snackbar at a time
+                            snackbarHostState?.currentSnackbarData?.dismiss()
+                            snackbarHostState?.showSuccessSnackbar("Attendance saved successfully")
+                        } catch (e: Exception) {
+                            snackbarHostState?.currentSnackbarData?.dismiss()
+                            snackbarHostState?.showErrorSnackbar(e.message ?: "Failed to save attendance")
+                        }
                     }
                 },
                 onDismiss = {
@@ -230,8 +246,17 @@ fun ScheduleScreen(
             onDismissRequest = { pendingDelete = null },
             onConfirmation =  {
                 val date = selected ?: return@DeleteDialog
-                screenModel.deleteAttendance(teamId, userId, date, teamMembers)
-                pendingDelete = null
+                scope.launch {
+                    try {
+                        screenModel.deleteAttendance(teamId, userId, date, teamMembers)
+                        pendingDelete = null
+                        snackbarHostState?.showSuccessSnackbar("Attendance deleted successfully")
+                    } catch (e: Exception) {
+                        snackbarHostState?.showErrorSnackbar(
+                            e.message ?: "Failed to delete attendance"
+                        )
+                    }
+                }
             },
             dialogTitle = "Remove attendance",
             dialogText = "Are you sure you want to remove your attendance?",

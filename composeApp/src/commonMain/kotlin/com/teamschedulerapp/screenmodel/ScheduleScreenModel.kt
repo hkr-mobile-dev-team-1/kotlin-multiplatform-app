@@ -138,6 +138,7 @@ class ScheduleScreenModel(
                 onDone()
             } catch (e: Exception) {
                 _error.value = e.message
+                throw e
             } finally {
                 _isLoading.value = false
             }
@@ -166,6 +167,7 @@ class ScheduleScreenModel(
                 }
             } catch (e: Exception) {
                 _error.value = e.message
+                throw e
             } finally {
                 _isLoading.value = false
             }
