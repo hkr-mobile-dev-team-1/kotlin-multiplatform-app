@@ -49,11 +49,11 @@ fun LoginScreen(
 
             val existingSession = supabase.auth.currentSessionOrNull()
             if (existingSession != null) {
+                UserManager.initialize(authRepository)
                 onLoginSuccess()
             } else {
                 isCheckingSession = false
             }
-            UserManager.initialize(authRepository)
         } catch (e: Exception) {
             println("Error restoring session: ${e.message}")
             isCheckingSession = false

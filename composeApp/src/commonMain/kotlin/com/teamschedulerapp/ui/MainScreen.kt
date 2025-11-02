@@ -199,12 +199,33 @@ object SettingsTab : Tab {
 
 @Composable
 fun MainScreen() {
+    // Supabase
+    val supabase = SupabaseClientManager.client
+    val teamRepository = remember { TeamRepository(supabase.postgrest) }
+    val userRepository = remember { UserRepository(supabase.postgrest) }
+    val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
+    val authRepository = remember { AuthRepository(supabase) }
+    val mainScreenModel = remember {
+        MainScreenModel(
+            teamRepository = teamRepository,
+            teamMemberRepository = teamMemberRepository,
+            userRepository = userRepository,
+        )
+    }
     val userId = UserManager.requireUserId()
     val currentTeam by TeamManager.currentTeam.collectAsState()
     val userTeams by TeamManager.userTeams.collectAsState()
     val isTeamManagerInitialized by TeamManager.isInitialized.collectAsState()
 
-
+    if (!isTeamManagerInitialized) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     var showTeamSelector by remember { mutableStateOf(false) }
     var showCreateTeamModal by remember { mutableStateOf(false) }
@@ -218,21 +239,9 @@ fun MainScreen() {
     ScheduleTab.snackbarHostState = snackbarHostState
 
 
-    // Supabase
-    val supabase = SupabaseClientManager.client
-    val teamRepository = remember { TeamRepository(supabase.postgrest) }
-    val userRepository = remember { UserRepository(supabase.postgrest) }
-    val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
+
 
     val isCurrentTeamAdmin = currentTeam?.members?.find { it.id == userId }?.isAdmin ?: false
-
-    val mainScreenModel = remember {
-        MainScreenModel(
-            teamRepository = teamRepository,
-            teamMemberRepository = teamMemberRepository,
-            userRepository = userRepository,
-        )
-    }
 
     TabNavigator(ScheduleTab) {
         Scaffold(

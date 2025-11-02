@@ -1,7 +1,9 @@
 package com.teamschedulerapp.screenmodel
 
+import androidx.compose.runtime.LaunchedEffect
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.TeamManager
@@ -9,6 +11,7 @@ import com.teamschedulerapp.navigation.UserManager
 import com.teamschedulerapp.repositories.TeamMemberRepository
 import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
