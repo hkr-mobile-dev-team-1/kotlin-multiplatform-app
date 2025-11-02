@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TeamWithMembers
 
 @Composable
-fun CreateTeamModal(
+fun TeamDetailModal(
     teamToEdit: TeamWithMembers? = null,
     onDismiss: () -> Unit,
     onSave: (name: String, description: String) -> Unit

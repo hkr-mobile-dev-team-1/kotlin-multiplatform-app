@@ -303,7 +303,7 @@ fun MainScreen() {
             onDeleteTeam = { team ->
                 scope.launch {
                     try {
-                        mainScreenModel.deleteTeam(team.id ?: "")
+                        mainScreenModel.deleteTeam(team.id)
                         // Show success snackbar
                         snackbarHostState.showSuccessSnackbar("Team deleted successfully")
                     } catch (e: Exception) {

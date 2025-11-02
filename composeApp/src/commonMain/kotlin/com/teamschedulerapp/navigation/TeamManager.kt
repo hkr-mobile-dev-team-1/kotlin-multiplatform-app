@@ -1,3 +1,31 @@
+/**
+ * TeamManager.kt
+ *
+ * Manages the global state for teams and team selection across the application.
+ *
+ * Key Responsibilities:
+ * - Stores all teams the current user belongs to
+ * - Tracks which team is currently selected by the user
+ * - Persists the selected team ID to local storage for session continuity
+ * - Provides utility functions for team selection and admin permission checks
+ *
+ * Architecture:
+ * - Uses StateFlow for reactive state management (observable by UI)
+ * - Selected team is stored as an ID (String), while full team objects are in userTeams
+ * - Current team is derived by finding the team with the selected ID in userTeams list
+ * - This ensures single source of truth and automatic updates when team data changes
+ *
+ * Persistence:
+ * - Uses multiplatform-settings library to persist selected team ID locally
+ * - Team selection survives app restarts and sessions
+ *
+ * Usage:
+ * ```
+ * val currentTeam by TeamManager.currentTeam.collectAsState()
+ * val userTeams by TeamManager.userTeams.collectAsState()
+ * ```
+ */
+
 package com.teamschedulerapp.navigation
 
 import com.teamschedulerapp.model.TeamWithMembers
