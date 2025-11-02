@@ -26,15 +26,6 @@ class ScheduleScreenModel(
     private val userId: String,
 ) : ScreenModel {
 
-    // emit UI events for snackbars reactions
-    sealed class UiEvent {
-        data class Success(val msg: String) : UiEvent()
-        data class Error(val msg: String) : UiEvent()
-    }
-
-    private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
-    val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
-
     // UI state
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -149,10 +140,9 @@ class ScheduleScreenModel(
                     this[date] = (this[date] ?: 0) + (if (exists == null) 1 else 0)
                 }
                 onDone()
-                _uiEvents.tryEmit(UiEvent.Success("Attendance saved"))
             } catch (e: Exception) {
                 _error.value = e.message
-                _uiEvents.tryEmit(UiEvent.Error("Failed to save attendance"))
+                throw e
             } finally {
                 _isLoading.value = false
             }
@@ -175,15 +165,13 @@ class ScheduleScreenModel(
                     // recompute headcount
                     _headcounts.value = _headcounts.value.toMutableMap().apply {
                         this[date] = (this[date] ?: 1).coerceAtLeast(1) - 1
-                        _uiEvents.tryEmit(UiEvent.Success("Attendance deleted"))
                     }
                 } else {
                     _error.value = "Failed to delete attendance"
-                    _uiEvents.tryEmit(UiEvent.Error("Failed to delete attendance"))
                 }
             } catch (e: Exception) {
                 _error.value = e.message
-                _uiEvents.tryEmit(UiEvent.Error("Failed to delete attendance"))
+                throw e
             } finally {
                 _isLoading.value = false
             }

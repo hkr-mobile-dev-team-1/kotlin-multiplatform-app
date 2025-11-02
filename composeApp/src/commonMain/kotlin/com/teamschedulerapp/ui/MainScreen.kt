@@ -65,6 +65,7 @@ import kotlinx.coroutines.launch
 import com.teamschedulerapp.repositories.AvailabilityRepository
 
 object ScheduleTab : Tab {
+    var snackbarHostState: SnackbarHostState? = null
     override val options: TabOptions
         @Composable
         get() {
@@ -106,7 +107,8 @@ object ScheduleTab : Tab {
             availabilityRepository = availabilityRepository,
             userRepository = userRepository,
             userId = userId,
-            currentUserDisplayName = displayName
+            currentUserDisplayName = displayName,
+            snackbarHostState = snackbarHostState
         )
     }
 }
@@ -209,6 +211,7 @@ fun MainScreen() {
     // Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
     TasksTab.snackbarHostState = snackbarHostState
+    ScheduleTab.snackbarHostState = snackbarHostState
 
 
     // Supabase
