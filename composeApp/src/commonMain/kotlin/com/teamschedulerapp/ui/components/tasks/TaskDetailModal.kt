@@ -41,12 +41,12 @@ fun TaskDetailModal(
         dueDate: String?
     ) -> Unit
 ) {
-    var title by remember { mutableStateOf(taskWithAssignment.task.title) }
-    var description by remember { mutableStateOf(taskWithAssignment.task.description ?: "") }
-    var selectedStatus by remember { mutableStateOf(taskWithAssignment.task.status) }
-    var selectedPriority by remember { mutableStateOf(taskWithAssignment.task.priority) }
+    var title by remember { mutableStateOf(taskWithAssignment.title) }
+    var description by remember { mutableStateOf(taskWithAssignment.description ?: "") }
+    var selectedStatus by remember { mutableStateOf(taskWithAssignment.status) }
+    var selectedPriority by remember { mutableStateOf(taskWithAssignment.priority) }
     var selectedMembers by remember { mutableStateOf(taskWithAssignment.assignedMembers) }
-    var selectedDueDate by remember { mutableStateOf<String?>(taskWithAssignment.task.dueDate) }
+    var selectedDueDate by remember { mutableStateOf<String?>(taskWithAssignment.dueDate) }
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }

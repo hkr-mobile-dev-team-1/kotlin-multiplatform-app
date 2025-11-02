@@ -202,7 +202,7 @@ fun TasksScreen (
                 ),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                items(sortedTasks, key = { it.task.id!! }) { taskWithAssignments ->
+                items(sortedTasks, key = { it.id }) { taskWithAssignments ->
                     TaskCard(
                         taskWithAssignments = taskWithAssignments,
                         openTaskDetail = {
@@ -214,17 +214,15 @@ fun TasksScreen (
                             editMode = true
                         },
                         onDeleteClick = {
-                            if (taskWithAssignments.task.id != null) {
-                                scope.launch {
-                                    try {
-                                        screenModel.deleteTask(taskWithAssignments.task.id)
+                            scope.launch {
+                                try {
+                                    screenModel.deleteTask(taskWithAssignments.id)
 
-                                        // Show success snackbar
-                                        snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
-                                    } catch (e: Exception) {
-                                        // Show error snackbar
-                                        snackbarHostState?.showErrorSnackbar("Failed to delete task")
-                                    }
+                                    // Show success snackbar
+                                    snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
+                                } catch (e: Exception) {
+                                    // Show error snackbar
+                                    snackbarHostState?.showErrorSnackbar("Failed to delete task")
                                 }
                             }
                             selectedTask = null
@@ -276,10 +274,10 @@ fun TasksScreen (
             isEditMode = editMode,
             onDismiss = { selectedTask = null },
             onDelete = {
-                if (taskWithAssignment.task.id != null) {
+                if (taskWithAssignment.id != null) {
                     scope.launch {
                         try {
-                            screenModel.deleteTask(taskWithAssignment.task.id)
+                            screenModel.deleteTask(taskWithAssignment.id)
 
                             // Show success snackbar
                             snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
@@ -292,12 +290,12 @@ fun TasksScreen (
                 selectedTask = null
             },
             onSave = { title, description, status, priority, assignedMembers, dueDate ->
-                if (taskWithAssignment.task.id != null) {
+                if (taskWithAssignment.id != null) {
                     scope.launch {
                         try {
                             screenModel.updateTask(
                                 Task(
-                                    id = taskWithAssignment.task.id,
+                                    id = taskWithAssignment.id,
                                     title = title,
                                     description = description,
                                     status = status,

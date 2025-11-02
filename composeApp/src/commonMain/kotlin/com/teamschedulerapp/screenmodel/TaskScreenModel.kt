@@ -33,9 +33,9 @@ class TaskScreenModel(
     init {
         // Listen to team changes
         screenModelScope.launch {
-            TeamManager.currentTeam.collect { team ->
-                team?.id?.let { teamId ->
-                    loadTasksForTeam(teamId)
+            TeamManager.selectedTeamId.collect { teamId ->
+                teamId?.let {
+                    loadTasksForTeam(it)
                 }
             }
         }
@@ -61,7 +61,7 @@ class TaskScreenModel(
                     val user = userRepository.getUserById(assignment.userId)
 
                     // Check if this user is a team member and get their admin status
-                    val teamMember = TeamManager.currentTeam.value?.members?.find { it.id == assignment.userId }
+                    val teamMember = TeamManager.userTeams.value.find { it.id == teamId }?.members?.find { it.id == assignment.userId }
 
                     // Create TeamMemberWithUser
                     user?.let {
@@ -76,7 +76,14 @@ class TaskScreenModel(
                 }
 
                 TaskWithAssignments(
-                    task = task,
+                    id = task.id,
+                    teamId = teamId,
+                    title = task.title,
+                    description = task.description,
+                    dueDate = task.dueDate,
+                    createdBy = task.createdBy,
+                    status = task.status,
+                    priority = task.priority,
                     assignedMembers = assignedMembers
                 )
             }

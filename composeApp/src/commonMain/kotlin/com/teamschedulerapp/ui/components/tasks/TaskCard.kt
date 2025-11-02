@@ -27,7 +27,6 @@ fun TaskCard(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    val task = taskWithAssignments.task
     val assignedMembers = taskWithAssignments.assignedMembers
     var showMenu by remember { mutableStateOf(false) }
 
@@ -57,7 +56,7 @@ fun TaskCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = task.title,
+                    text = taskWithAssignments.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -99,10 +98,10 @@ fun TaskCard(
             }
 
             // Task Description (if exists)
-            if (!task.description.isNullOrEmpty()) {
+            if (!taskWithAssignments.description.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(0.dp))
                 Text(
-                    text = task.description,
+                    text = taskWithAssignments.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 3,
@@ -122,8 +121,8 @@ fun TaskCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    StatusLabel(task.status)
-                    PriorityLabel(priority = task.priority)
+                    StatusLabel(taskWithAssignments.status)
+                    PriorityLabel(priority = taskWithAssignments.priority)
                 }
 
                 AssigneesTiles(assignedMembers = assignedMembers)
@@ -132,7 +131,7 @@ fun TaskCard(
             Spacer(modifier = Modifier.height(12.dp))
 
 
-            DateRange(startDate = null, endDate = task.dueDate, big = false)
+            DateRange(startDate = null, endDate = taskWithAssignments.dueDate, big = false)
 
         }
     }

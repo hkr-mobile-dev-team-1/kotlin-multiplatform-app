@@ -17,7 +17,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.data.SupabaseClientManager
+import com.teamschedulerapp.navigation.UserManager
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -38,6 +40,7 @@ fun LoginScreen(
     val scope = rememberCoroutineScope()
 
     val supabase = SupabaseClientManager.client
+    val authRepository = AuthRepository(supabase)
 
     LaunchedEffect(Unit) {
         try {
@@ -46,6 +49,7 @@ fun LoginScreen(
 
             val existingSession = supabase.auth.currentSessionOrNull()
             if (existingSession != null) {
+                UserManager.initialize(authRepository)
                 onLoginSuccess()
             } else {
                 isCheckingSession = false
