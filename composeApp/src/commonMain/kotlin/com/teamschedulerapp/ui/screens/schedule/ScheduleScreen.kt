@@ -224,10 +224,9 @@ fun ScheduleScreen(
                                 editTarget = null
                                 showDialogFor = null
                             }
-
                             // only one snackbar at a time
                             snackbarHostState?.currentSnackbarData?.dismiss()
-                            snackbarHostState?.showSuccessSnackbar("Attendance saved")
+                            snackbarHostState?.showSuccessSnackbar("Attendance saved successfully")
                         } catch (e: Exception) {
                             snackbarHostState?.currentSnackbarData?.dismiss()
                             snackbarHostState?.showErrorSnackbar(e.message ?: "Failed to save attendance")
