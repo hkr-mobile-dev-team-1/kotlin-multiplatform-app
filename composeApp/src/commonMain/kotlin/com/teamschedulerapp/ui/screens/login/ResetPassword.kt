@@ -90,7 +90,7 @@ fun ResetPasswordScreen(onNavigateBack: () -> Unit) {
             OutlinedTextField(
                 value = deeplink,
                 onValueChange = { deeplink = it },
-                label = { Text("Paste deeplink here (for testing)") },
+                label = { Text("Click on the link received in your email and copy/paste the web address of the new window here") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
