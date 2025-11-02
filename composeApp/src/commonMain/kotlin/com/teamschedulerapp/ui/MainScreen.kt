@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.BarChart
@@ -233,16 +234,23 @@ fun MainScreen() {
             topBar = {
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFF5F5F5)
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
                     title = {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { showTeamSelector = true }
+                            modifier = Modifier
+                                .clickable { showTeamSelector = true }
+                                .widthIn(max = 280.dp)
                         ) {
                             TeamTile(currentTeam)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = currentTeam?.name ?: "Select team")
+                            Text(
+                                text = currentTeam?.name ?: "Select team",
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
                             if (isCurrentTeamAdmin) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 AdminBadge()
