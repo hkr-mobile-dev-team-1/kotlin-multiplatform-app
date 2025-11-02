@@ -13,8 +13,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        val sessionFragment = intent?.data?.fragment
+
         setContent {
-            App()
+            App(sessionFragment = sessionFragment)
         }
     }
 }

@@ -11,21 +11,71 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.navigation.UpdatePassword
-import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.status.SessionSource
 import io.github.jan.supabase.auth.user.UserSession
 import kotlinx.coroutines.launch
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 @Composable
-fun ResetPasswordScreen(onNavigateBack: () -> Unit) {
+fun ResetPasswordScreen(onNavigateBack: () -> Unit, sessionFragment: String? = null) {
     var email by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
-    var deeplink by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
+
+    LaunchedEffect(sessionFragment) {
+        if (sessionFragment != null) {
+            scope.launch {
+                try {
+                    fun parseParams(paramString: String?): Map<String, String> {
+                        if (paramString.isNullOrBlank()) return emptyMap()
+                        return paramString.split("&").mapNotNull {
+                            val parts = it.split("=")
+                            if (parts.size == 2) parts[0] to parts[1] else null
+                        }.toMap()
+                    }
+
+                    val allParams = parseParams(sessionFragment)
+                    val auth = SupabaseClientManager.client.auth
+
+                    val access = allParams["access_token"]
+                    val refresh = allParams["refresh_token"]
+
+                    if (!access.isNullOrBlank() && !refresh.isNullOrBlank()) {
+                        try {
+                            val session = UserSession(
+                                accessToken = access,
+                                refreshToken = refresh,
+                                expiresIn = 3600,            // 1 hour, safe default
+                                tokenType = "bearer",        // standard for Supabase tokens
+                                user = null
+                            )
+
+                            auth.importSession(session = session, autoRefresh = true)
+
+                            val currentSession = auth.currentSessionOrNull()
+                            if (currentSession != null) {
+                                message = "Session imported and verified — proceed to update password."
+                                navigator?.push(UpdatePassword)
+                            } else {
+                                message = "Session import attempted, but no active session found."
+                            }
+
+                        } catch (e: Exception) {
+                            message = "Failed to import session: ${e.message}"
+                        }
+                        return@launch
+                    }
+
+                    message = "No valid token found in deeplink."
+
+                } catch (e: Exception) {
+                    message = "Failed to process deeplink: ${e.message}"
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Reset Password") }) }
@@ -82,108 +132,6 @@ fun ResetPasswordScreen(onNavigateBack: () -> Unit) {
                         MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 8.dp)
                 )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // --- Manual deeplink test input ---
-            OutlinedTextField(
-                value = deeplink,
-                onValueChange = { deeplink = it },
-                label = { Text("Click on the link received in your email and copy/paste the web address of the new window here") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // --- Verify deeplink manually ---
-            Button(
-                onClick = {
-                    scope.launch {
-                        try {
-                            // ---- Helper: parse params from ?query and #fragment ----
-                            fun parseParams(paramString: String?): Map<String, String> {
-                                if (paramString.isNullOrBlank()) return emptyMap()
-                                return paramString.split("&").mapNotNull {
-                                    val parts = it.split("=")
-                                    if (parts.size == 2) parts[0] to parts[1] else null
-                                }.toMap()
-                            }
-
-                            val queryIndex = deeplink.indexOf("?")
-                            val fragmentIndex = deeplink.indexOf("#")
-
-                            val queryString = if (queryIndex != -1) {
-                                val end = if (fragmentIndex != -1) fragmentIndex else deeplink.length
-                                deeplink.substring(queryIndex + 1, end)
-                            } else null
-
-                            val fragmentString = if (fragmentIndex != -1) {
-                                deeplink.substring(fragmentIndex + 1)
-                            } else null
-
-                            val allParams = parseParams(queryString) + parseParams(fragmentString)
-                            val auth = SupabaseClientManager.client.auth
-
-                            // ---- Case 1: verify OTP token (for email recovery links) ----
-                            if (allParams.containsKey("token")) {
-                                val token = allParams["token"]!!
-                                auth.verifyEmailOtp(
-                                    type = OtpType.Email.RECOVERY,
-                                    token = token,
-                                    email = email
-                                )
-                                message = "Email OTP verified — proceed to update password."
-                                navigator?.push(UpdatePassword)
-                                return@launch
-                            }
-
-                            // ---- Case 2: import session (for password recovery callback) ----
-                            val access = allParams["access_token"]
-                            val refresh = allParams["refresh_token"]
-
-                            if (!access.isNullOrBlank() && !refresh.isNullOrBlank()) {
-                                try {
-                                    val session = UserSession(
-                                        accessToken = access,
-                                        refreshToken = refresh,
-                                        expiresIn = 3600,            // 1 hour, safe default
-                                        tokenType = "bearer",        // standard for Supabase tokens
-                                        user = null
-                                    )
-
-                                    auth.importSession(
-                                        session = session,
-                                        autoRefresh = true,
-                                        source = SessionSource.External  // optional but clearer
-                                    )
-
-                                    val currentSession = auth.currentSessionOrNull()
-                                    if (currentSession != null) {
-                                        message = "Session imported and verified — proceed to update password."
-                                        navigator?.push(UpdatePassword)
-                                    } else {
-                                        message = "Session import attempted, but no active session found."
-                                    }
-
-                                } catch (e: Exception) {
-                                    message = "Failed to import session: ${e.message}"
-                                }
-                                return@launch
-                            }
-
-                            // ---- Fallback: invalid link ----
-                            message = "No valid token found in deeplink."
-
-                        } catch (e: Exception) {
-                            message = "Failed to process deeplink: ${e.message}"
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Manual Deeplink Verification")
             }
         }
     }

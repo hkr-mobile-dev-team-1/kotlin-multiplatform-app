@@ -18,16 +18,24 @@ object Login : Screen {
         LoginScreen(
             onNavigateToSignUp = { navigator.push(Register) },
             onLoginSuccess = { navigator.replace(MainScreen) },
-            onNavigateToResetPassword = { navigator.push(ResetPassword) }
+            onNavigateToResetPassword = { navigator.push(RequestPasswordReset) }
         )
     }
 }
 
-object ResetPassword : Screen {
+object RequestPasswordReset : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         ResetPasswordScreen(onNavigateBack = { navigator.pop() })
+    }
+}
+
+data class ResetPassword(val sessionFragment: String) : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        ResetPasswordScreen(onNavigateBack = { navigator.pop() }, sessionFragment = sessionFragment)
     }
 }
 
