@@ -15,10 +15,6 @@ import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.repositories.UserRepository
 import kotlinx.datetime.*
 
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-
 
 class ScheduleScreenModel(
     private val availabilityRepository: AvailabilityRepository,
