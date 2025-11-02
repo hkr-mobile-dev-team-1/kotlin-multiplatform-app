@@ -17,12 +17,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.navigation.UserManager
-import com.teamschedulerapp.repositories.UserRepository
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -30,7 +27,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     onNavigateToSignUp: () -> Unit = {},
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    onNavigateToResetPassword: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -189,6 +187,10 @@ fun LoginScreen(
 
             TextButton(onClick = { onNavigateToSignUp() }) {
                 Text("Don't have an account? Sign Up here")
+            }
+
+            TextButton(onClick = { onNavigateToResetPassword() }) {
+                Text("Forgot Password?")
             }
 
         }
