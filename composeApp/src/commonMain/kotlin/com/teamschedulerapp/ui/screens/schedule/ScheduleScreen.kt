@@ -32,7 +32,7 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
-import com.teamschedulerapp.ui.components.schedule.AttendanceRightSheet
+import com.teamschedulerapp.ui.components.schedule.AttendanceSheet
 import com.teamschedulerapp.utils.showErrorSnackbar
 import com.teamschedulerapp.utils.showSuccessSnackbar
 
@@ -212,7 +212,7 @@ fun ScheduleScreen(
         showSheetFor?.let { date ->
             //collecting data, passing the prefilled first last name
             androidx.compose.runtime.key(date to (editTarget?.displayName ?: "")) {
-                AttendanceRightSheet(
+                AttendanceSheet(
                     visible = true,
                     date = date,
                     displayName = currentUserDisplayName,
