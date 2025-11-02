@@ -54,22 +54,6 @@ object ManageTeamsScreenWrapper : Screen {
         val snackbarHostState = remember { SnackbarHostState() }
 
         Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Manage Teams") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                )
-            },
             snackbarHost = { CustomSnackbarHost(snackbarHostState) }
         ) { paddingValues ->
             Box(
