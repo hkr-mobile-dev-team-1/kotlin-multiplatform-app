@@ -38,7 +38,7 @@ fun TeamSelectorModal(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.surface,
         sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true
         )
@@ -71,7 +71,7 @@ fun TeamSelectorModal(
                             .fillMaxWidth()
                             .clickable { onTeamSelected(team) }
                             .padding(vertical = 4.dp),
-                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                        color = if (isSelected) MaterialTheme.colorScheme.surfaceContainerHighest
                         else Color.Transparent,
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -90,15 +90,21 @@ fun TeamSelectorModal(
                             ) {
                                 TeamTile(team)
 
-                                Column {
+                                Column (
+                                    modifier = Modifier.weight(1f)
+                                ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text(
                                             text = team.name,
                                             style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f, fill = false)
                                         )
                                         if (userIsAdmin) {
                                             AdminBadge()
@@ -138,7 +144,7 @@ fun TeamSelectorModal(
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Delete team",
-                                        tint = MaterialTheme.colorScheme.error,
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }

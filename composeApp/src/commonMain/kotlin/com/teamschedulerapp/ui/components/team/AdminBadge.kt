@@ -13,15 +13,15 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AdminBadge() {
     Surface(
-    shape = RoundedCornerShape(4.dp),
-    color = MaterialTheme.colorScheme.primaryContainer
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
         Text(
-            text = "Admin",
+            text = "admin",
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
         )
     }
 }
