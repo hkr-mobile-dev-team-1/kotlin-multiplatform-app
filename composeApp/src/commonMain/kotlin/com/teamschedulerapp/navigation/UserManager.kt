@@ -8,10 +8,11 @@
  */
 package com.teamschedulerapp.navigation
 
-import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.model.User
+import com.teamschedulerapp.repositories.UserRepository
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,16 +28,18 @@ object UserManager {
 
     /**
      * Initialize user state from Supabase auth
-     * Call this when app starts or user logs in
+     * This is called when app starts or user logs in / signs up
      */
-    suspend fun initialize(authRepository: AuthRepository) {
+    suspend fun initialize() {
+        val userRepository = UserRepository(supabase.postgrest)
         val authUser = supabase.auth.currentUserOrNull()
         _currentUserId.value = authUser?.id
 
-        // Optionally fetch full user profile
         authUser?.id?.let { userId ->
-            _currentUser.value = authRepository.getCurrentUser()
+            _currentUser.value = userRepository.getUserById(userId)
         }
+
+        println("UserManager - Initialized with user: ${_currentUser.value?.firstName} ${_currentUser.value?.lastName}")
     }
 
     /**
@@ -47,13 +50,22 @@ object UserManager {
         _currentUser.value = null
         // Also reset TeamManager
         TeamManager.reset()
+        println("UserManager - Cleared")
     }
 
     /**
      * Get current user ID, throws if not authenticated
      */
-    fun requireUserId(): String {
+    fun getCurrentUserId(): String {
         return _currentUserId.value
+            ?: throw IllegalStateException("User not authenticated")
+    }
+
+    /**
+     * Get current user, throws if not authenticated
+     */
+    fun getCurrentUser(): User {
+        return _currentUser.value
             ?: throw IllegalStateException("User not authenticated")
     }
 }

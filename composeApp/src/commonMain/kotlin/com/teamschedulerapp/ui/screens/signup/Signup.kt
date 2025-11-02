@@ -165,7 +165,7 @@ fun SignupScreen(
                             lastName
                         )
                         if (result.isSuccess) {
-                            UserManager.initialize(SupabaseClientManager.authRepository)
+                            UserManager.initialize()
                             successMessage = "Registration Successful!"
                             delay(1500)
                             onSignupSuccess()

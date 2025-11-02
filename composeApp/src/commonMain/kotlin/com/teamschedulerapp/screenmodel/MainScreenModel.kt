@@ -28,7 +28,7 @@ class MainScreenModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    val userId = UserManager.requireUserId()
+    val userId = UserManager.getCurrentUserId()
 
     init {
         loadUserTeams()

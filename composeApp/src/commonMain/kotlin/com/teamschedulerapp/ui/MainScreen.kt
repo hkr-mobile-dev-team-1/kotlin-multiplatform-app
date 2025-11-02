@@ -212,7 +212,7 @@ fun MainScreen() {
             userRepository = userRepository,
         )
     }
-    val userId = UserManager.requireUserId()
+    val userId = UserManager.getCurrentUserId()
     val currentTeam by TeamManager.currentTeam.collectAsState()
     val userTeams by TeamManager.userTeams.collectAsState()
     val isTeamManagerInitialized by TeamManager.isInitialized.collectAsState()

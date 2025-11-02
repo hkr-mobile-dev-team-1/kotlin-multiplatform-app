@@ -33,7 +33,7 @@ object ManageTeamsScreenWrapper : Screen {
         val teamRepository = remember { TeamRepository(supabase.postgrest) }
         val userRepository = remember { UserRepository(supabase.postgrest) }
         val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
-        var userId by remember { mutableStateOf<String>(UserManager.requireUserId()) }
+        var userId by remember { mutableStateOf<String>(UserManager.getCurrentUserId()) }
         var isLoading by remember { mutableStateOf(true) }
         var showCreateTeamModal by remember { mutableStateOf(false) }
 
