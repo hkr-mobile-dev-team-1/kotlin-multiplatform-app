@@ -146,12 +146,6 @@ class MainScreenModel(
 
             if (success) {
                 println("Team deleted: $teamId")
-
-                // If deleted team was the current team, clear it
-                if (TeamManager.selectedTeamId.value == teamId) {
-                    TeamManager.clearTeam()
-                }
-
                 loadUserTeams()
             } else {
                 throw Exception("Failed to delete team")

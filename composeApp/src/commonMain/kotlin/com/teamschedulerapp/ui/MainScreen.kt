@@ -63,9 +63,12 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 import com.teamschedulerapp.repositories.AvailabilityRepository
+import com.teamschedulerapp.ui.TasksTab.onCreateTeam
 
 object ScheduleTab : Tab {
     var snackbarHostState: SnackbarHostState? = null
+    var onCreateTeam: (() -> Unit)? = null
+
     override val options: TabOptions
         @Composable
         get() {
@@ -77,7 +80,7 @@ object ScheduleTab : Tab {
     @Composable
     override fun Content() {
         // get Supabase client
-        val supabase = com.teamschedulerapp.data.SupabaseClientManager.client
+        val supabase = SupabaseClientManager.client
         val authUser = supabase.auth.currentUserOrNull() ?: return
         val userId = authUser.id
 
@@ -86,7 +89,7 @@ object ScheduleTab : Tab {
         val userRepository = remember { UserRepository(supabase.postgrest) }
 
         // logged-in user
-        var appUser by remember { mutableStateOf<com.teamschedulerapp.model.User?>(null) }
+        var appUser by remember { mutableStateOf<User?>(null) }
 
         LaunchedEffect(userId) {
             appUser = userRepository.getUserById(userId)
@@ -108,13 +111,16 @@ object ScheduleTab : Tab {
             userRepository = userRepository,
             userId = userId,
             currentUserDisplayName = displayName,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
+            onCreateTeam = { onCreateTeam?.invoke() }
         )
     }
 }
 
 object TasksTab : Tab {
     var snackbarHostState: SnackbarHostState? = null
+    var onCreateTeam: (() -> Unit)? = null
+
     override val options: TabOptions
         @Composable
         get() {
@@ -138,12 +144,15 @@ object TasksTab : Tab {
         }
         TasksScreen(
             screenModel = screenModel,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
+            onCreateTeam = { onCreateTeam?.invoke() }
         )
     }
 }
 
 object AnalyticsTab : Tab {
+    var onCreateTeam: (() -> Unit)? = null
+
     override val options: TabOptions
         @Composable
         get() {
@@ -154,7 +163,9 @@ object AnalyticsTab : Tab {
 
     @Composable
     override fun Content() {
-        AnalyticsScreen()
+        AnalyticsScreen(
+            onCreateTeam = { TasksTab.onCreateTeam?.invoke() }
+        )
     }
 }
 
@@ -204,7 +215,6 @@ fun MainScreen() {
     val teamRepository = remember { TeamRepository(supabase.postgrest) }
     val userRepository = remember { UserRepository(supabase.postgrest) }
     val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
-    val authRepository = remember { AuthRepository(supabase) }
     val mainScreenModel = remember {
         MainScreenModel(
             teamRepository = teamRepository,
@@ -233,12 +243,14 @@ fun MainScreen() {
 
     val scope = rememberCoroutineScope()
 
-    // Snackbar
+    // Snackbar setup
     val snackbarHostState = remember { SnackbarHostState() }
     TasksTab.snackbarHostState = snackbarHostState
     ScheduleTab.snackbarHostState = snackbarHostState
 
-
+    // Set onCreateTeam callbacks
+    TasksTab.onCreateTeam = { showCreateTeamModal = true }
+    // ScheduleTab.onCreateTeam = { showCreateTeamModal = true }
 
 
     val isCurrentTeamAdmin = currentTeam?.members?.find { it.id == userId }?.isAdmin ?: false

@@ -32,6 +32,7 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
+import com.teamschedulerapp.ui.components.NoTeamsEmptyState
 import com.teamschedulerapp.utils.showErrorSnackbar
 import com.teamschedulerapp.utils.showSuccessSnackbar
 
@@ -43,7 +44,8 @@ fun ScheduleScreen(
     userRepository: UserRepository,
     userId: String,
     currentUserDisplayName: String,
-    snackbarHostState: SnackbarHostState? = null
+    snackbarHostState: SnackbarHostState? = null,
+    onCreateTeam: () -> Unit = {}
 ) {
     // time anchors
     // today (for highlighting)
@@ -76,10 +78,19 @@ fun ScheduleScreen(
     // delete dialog trigger
     var pendingDelete by remember { mutableStateOf<Attendee?>(null) }
 
-    val teamWithMembers by TeamManager.currentTeam.collectAsState()
-    val teamId = teamWithMembers?.id ?: return
+    val currentTeam by TeamManager.currentTeam.collectAsState()
+
+    // Show empty state if no team is selected
+    if (currentTeam == null) {
+        NoTeamsEmptyState(
+            onCreateTeam = onCreateTeam
+        )
+        return
+    }
+
+    val teamId = currentTeam?.id!!
     // wire team members
-    val teamMembers: List<TeamMemberWithUser> = teamWithMembers?.members ?: emptyList()
+    val teamMembers: List<TeamMemberWithUser> = currentTeam?.members ?: emptyList()
 
     // bring in screen model
     val screenModel = remember(availabilityRepository, userRepository, userId) {
@@ -95,9 +106,9 @@ fun ScheduleScreen(
     val scope = rememberCoroutineScope()
 
     // Load whenever team or selected date changes
-    LaunchedEffect(teamId, selected) {
+    LaunchedEffect(currentTeam?.id, selected) {
         selected?.let { date ->
-            screenModel.loadDay(teamId = teamId, date = date, teamMembers = teamMembers)
+            screenModel.loadDay(teamId = currentTeam?.id!!, date = date, teamMembers = teamMembers)
         }
     }
 
@@ -105,7 +116,7 @@ fun ScheduleScreen(
     val visibleMonth by remember(state) { derivedStateOf { state.firstVisibleMonth.yearMonth } }
 
     LaunchedEffect(teamId, visibleMonth) {
-        screenModel.loadHeadcountsForMonth(teamId, visibleMonth)
+        screenModel.loadHeadcountsForMonth(currentTeam?.id!!, visibleMonth)
     }
 
     // reset to current month on screen re-entry
@@ -219,7 +230,7 @@ fun ScheduleScreen(
                     scope.launch {
                         try {
                             val attendee = Attendee(displayName = name, from = from, to = to)
-                            screenModel.saveAttendance(teamId, date, attendee, teamMembers) {
+                            screenModel.saveAttendance(currentTeam?.id!!, date, attendee, teamMembers) {
                                 // close dialog on success
                                 editTarget = null
                                 showDialogFor = null
@@ -248,7 +259,7 @@ fun ScheduleScreen(
                 val date = selected ?: return@DeleteDialog
                 scope.launch {
                     try {
-                        screenModel.deleteAttendance(teamId, userId, date, teamMembers)
+                        screenModel.deleteAttendance(currentTeam?.id!!, userId, date, teamMembers)
                         pendingDelete = null
                         snackbarHostState?.showSuccessSnackbar("Attendance deleted successfully")
                     } catch (e: Exception) {
