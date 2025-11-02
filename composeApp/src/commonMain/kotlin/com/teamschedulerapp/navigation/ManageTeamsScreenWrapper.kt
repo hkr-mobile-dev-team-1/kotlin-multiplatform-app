@@ -1,6 +1,8 @@
 package com.teamschedulerapp.navigation
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -8,10 +10,9 @@ import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import com.teamschedulerapp.data.SupabaseClientManager
-import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.TeamMemberRepository
+import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
 import com.teamschedulerapp.screenmodel.SettingsScreenModel
 import com.teamschedulerapp.ui.components.CustomSnackbarHost
@@ -29,14 +30,12 @@ object ManageTeamsScreenWrapper : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val supabase = SupabaseClientManager.client
 
-        // Initialize repositories
         val teamRepository = remember { TeamRepository(supabase.postgrest) }
         val userRepository = remember { UserRepository(supabase.postgrest) }
         val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
+        val userId = remember { UserManager.getCurrentUserId() }
 
-        val userId = remember { UserManager.getCurrentUserId() ?: "" }
-
-        val settingsScreenModel = rememberScreenModel {
+        val settingsScreenModel = remember {
             SettingsScreenModel(
                 teamRepository = teamRepository,
                 teamMemberRepository = teamMemberRepository,
@@ -45,31 +44,42 @@ object ManageTeamsScreenWrapper : Screen {
             )
         }
 
-        val isLoading by settingsScreenModel.isLoading.collectAsState()
+        val scope = rememberCoroutineScope()
         val userTeams by TeamManager.userTeams.collectAsState()
+        val isLoading by settingsScreenModel.isLoading.collectAsState()
 
         var showCreateTeamModal by remember { mutableStateOf(false) }
 
-        val scope = rememberCoroutineScope()
-
-        //  Snackbar host
+        // Custom Snackbar
         val snackbarHostState = remember { SnackbarHostState() }
 
         Scaffold(
-            snackbarHost = { CustomSnackbarHost(snackbarHostState = snackbarHostState) }
+            topBar = {
+                TopAppBar(
+                    title = { Text("Manage Teams") },
+                    navigationIcon = {
+                        IconButton(onClick = { navigator.pop() }) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                )
+            },
+            snackbarHost = { CustomSnackbarHost(snackbarHostState) }
         ) { paddingValues ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
             ) {
                 if (isLoading) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    CircularProgressIndicator()
                 } else {
                     ManageTeamsScreen(
                         userId = userId,
@@ -90,8 +100,9 @@ object ManageTeamsScreenWrapper : Screen {
                                     snackbarHostState.showSuccessSnackbar("Team created successfully")
                                 } catch (e: Exception) {
                                     snackbarHostState.showErrorSnackbar("Failed to create team")
+                                } finally {
+                                    showCreateTeamModal = false
                                 }
-                                showCreateTeamModal = false
                             }
                         }
                     )
