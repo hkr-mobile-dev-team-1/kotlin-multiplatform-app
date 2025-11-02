@@ -63,7 +63,6 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 import com.teamschedulerapp.repositories.AvailabilityRepository
-import com.teamschedulerapp.ui.TasksTab.onCreateTeam
 
 object ScheduleTab : Tab {
     var snackbarHostState: SnackbarHostState? = null
