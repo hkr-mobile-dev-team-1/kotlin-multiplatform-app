@@ -31,19 +31,12 @@ object RequestPasswordReset : Screen {
     }
 }
 
-data class ResetPassword(val sessionFragment: String) : Screen {
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        ResetPasswordScreen(onNavigateBack = { navigator.pop() }, sessionFragment = sessionFragment)
-    }
-}
-
-object UpdatePassword : Screen {
+class UpdatePassword(val sessionFragment: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         UpdatePasswordScreen(
+            sessionFragment = sessionFragment,
             onPasswordUpdated = { navigator.replaceAll(Login) }
         )
     }
