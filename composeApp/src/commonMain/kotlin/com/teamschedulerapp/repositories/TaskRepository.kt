@@ -65,7 +65,8 @@ class TaskRepository(private val postgrest: Postgrest) {
        description: String?,
        status: String?,
        priority: String?,
-       dueDate: String?
+       startDate: String?,
+       endDate: String?
     ): Boolean {
         return try {
             withContext(Dispatchers.IO) {
@@ -76,7 +77,8 @@ class TaskRepository(private val postgrest: Postgrest) {
                         description?.let{ set("description", it) }
                         status?.let { set("status", it) }
                         priority?.let{ set("priority",it) }
-                        dueDate?.let { set("due_date", it) }
+                        startDate?.let { set("start_date", it) }
+                        endDate?.let { set("end_date", it) }
                     }) {
                         filter {
                             eq("id",taskId)

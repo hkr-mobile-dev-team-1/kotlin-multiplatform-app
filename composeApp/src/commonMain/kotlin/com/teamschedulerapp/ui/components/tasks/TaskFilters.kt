@@ -60,8 +60,8 @@ fun applySorting(
             }
         }
         "due_date_nearest" -> tasks.sortedWith { a, b ->
-            val dateA = DateUtils.parseDate(a.dueDate)
-            val dateB = DateUtils.parseDate(b.dueDate)
+            val dateA = DateUtils.parseDate(a.endDate)
+            val dateB = DateUtils.parseDate(b.endDate)
             when {
                 dateA == null && dateB == null -> 0
                 dateA == null -> 1
@@ -70,8 +70,8 @@ fun applySorting(
             }
         }
         "due_date_furthest" -> tasks.sortedWith { a, b ->
-            val dateA = DateUtils.parseDate(a.dueDate)
-            val dateB = DateUtils.parseDate(b.dueDate)
+            val dateA = DateUtils.parseDate(a.endDate)
+            val dateB = DateUtils.parseDate(b.endDate)
             when {
                 dateA == null && dateB == null -> 0
                 dateA == null -> 1

@@ -19,16 +19,18 @@ import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TaskWithAssignments
 import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.navigation.TeamManager
+import com.teamschedulerapp.navigation.UserManager
 import com.teamschedulerapp.ui.components.DateRange
 import com.teamschedulerapp.ui.components.UserLabel
 import com.teamschedulerapp.utils.DateUtils.formatDateForDisplay
 import kotlinx.datetime.*
+import kotlin.time.Instant
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 @Composable
 fun TaskDetailModal(
-    taskWithAssignment: TaskWithAssignments,
+    taskWithAssignments: TaskWithAssignments?,
     isEditMode: Boolean,
     onDismiss: () -> Unit,
     onDelete: () -> Unit,
@@ -38,34 +40,55 @@ fun TaskDetailModal(
         status: String,
         priority: String,
         assignedMembers: List<TeamMemberWithUser>,
-        dueDate: String?
+        startDate: String?,
+        endDate: String?
     ) -> Unit
 ) {
-    var title by remember { mutableStateOf(taskWithAssignment.title) }
-    var description by remember { mutableStateOf(taskWithAssignment.description ?: "") }
-    var selectedStatus by remember { mutableStateOf(taskWithAssignment.status) }
-    var selectedPriority by remember { mutableStateOf(taskWithAssignment.priority) }
-    var selectedMembers by remember { mutableStateOf(taskWithAssignment.assignedMembers) }
-    var selectedDueDate by remember { mutableStateOf<String?>(taskWithAssignment.dueDate) }
+    val currentTeam by TeamManager.currentTeam.collectAsState()
+    val currentUserId = UserManager.getCurrentUserId()
+    val isCurrentUserAdmin = TeamManager.isUserAdminOfTeam(currentTeam?.id!!, currentUserId)
+
+    // Initialize state from existing task or defaults
+    var title by remember { mutableStateOf(taskWithAssignments?.title ?: "") }
+    var description by remember { mutableStateOf(taskWithAssignments?.description ?: "") }
+    var selectedStatus by remember { mutableStateOf(taskWithAssignments?.status ?: "pending") }
+    var selectedPriority by remember { mutableStateOf(taskWithAssignments?.priority ?: "medium") }
+    var selectedMembers by remember { mutableStateOf(taskWithAssignments?.assignedMembers ?: emptyList()) }
+    var selectedStartDate by remember { mutableStateOf(taskWithAssignments?.startDate) }
+    var selectedEndDate by remember { mutableStateOf(taskWithAssignments?.endDate) }
 
     var statusExpanded by remember { mutableStateOf(false) }
     var priorityExpanded by remember { mutableStateOf(false) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var showDatePicker: Int? by remember { mutableStateOf(null) }
     var isEditing by remember { mutableStateOf(isEditMode) }
 
-    val currentTeam by TeamManager.currentTeam.collectAsState()
+    // Validation
+    val isTitleValid = title.isNotBlank()
+    val hasChanges = remember(title, description, selectedStatus, selectedPriority, selectedMembers, selectedStartDate, selectedEndDate) {
+        if (taskWithAssignments == null) {
+            title.isNotBlank() || description.isNotBlank()
+        } else {
+            title != taskWithAssignments.title ||
+                    description != taskWithAssignments.description ||
+                    selectedStatus != taskWithAssignments.status ||
+                    selectedPriority != taskWithAssignments.priority ||
+                    selectedMembers != taskWithAssignments.assignedMembers ||
+                    selectedStartDate != taskWithAssignments.startDate ||
+                    selectedEndDate != taskWithAssignments.endDate
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         scrimColor = Color.DarkGray.copy(alpha = 0.6f),
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.9f)
+                .fillMaxHeight()
         ) {
             // Header
             Row(
@@ -76,7 +99,11 @@ fun TaskDetailModal(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (isEditing) "Edit Task" else "Task Detail",
+                    text = when {
+                        taskWithAssignments == null -> "Create New Task"
+                        isEditing -> "Edit Task"
+                        else -> "Task Details"
+                    },
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -90,7 +117,9 @@ fun TaskDetailModal(
 
             HorizontalDivider()
 
-            if (isEditing) {
+            if (isEditing || taskWithAssignments == null) {
+
+                // Form Content
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -104,7 +133,13 @@ fun TaskDetailModal(
                         onValueChange = { title = it },
                         label = { Text("Task Title *") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        isError = title.isBlank() && title.isNotEmpty(),
+                        supportingText = {
+                            if (title.isBlank() && title.isNotEmpty()) {
+                                Text("Title is required", color = MaterialTheme.colorScheme.error)
+                            }
+                        }
                     )
 
                     // Task Description
@@ -115,7 +150,9 @@ fun TaskDetailModal(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp),
-                        maxLines = 5
+                        maxLines = 5,
+                        placeholder = { Text("Add task details...") }
+
                     )
 
                     // Status Dropdown
@@ -207,15 +244,33 @@ fun TaskDetailModal(
                         }
                     }
 
-                    // Due Date Field
+                    // Start Date Field
                     OutlinedTextField(
-                        value = formatDateForDisplay(selectedDueDate),
+                        value = formatDateForDisplay(selectedStartDate),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Due Date") },
+                        label = { Text("Start Date") },
                         placeholder = { Text("Select date") },
                         trailingIcon = {
-                            IconButton(onClick = { showDatePicker = true }) {
+                            IconButton(onClick = { showDatePicker = 0 }) {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarToday,
+                                    contentDescription = "Select date"
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // End Date Field
+                    OutlinedTextField(
+                        value = formatDateForDisplay(selectedEndDate),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("End Date") },
+                        placeholder = { Text("Select date") },
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = 1 }) {
                                 Icon(
                                     imageVector = Icons.Default.CalendarToday,
                                     contentDescription = "Select date"
@@ -226,25 +281,30 @@ fun TaskDetailModal(
                     )
 
                     // Date Picker Dialog
-                    if (showDatePicker) {
+                    if (showDatePicker != null) {
                         val datePickerState = rememberDatePickerState()
                         DatePickerDialog(
-                            onDismissRequest = { showDatePicker = false },
+                            onDismissRequest = { showDatePicker = null },
                             confirmButton = {
                                 TextButton(onClick = {
                                     datePickerState.selectedDateMillis?.let { millis ->
-                                        selectedDueDate = Instant.fromEpochMilliseconds(millis)
+                                        val selectedDate = Instant.fromEpochMilliseconds(millis)
                                             .toLocalDateTime(TimeZone.currentSystemDefault())
                                             .date
                                             .toString()
+                                        if (showDatePicker == 0) {
+                                            selectedStartDate = selectedDate
+                                        } else if (showDatePicker == 1) {
+                                            selectedEndDate = selectedDate
+                                        }
                                     }
-                                    showDatePicker = false
+                                    showDatePicker = null
                                 }) {
                                     Text("OK")
                                 }
                             },
                             dismissButton = {
-                                TextButton(onClick = { showDatePicker = false }) {
+                                TextButton(onClick = { showDatePicker = null }) {
                                     Text("Cancel")
                                 }
                             }
@@ -253,34 +313,90 @@ fun TaskDetailModal(
                         }
                     }
 
-                    // Assignees Section
+                    // Clear dates option
+                    if (selectedStartDate != null || selectedEndDate != null) {
+                        TextButton(
+                            onClick = {
+                                selectedStartDate = null
+                                selectedEndDate = null
+                            }
+                        ) {
+                            Text("Clear dates")
+                        }
+                    }
+
+
+                    // Assign Members
                     Column {
                         Text(
-                            text = "Assign to",
+                            text = if (isCurrentUserAdmin) "Assign to" else "Assign yourself",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            currentTeam?.members?.forEach { member ->
-                                val isSelected = selectedMembers
-                                    .map { member -> member.id }
-                                    .contains(member.id)
+                        if (currentTeam?.members.isNullOrEmpty()) {
+                            Text(
+                                text = "No team members available",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else if (isCurrentUserAdmin) {
+                            // Admin can assign anyone
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                currentTeam?.members?.forEach { member ->
+                                    val isSelected = selectedMembers.contains(member)
 
-                                UserLabel(
-                                    member = member,
-                                    isSelected = isSelected,
-                                    onClick = {
-                                        selectedMembers = if (isSelected) {
-                                            selectedMembers - member
-                                        } else {
-                                            selectedMembers + member
+                                    UserLabel(
+                                        member = member,
+                                        isSelected = isSelected,
+                                        onClick = {
+                                            selectedMembers = if (isSelected) {
+                                                selectedMembers - member
+                                            } else {
+                                                selectedMembers + member
+                                            }
                                         }
-                                    }
+                                    )
+                                }
+                            }
+                        } else {
+                            // Non-admin can only assign themselves
+                            val currentUserMember = currentTeam?.members?.find { it.id == currentUserId }
+
+                            if (currentUserMember != null) {
+                                val isAssigned = selectedMembers.contains(currentUserMember)
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    UserLabel(
+                                        member = currentUserMember,
+                                        isSelected = isAssigned,
+                                        onClick = {
+                                            selectedMembers = if (isAssigned) {
+                                                emptyList()
+                                            } else {
+                                                listOf(currentUserMember)
+                                            }
+                                        }
+                                    )
+
+                                    Text(
+                                        text = if (isAssigned) "Assigned to you" else "Tap to assign yourself",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = "You are not a member of this team",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -288,12 +404,15 @@ fun TaskDetailModal(
                 }
             }
             else {
+                // VIEW MODE - Display Content
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp),
                 ) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     // Task Title
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -332,12 +451,8 @@ fun TaskDetailModal(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
                         )
-
                         Spacer(modifier = Modifier.height(12.dp))
-
                         StatusLabel(selectedStatus)
                     }
 
@@ -350,21 +465,17 @@ fun TaskDetailModal(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
                         )
-
                         Spacer(modifier = Modifier.height(12.dp))
-
                         PriorityLabel(priority = selectedPriority)
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Due Date
+                    // Due Dates
                     Column() {
                         Text(
-                            text = "Due Date ",
+                            text = "Due dates ",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -374,12 +485,12 @@ fun TaskDetailModal(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        DateRange(startDate = null, endDate = selectedDueDate, big = true)
+                        DateRange(startDate = selectedStartDate, endDate = selectedEndDate, big = true)
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Assignees Row
+                    // Assignees
                     Column {
                         Text(
                             text = "Assignees",
@@ -387,9 +498,9 @@ fun TaskDetailModal(
                             fontWeight = FontWeight.SemiBold,
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        if (taskWithAssignment.assignedMembers.isEmpty()) {
+                        if (taskWithAssignments.assignedMembers.isEmpty()) {
                             Text(
-                                text = "No team member was assigned to this task.",
+                                text = "No team members assigned",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Normal,
                             )
@@ -398,7 +509,7 @@ fun TaskDetailModal(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                taskWithAssignment.assignedMembers.forEach { member ->
+                                taskWithAssignments.assignedMembers.forEach { member ->
                                     UserLabel(
                                         member = member,
                                         isSelected = false,
@@ -410,8 +521,6 @@ fun TaskDetailModal(
 
                     }
                 }
-
-                Spacer(modifier = Modifier.height(12.dp))
             }
 
 
@@ -439,7 +548,8 @@ fun TaskDetailModal(
                                     selectedStatus,
                                     selectedPriority,
                                     selectedMembers,
-                                    selectedDueDate
+                                    selectedStartDate,
+                                    selectedEndDate
                                 )
                                 onDismiss()
                             }
@@ -448,9 +558,15 @@ fun TaskDetailModal(
                         }
                     },
                     modifier = Modifier.weight(1f),
-                    enabled = if (isEditing) title.isNotBlank() else true
+                    enabled = if (isEditing) {isTitleValid && hasChanges} else true
                 ) {
-                    Text(if (isEditing) "Save" else "Edit Task")
+                    Text(
+                        text = when {
+                            taskWithAssignments == null -> "Create"
+                            isEditing -> "Save"
+                            else -> "Edit"
+                        },
+                    )
                 }
             }
         }

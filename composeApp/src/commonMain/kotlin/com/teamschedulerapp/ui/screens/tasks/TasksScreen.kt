@@ -13,7 +13,6 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.data.SupabaseClientManager
@@ -21,8 +20,8 @@ import com.teamschedulerapp.model.Task
 import com.teamschedulerapp.model.TaskWithAssignments
 import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.screenmodel.TaskScreenModel
+import com.teamschedulerapp.ui.components.ConfirmationDialog
 import com.teamschedulerapp.ui.components.NoTeamsEmptyState
-import com.teamschedulerapp.ui.components.tasks.AddTaskModal
 import com.teamschedulerapp.ui.components.tasks.TaskCard
 import com.teamschedulerapp.ui.components.tasks.TaskDetailModal
 import com.teamschedulerapp.ui.components.tasks.FilterDropdown
@@ -47,6 +46,7 @@ fun TasksScreen (
     val currentUserId = SupabaseClientManager.client.auth.currentUserOrNull()?.id
     var showAddTaskModal by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<TaskWithAssignments?>(null) }
+    var deleteTask by remember { mutableStateOf<TaskWithAssignments?>(null) }
     var editMode by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf<FilterOption>(FilterOption(emptySet<String>(),emptySet<String>())) }
     var selectedSort by remember { mutableStateOf<String>("due_date_nearest") }
@@ -82,7 +82,7 @@ fun TasksScreen (
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         // Top App Bar
         TopAppBar(
@@ -103,7 +103,7 @@ fun TasksScreen (
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFFF5F5F5),
+                containerColor = MaterialTheme.colorScheme.surface,
                 titleContentColor = MaterialTheme.colorScheme.onSurface
             )
         )
@@ -111,7 +111,7 @@ fun TasksScreen (
         // Tab Row
         TabRow(
             selectedTabIndex = selectedTab,
-            containerColor = Color(0xFFF5F5F5),
+            containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.primary,
             indicator = { tabPositions ->
                 TabRowDefaults.SecondaryIndicator(
@@ -141,7 +141,7 @@ fun TasksScreen (
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -223,21 +223,7 @@ fun TasksScreen (
                             selectedTask = taskWithAssignments
                             editMode = true
                         },
-                        onDeleteClick = {
-                            scope.launch {
-                                try {
-                                    screenModel.deleteTask(taskWithAssignments.id)
-
-                                    // Show success snackbar
-                                    snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
-                                } catch (e: Exception) {
-                                    // Show error snackbar
-                                    snackbarHostState?.showErrorSnackbar("Failed to delete task")
-                                }
-                            }
-                            selectedTask = null
-                        }
-
+                        onDeleteClick = { deleteTask = taskWithAssignments }
                     )
                 }
             }
@@ -246,10 +232,12 @@ fun TasksScreen (
 
     // Add Task Modal
     if (showAddTaskModal) {
-        AddTaskModal(
-            screenModel = screenModel,
+        TaskDetailModal(
+            taskWithAssignments = null,
+            isEditMode = true,
             onDismiss = { showAddTaskModal = false },
-            onSave = { title, description, status, priority, assignedMembers, dueDate ->
+            onDelete = { showAddTaskModal = false },
+            onSave = { title, description, status, priority, assignedMembers, startDate, endDate ->
                 scope.launch {
                     try {
                         screenModel.createTask(
@@ -259,7 +247,8 @@ fun TasksScreen (
                                 description = description,
                                 status = status,
                                 priority = priority,
-                                dueDate = dueDate
+                                startDate = startDate,
+                                endDate = endDate
                             ),
                             assignedMembers,
                         )
@@ -278,36 +267,24 @@ fun TasksScreen (
     }
 
     // Task Description Modal
-    selectedTask?.let { taskWithAssignment ->
+    selectedTask?.let { taskWithAssignments ->
         TaskDetailModal(
-            taskWithAssignment = taskWithAssignment,
+            taskWithAssignments = taskWithAssignments,
             isEditMode = editMode,
             onDismiss = { selectedTask = null },
-            onDelete = {
-                scope.launch {
-                    try {
-                        screenModel.deleteTask(taskWithAssignment.id)
-
-                        // Show success snackbar
-                        snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
-                    } catch (e: Exception) {
-                        // Show error snackbar
-                        snackbarHostState?.showErrorSnackbar("Failed to delete task")
-                    }
-                }
-                selectedTask = null
-            },
-            onSave = { title, description, status, priority, assignedMembers, dueDate ->
+            onDelete = { deleteTask = taskWithAssignments },
+            onSave = { title, description, status, priority, assignedMembers, startDate, endDate ->
                 scope.launch {
                     try {
                         screenModel.updateTask(
                             Task(
-                                id = taskWithAssignment.id,
+                                id = taskWithAssignments.id,
                                 title = title,
                                 description = description,
                                 status = status,
                                 priority = priority,
-                                dueDate = dueDate,
+                                startDate = startDate,
+                                endDate = endDate,
                                 teamId = ""
                             ),
                             assignedMembers,
@@ -324,6 +301,30 @@ fun TasksScreen (
                 }
                 selectedTask = null
             }
+        )
+    }
+
+    // Delete Confirmation Dialog
+    deleteTask?.let { taskWithAssignments ->
+        ConfirmationDialog(
+            showDialog = deleteTask != null,
+            title = "Delete task",
+            message = "Are you sure you want to delete {item}? This action cannot be undone.",
+            onConfirm = {
+                scope.launch {
+                    try {
+                        screenModel.deleteTask(taskWithAssignments.id)
+
+                        // Show success snackbar
+                        snackbarHostState?.showSuccessSnackbar("Task deleted successfully")
+                    } catch (e: Exception) {
+                        // Show error snackbar
+                        snackbarHostState?.showErrorSnackbar("Failed to delete task")
+                    }
+                }
+                selectedTask = null
+            },
+            onDismiss = { deleteTask = null }
         )
     }
 }
