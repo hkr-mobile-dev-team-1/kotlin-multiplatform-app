@@ -1,18 +1,24 @@
 package com.teamschedulerapp.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.ViewAgenda
 import androidx.compose.material3.*
@@ -55,6 +61,7 @@ import com.teamschedulerapp.ui.components.team.TeamSelectorModal
 import com.teamschedulerapp.ui.components.team.TeamTile
 import com.teamschedulerapp.ui.screens.analytics.AnalyticsScreen
 import com.teamschedulerapp.ui.screens.schedule.ScheduleScreen
+import com.teamschedulerapp.ui.screens.settings.ManageTeamsScreen
 import com.teamschedulerapp.ui.screens.settings.SettingsScreen
 import com.teamschedulerapp.ui.screens.tasks.TasksScreen
 import com.teamschedulerapp.utils.showErrorSnackbar
@@ -63,9 +70,12 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 import com.teamschedulerapp.repositories.AvailabilityRepository
+import com.teamschedulerapp.ui.components.notifications.NotificationRightSheet
 
 object ScheduleTab : Tab {
     var snackbarHostState: SnackbarHostState? = null
+    var onCreateTeam: (() -> Unit)? = null
+
     override val options: TabOptions
         @Composable
         get() {
@@ -77,7 +87,7 @@ object ScheduleTab : Tab {
     @Composable
     override fun Content() {
         // get Supabase client
-        val supabase = com.teamschedulerapp.data.SupabaseClientManager.client
+        val supabase = SupabaseClientManager.client
         val authUser = supabase.auth.currentUserOrNull() ?: return
         val userId = authUser.id
 
@@ -86,7 +96,7 @@ object ScheduleTab : Tab {
         val userRepository = remember { UserRepository(supabase.postgrest) }
 
         // logged-in user
-        var appUser by remember { mutableStateOf<com.teamschedulerapp.model.User?>(null) }
+        var appUser by remember { mutableStateOf<User?>(null) }
 
         LaunchedEffect(userId) {
             appUser = userRepository.getUserById(userId)
@@ -108,13 +118,16 @@ object ScheduleTab : Tab {
             userRepository = userRepository,
             userId = userId,
             currentUserDisplayName = displayName,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
+            onCreateTeam = { onCreateTeam?.invoke() }
         )
     }
 }
 
 object TasksTab : Tab {
     var snackbarHostState: SnackbarHostState? = null
+    var onCreateTeam: (() -> Unit)? = null
+
     override val options: TabOptions
         @Composable
         get() {
@@ -138,12 +151,15 @@ object TasksTab : Tab {
         }
         TasksScreen(
             screenModel = screenModel,
-            snackbarHostState = snackbarHostState
+            snackbarHostState = snackbarHostState,
+            onCreateTeam = { onCreateTeam?.invoke() }
         )
     }
 }
 
 object AnalyticsTab : Tab {
+    var onCreateTeam: (() -> Unit)? = null
+
     override val options: TabOptions
         @Composable
         get() {
@@ -154,7 +170,9 @@ object AnalyticsTab : Tab {
 
     @Composable
     override fun Content() {
-        AnalyticsScreen()
+        AnalyticsScreen(
+            onCreateTeam = { TasksTab.onCreateTeam?.invoke() }
+        )
     }
 }
 
@@ -204,7 +222,6 @@ fun MainScreen() {
     val teamRepository = remember { TeamRepository(supabase.postgrest) }
     val userRepository = remember { UserRepository(supabase.postgrest) }
     val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
-    val authRepository = remember { AuthRepository(supabase) }
     val mainScreenModel = remember {
         MainScreenModel(
             teamRepository = teamRepository,
@@ -233,13 +250,19 @@ fun MainScreen() {
 
     val scope = rememberCoroutineScope()
 
-    // Snackbar
+    // Snackbar setup
     val snackbarHostState = remember { SnackbarHostState() }
     TasksTab.snackbarHostState = snackbarHostState
     ScheduleTab.snackbarHostState = snackbarHostState
 
+    // Set onCreateTeam callbacks
+    TasksTab.onCreateTeam = { showCreateTeamModal = true }
+    ScheduleTab.onCreateTeam = { showCreateTeamModal = true }
+    AnalyticsTab.onCreateTeam = { showCreateTeamModal = true }
 
-
+    var showNotificationModal by remember { mutableStateOf(false) }
+    val notifications by mainScreenModel.notifications.collectAsState()
+    val unreadCount = notifications.count { !it.isRead }
 
     val isCurrentTeamAdmin = currentTeam?.members?.find { it.id == userId }?.isAdmin ?: false
 
@@ -275,6 +298,35 @@ fun MainScreen() {
                             )
                         }
                     },
+                    actions = {
+                        IconButton(
+                            onClick = { showNotificationModal = true },
+                            modifier = Modifier
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant,
+                                    shape = CircleShape
+                                )
+                        ) {
+                            BadgedBox(
+                                badge = {
+                                    if (unreadCount > 0) {
+                                        Badge(
+                                            containerColor = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .offset(x = 2.dp, y = (-1).dp)
+                                        )
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Notifications,
+                                    contentDescription = "Notifications"
+                                )
+                            }
+                        }
+                    }
                 )
             },
             bottomBar = {
@@ -325,6 +377,22 @@ fun MainScreen() {
                 showTeamSelector = false
             },
             onDismiss = { showTeamSelector = false }
+        )
+    }
+
+    // Notification Modal
+    if (showNotificationModal) {
+        NotificationRightSheet(
+            notifications = notifications,
+            onDismiss = { showNotificationModal = false },
+            onNotificationClick = { notification ->
+                // Handle notification click (mark as read, navigate, etc.)
+            },
+            onDeleteNotification = {},
+            onMarkAllAsRead = {},
+            onClearAll = {
+                // Clear all notifications
+            }
         )
     }
 

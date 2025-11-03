@@ -1,30 +1,29 @@
 package com.teamschedulerapp.screenmodel
 
-import androidx.compose.runtime.LaunchedEffect
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.teamschedulerapp.data.AuthRepository
-import com.teamschedulerapp.model.Notification
 import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.TeamManager
-import com.teamschedulerapp.navigation.UserManager
 import com.teamschedulerapp.repositories.TeamMemberRepository
 import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
-import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import io.github.jan.supabase.postgrest.Postgrest
 
-class MainScreenModel(
+import kotlinx.coroutines.withContext
+
+class SettingsScreenModel(
     private val teamRepository: TeamRepository,
     private val teamMemberRepository: TeamMemberRepository,
     private val userRepository: UserRepository,
+    private val userId: String
 ) : ScreenModel {
-
-    val userId = UserManager.getCurrentUserId()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -32,12 +31,8 @@ class MainScreenModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val _notifications = MutableStateFlow<List<com.teamschedulerapp.model.Notification>>(emptyList())
-    val notifications: StateFlow<List<com.teamschedulerapp.model.Notification>> = _notifications.asStateFlow()
-
     init {
         loadUserTeams()
-        loadNotifications()
     }
 
     fun loadUserTeams() {
@@ -152,6 +147,12 @@ class MainScreenModel(
 
             if (success) {
                 println("Team deleted: $teamId")
+
+                // If deleted team was the current team, clear it
+                if (TeamManager.selectedTeamId.value == teamId) {
+                    TeamManager.clearTeam()
+                }
+
                 loadUserTeams()
             } else {
                 throw Exception("Failed to delete team")
@@ -163,88 +164,5 @@ class MainScreenModel(
             _isLoading.value = false
         }
     }
-
-    fun isUserAdminOfTeam(teamId: String): Boolean {
-        return TeamManager.isUserAdminOfTeam(teamId, userId)
-    }
-
-    fun isUserAdminOfCurrentTeam(): Boolean {
-        return TeamManager.isUserAdminOfCurrentTeam(userId)
-    }
-    // Notification management
-    private fun loadNotifications() {
-        screenModelScope.launch {
-            // TODO: Replace with actual repository call when backend is ready
-            // For now, using mock data
-            _notifications.value = generateMockNotifications()
-        }
-    }
-
-    fun markNotificationAsRead(notificationId: String) {
-        screenModelScope.launch {
-            _notifications.value = _notifications.value.map { notification ->
-                if (notification.id == notificationId) {
-                    notification.copy(isRead = true)
-                } else {
-                    notification
-                }
-            }
-        }
-    }
-
-    fun markAllNotificationsAsRead() {
-        screenModelScope.launch {
-            _notifications.value = _notifications.value.map { it.copy(isRead = true) }
-        }
-    }
-
-    fun deleteNotification(notificationId: String) {
-        screenModelScope.launch {
-            _notifications.value = _notifications.value.filter { it.id != notificationId }
-        }
-    }
-
-    fun clearAllNotifications() {
-        screenModelScope.launch {
-            _notifications.value = emptyList()
-        }
-    }
-
-    // Mock data generator - remove when backend is ready
-    private fun generateMockNotifications(): List<Notification> {
-        return listOf(
-            Notification(
-                id = "1",
-                title = "New Task Assigned",
-                message = "You've been assigned to 'Update documentation'",
-                timestamp = "2 hours ago",
-                isRead = false,
-                type = "task"
-            ),
-            Notification(
-                id = "2",
-                title = "Team Invite",
-                message = "You've been invited to join 'Marketing Team'",
-                timestamp = "5 hours ago",
-                isRead = false,
-                type = "team"
-            ),
-            Notification(
-                id = "3",
-                title = "Schedule Change",
-                message = "Your availability for Monday has been updated",
-                timestamp = "1 day ago",
-                isRead = true,
-                type = "schedule"
-            ),
-            Notification(
-                id = "4",
-                title = "Task Completed",
-                message = "John completed 'Design wireframes'",
-                timestamp = "2 days ago",
-                isRead = true,
-                type = "task"
-            )
-        )
-    }
 }
+

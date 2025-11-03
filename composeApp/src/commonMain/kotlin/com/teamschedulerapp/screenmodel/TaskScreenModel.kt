@@ -80,7 +80,8 @@ class TaskScreenModel(
                     teamId = teamId,
                     title = task.title,
                     description = task.description,
-                    dueDate = task.dueDate,
+                    startDate = task.startDate,
+                    endDate = task.endDate,
                     createdBy = task.createdBy,
                     status = task.status,
                     priority = task.priority,
@@ -107,7 +108,8 @@ class TaskScreenModel(
                     description = task.description,
                     status = task.status,
                     priority = task.priority,
-                    dueDate = task.dueDate
+                    startDate = task.startDate,
+                    endDate = task.endDate
                 )
             )
 
@@ -148,7 +150,8 @@ class TaskScreenModel(
                 description = task.description,
                 status = task.status,
                 priority = task.priority,
-                dueDate = task.dueDate
+                startDate = task.startDate,
+                endDate = task.endDate
             )
 
             if (!success) {

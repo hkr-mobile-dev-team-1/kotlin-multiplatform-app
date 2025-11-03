@@ -3,34 +3,42 @@ package com.teamschedulerapp.ui.screens.settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.TeamWithMembers
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageTeamsScreen(
     userId: String,
     teams: List<TeamWithMembers>,
     onCreateTeam: () -> Unit,
-    onTeamSelected: (TeamWithMembers) -> Unit,
+    onTeamSelected: (TeamWithMembers) -> Unit, // ✅ define as a lambda type
     onBack: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    // same size as Settings title but NOT bold
                     Text(
                         text = "Manage Teams",
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Normal)
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -45,7 +53,7 @@ fun ManageTeamsScreen(
                 .padding(innerPadding)
                 .padding(vertical = 8.dp)
         ) {
-            // Create New Team tile — NO trailing arrow
+            // Create New Team tile
             Surface(
                 tonalElevation = 2.dp,
                 modifier = Modifier
@@ -72,11 +80,9 @@ fun ManageTeamsScreen(
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
-                    // intentionally no trailing arrow here
                 }
             }
 
-            // Divider + heading
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(modifier = Modifier.height(12.dp))
@@ -88,7 +94,6 @@ fun ManageTeamsScreen(
                 modifier = Modifier.padding(start = 20.dp, bottom = 8.dp)
             )
 
-            // Teams list
             if (teams.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -110,7 +115,7 @@ fun ManageTeamsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 6.dp)
-                                .clickable { onTeamSelected(team) },
+                                .clickable { onTeamSelected(team) }, // ✅ call the lambda
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Row(
@@ -125,7 +130,6 @@ fun ManageTeamsScreen(
                                     color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
-                                // Small chevron that matches the font scale
                                 Icon(
                                     imageVector = Icons.Default.ChevronRight,
                                     contentDescription = null,

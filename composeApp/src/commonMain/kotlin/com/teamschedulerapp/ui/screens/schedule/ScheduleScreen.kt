@@ -1,10 +1,8 @@
 package com.teamschedulerapp.ui.screens.schedule
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -12,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
-import com.teamschedulerapp.ui.components.schedule.AttendanceDialog
 import com.teamschedulerapp.ui.components.schedule.AttendeeList
 import com.teamschedulerapp.ui.components.schedule.DeleteDialog
 import com.teamschedulerapp.repositories.AvailabilityRepository
@@ -32,6 +29,8 @@ import kotlin.time.ExperimentalTime
 // lib
 import com.kizitonwose.calendar.core.*
 import com.kizitonwose.calendar.compose.*
+import com.teamschedulerapp.ui.components.NoTeamsEmptyState
+import com.teamschedulerapp.ui.components.schedule.AttendanceSheet
 import com.teamschedulerapp.utils.showErrorSnackbar
 import com.teamschedulerapp.utils.showSuccessSnackbar
 
@@ -43,7 +42,8 @@ fun ScheduleScreen(
     userRepository: UserRepository,
     userId: String,
     currentUserDisplayName: String,
-    snackbarHostState: SnackbarHostState? = null
+    snackbarHostState: SnackbarHostState? = null,
+    onCreateTeam: () -> Unit = {}
 ) {
     // time anchors
     // today (for highlighting)
@@ -71,15 +71,25 @@ fun ScheduleScreen(
     // UI events - dialog, attendance edit
     var selected by remember { mutableStateOf<LocalDate?>(null) }
     var editTarget by remember { mutableStateOf<Attendee?>(null) }
-    // dialog trigger
+    // attendance dialog state
     var showDialogFor by remember { mutableStateOf<LocalDate?>(null) }
-    // delete dialog trigger
+    var showSheetFor by remember { mutableStateOf<LocalDate?>(null) }
+    // delete dialog state
     var pendingDelete by remember { mutableStateOf<Attendee?>(null) }
 
-    val teamWithMembers by TeamManager.currentTeam.collectAsState()
-    val teamId = teamWithMembers?.id ?: return
+    val currentTeam by TeamManager.currentTeam.collectAsState()
+
+    // Show empty state if no team is selected
+    if (currentTeam == null) {
+        NoTeamsEmptyState(
+            onCreateTeam = onCreateTeam
+        )
+        return
+    }
+
+    val teamId = currentTeam?.id!!
     // wire team members
-    val teamMembers: List<TeamMemberWithUser> = teamWithMembers?.members ?: emptyList()
+    val teamMembers: List<TeamMemberWithUser> = currentTeam?.members ?: emptyList()
 
     // bring in screen model
     val screenModel = remember(availabilityRepository, userRepository, userId) {
@@ -95,9 +105,9 @@ fun ScheduleScreen(
     val scope = rememberCoroutineScope()
 
     // Load whenever team or selected date changes
-    LaunchedEffect(teamId, selected) {
+    LaunchedEffect(currentTeam?.id, selected) {
         selected?.let { date ->
-            screenModel.loadDay(teamId = teamId, date = date, teamMembers = teamMembers)
+            screenModel.loadDay(teamId = currentTeam?.id!!, date = date, teamMembers = teamMembers)
         }
     }
 
@@ -105,7 +115,7 @@ fun ScheduleScreen(
     val visibleMonth by remember(state) { derivedStateOf { state.firstVisibleMonth.yearMonth } }
 
     LaunchedEffect(teamId, visibleMonth) {
-        screenModel.loadHeadcountsForMonth(teamId, visibleMonth)
+        screenModel.loadHeadcountsForMonth(currentTeam?.id!!, visibleMonth)
     }
 
     // reset to current month on screen re-entry
@@ -179,7 +189,7 @@ fun ScheduleScreen(
                     val idx = attendees.indexOf(a)
                     if (owners.getOrNull(idx) == userId) {
                         editTarget = a
-                        showDialogFor = selected
+                        showSheetFor = selected
                     }
                 },
                 onDelete = { a ->
@@ -200,44 +210,45 @@ fun ScheduleScreen(
                 horizontalArrangement = Arrangement.End
             ) {
                 Button(
-                    onClick = { showDialogFor = selected },   // open dialog
+                    onClick = { showSheetFor = selected },   // open dialog
                     ) { Text("Add my attendance") }
                 }
             }
         }
 
         // Dialog
-        showDialogFor?.let { date ->
+        showSheetFor?.let { date ->
             //collecting data, passing the prefilled first last name
             androidx.compose.runtime.key(date to (editTarget?.displayName ?: "")) {
-            AttendanceDialog(
-                date = date,
-                initialName = currentUserDisplayName,
-                initialFrom = editTarget?.from,
-                initialTo = editTarget?.to,
-                onConfirm = { name, from, to ->
-                    scope.launch {
-                        try {
-                            val attendee = Attendee(displayName = name, from = from, to = to)
-                            screenModel.saveAttendance(teamId, date, attendee, teamMembers) {
-                                // close dialog on success
-                                editTarget = null
-                                showDialogFor = null
+                AttendanceSheet(
+                    visible = true,
+                    date = date,
+                    displayName = currentUserDisplayName,
+                    initialFrom = editTarget?.from,
+                    initialTo = editTarget?.to,
+                    onConfirm = { from, to ->
+                        scope.launch {
+                            try {
+                                val attendee = Attendee(displayName = currentUserDisplayName, from = from, to = to)
+                                screenModel.saveAttendance(teamId, date, attendee, teamMembers) {
+                                    // close dialog on success
+                                    editTarget = null
+                                    showSheetFor = null
+                                }
+                                // only one snackbar at a time
+                                snackbarHostState?.currentSnackbarData?.dismiss()
+                                snackbarHostState?.showSuccessSnackbar("Attendance saved successfully")
+                            } catch (e: Exception) {
+                                snackbarHostState?.currentSnackbarData?.dismiss()
+                                snackbarHostState?.showErrorSnackbar(e.message ?: "Failed to save attendance")
                             }
-                            // only one snackbar at a time
-                            snackbarHostState?.currentSnackbarData?.dismiss()
-                            snackbarHostState?.showSuccessSnackbar("Attendance saved successfully")
-                        } catch (e: Exception) {
-                            snackbarHostState?.currentSnackbarData?.dismiss()
-                            snackbarHostState?.showErrorSnackbar(e.message ?: "Failed to save attendance")
                         }
+                    },
+                    onDismiss = {
+                        editTarget = null
+                        showSheetFor = null
                     }
-                },
-                onDismiss = {
-                    editTarget = null
-                    showDialogFor = null
-                }
-            )
+                )
             }
         }
 

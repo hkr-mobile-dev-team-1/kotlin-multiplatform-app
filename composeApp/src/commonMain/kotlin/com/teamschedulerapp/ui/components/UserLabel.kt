@@ -25,7 +25,7 @@ fun UserLabel(
 ) {
     Surface(
         shape = RoundedCornerShape(15.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.surfaceVariant else Color(0xFFF7F7F7),
+        color = if (isSelected) Color(0xffffb9f8) else MaterialTheme.colorScheme.secondaryContainer,
         tonalElevation = if (isSelected) 0.dp else 2.dp,
         modifier = Modifier
             .clickable (
