@@ -9,19 +9,19 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.teamschedulerapp.data.SupabaseClientManager
+import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.repositories.TeamMemberRepository
 import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
 import com.teamschedulerapp.screenmodel.SettingsScreenModel
 import com.teamschedulerapp.ui.components.CustomSnackbarHost
-import com.teamschedulerapp.ui.components.team.TeamDetailModal
-import com.teamschedulerapp.ui.screens.settings.ManageTeamsScreen
+import com.teamschedulerapp.ui.screens.settings.TeamMembersScreen
 import com.teamschedulerapp.utils.showErrorSnackbar
 import com.teamschedulerapp.utils.showSuccessSnackbar
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 
-object ManageTeamsScreenWrapper : Screen {
+class TeamMembersScreenWrapper(private val team: TeamWithMembers) : Screen {
 
     @Composable
     override fun Content() {
@@ -31,9 +31,10 @@ object ManageTeamsScreenWrapper : Screen {
         val teamRepository = remember { TeamRepository(supabase.postgrest) }
         val userRepository = remember { UserRepository(supabase.postgrest) }
         val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
+
         val userId = remember { UserManager.getCurrentUserId() }
 
-        val settingsScreenModel = remember {
+        val settingsModel = remember {
             SettingsScreenModel(
                 teamRepository = teamRepository,
                 teamMemberRepository = teamMemberRepository,
@@ -43,12 +44,8 @@ object ManageTeamsScreenWrapper : Screen {
         }
 
         val scope = rememberCoroutineScope()
-        val userTeams by TeamManager.userTeams.collectAsState()
-        val isLoading by settingsScreenModel.isLoading.collectAsState()
-
-        var showCreateTeamModal by remember { mutableStateOf(false) }
-
         val snackbarHostState = remember { SnackbarHostState() }
+        val isLoading by settingsModel.isLoading.collectAsState()
 
         Scaffold(
             snackbarHost = { CustomSnackbarHost(snackbarHostState) }
@@ -62,31 +59,31 @@ object ManageTeamsScreenWrapper : Screen {
                 if (isLoading) {
                     CircularProgressIndicator()
                 } else {
-                    ManageTeamsScreen(
-                        userId = userId,
-                        teams = userTeams,
-                        onCreateTeam = { showCreateTeamModal = true },
-                        onTeamSelected = { team ->
-                            TeamManager.selectTeam(team)
-                            navigator.push(TeamMembersScreenWrapper(team))
-                        },
-                        onBack = { navigator.pop() }
-                    )
-                }
-
-                if (showCreateTeamModal) {
-                    TeamDetailModal(
-                        onDismiss = { showCreateTeamModal = false },
-                        onSave = { name, description ->
+                    TeamMembersScreen(
+                        team = team,
+                        onBack = { navigator.pop() },
+                        onRemoveMember = { member ->
                             scope.launch {
                                 try {
-                                    settingsScreenModel.createTeam(name, description)
-                                    snackbarHostState.showSuccessSnackbar("Team created successfully")
+                                    val success = teamMemberRepository.removeMember(
+                                        teamId = team.id ?: return@launch,
+                                        userId = member.id
+                                    )
+                                    if (success) {
+                                        settingsModel.loadUserTeams()
+                                        snackbarHostState.showSuccessSnackbar("Member removed successfully")
+                                    } else {
+                                        snackbarHostState.showErrorSnackbar("Failed to remove member")
+                                    }
                                 } catch (e: Exception) {
-                                    snackbarHostState.showErrorSnackbar("Failed to create team")
-                                } finally {
-                                    showCreateTeamModal = false
+                                    snackbarHostState.showErrorSnackbar("Error: ${e.message}")
                                 }
+                            }
+                        },
+                        onMakeAdmin = { member ->
+                            scope.launch {
+                                // later replace this with your real "make admin" API call
+                                snackbarHostState.showSuccessSnackbar("${member.firstName ?: "User"} promoted to admin (mock)")
                             }
                         }
                     )
