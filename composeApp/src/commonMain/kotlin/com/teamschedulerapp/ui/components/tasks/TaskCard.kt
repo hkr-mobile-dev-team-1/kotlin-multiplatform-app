@@ -40,7 +40,7 @@ fun TaskCard(
             pressedElevation = 4.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -131,7 +131,7 @@ fun TaskCard(
             Spacer(modifier = Modifier.height(12.dp))
 
 
-            DateRange(startDate = null, endDate = taskWithAssignments.dueDate, big = false)
+            DateRange(startDate = taskWithAssignments.startDate, endDate = taskWithAssignments.endDate, big = false)
 
         }
     }

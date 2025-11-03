@@ -21,9 +21,9 @@ class AnalyticsPresenter {
         } catch (e: Exception) {
             // Fallback mock data so analytics still renders
             listOf(
-                Task(id = "1", teamId = "team-1", title = "Mock task A", description = "Fallback task", dueDate = null, createdBy = "user-1", status = "open", priority = "high"),
-                Task(id = "2", teamId = "team-1", title = "Mock task B", description = "Fallback task", dueDate = null, createdBy = "user-2", status = "done", priority = "low"),
-                Task(id = "3", teamId = "team-2", title = "Mock task C", description = "Fallback task", dueDate = null, createdBy = "user-1", status = "in_progress", priority = "medium")
+                Task(id = "1", teamId = "team-1", title = "Mock task A", description = "Fallback task", startDate = null, createdBy = "user-1", status = "open", priority = "high"),
+                Task(id = "2", teamId = "team-1", title = "Mock task B", description = "Fallback task", startDate = null, createdBy = "user-2", status = "done", priority = "low"),
+                Task(id = "3", teamId = "team-2", title = "Mock task C", description = "Fallback task", startDate = null, createdBy = "user-1", status = "in_progress", priority = "medium")
             )
         }
     }
