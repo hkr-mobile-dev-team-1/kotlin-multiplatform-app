@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,32 +58,41 @@ fun AttendanceSheet(
         ) {
             Text(
                 "Add attendance",
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold
             )
 
             // date label
-            Text(
-                text = date.toString(),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = displayName,
-                style = MaterialTheme.typography.titleLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = date.toString(),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = displayName,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
-            // FROM
-            Text("From", style = MaterialTheme.typography.titleMedium)
-            InputTimePicker(state = fromState)
-
-            // TO
-            Text("To", style = MaterialTheme.typography.titleMedium)
-            InputTimePicker(state = toState)
-
-            Spacer(Modifier.height(8.dp))
+            OutlinedCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    LabeledField(label = "From") {
+                        InputTimePicker(state = fromState)
+                    }
+                    LabeledField(label = "To") {
+                        InputTimePicker(state = toState)
+                    }
+                }
+            }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(
@@ -99,7 +109,31 @@ fun AttendanceSheet(
                     modifier = Modifier.weight(1f)
                 ) { Text(confirmLabel) }
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
+        }
+    }
+}
+
+@Composable
+private fun LabeledField(
+    label: String,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.width(39.dp)
+        )
+        Spacer(Modifier.width(12.dp))
+        Box(Modifier.weight(1f)) {
+            content()
         }
     }
 }
