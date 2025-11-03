@@ -1,32 +1,12 @@
 package com.teamschedulerapp.ui.screens.login
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,6 +17,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.teamschedulerapp.data.SupabaseClientManager
 import com.teamschedulerapp.navigation.Login
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -45,15 +26,13 @@ fun UpdatePasswordScreen(onPasswordUpdated: () -> Unit = {}) {
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
 
+    val scope = rememberCoroutineScope()
     val navigator = LocalNavigator.currentOrThrow
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Update Password") })
-        }
+        topBar = { TopAppBar(title = { Text("Update Password") }) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -116,25 +95,27 @@ fun UpdatePasswordScreen(onPasswordUpdated: () -> Unit = {}) {
                         message = "Passwords do not match."
                         return@Button
                     }
+
                     scope.launch {
                         isLoading = true
                         try {
                             val result = SupabaseClientManager.authRepository.updatePassword(newPassword)
                             if (result.isSuccess) {
+                                isLoading = false
                                 message = "Password updated successfully!"
+
+                                delay(2000)
+
                                 onPasswordUpdated()
-
-                                // Redirect to Login after short delay (UX-friendly)
-                                kotlinx.coroutines.delay(1000)
                                 navigator.replaceAll(Login)
-
                             } else {
                                 message = result.exceptionOrNull()?.message ?: "An error occurred."
+                                isLoading = false
                             }
                         } catch (e: Exception) {
                             message = e.message ?: "An unexpected error occurred."
+                            isLoading = false
                         }
-                        isLoading = false
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -147,12 +128,15 @@ fun UpdatePasswordScreen(onPasswordUpdated: () -> Unit = {}) {
                 }
             }
 
-            // --- Message feedback ---
+            // --- Feedback message ---
             message?.let {
                 Text(
                     text = it,
-                    color = if (it.contains("successfully")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 8.dp)
+                    color = if (it.contains("success", ignoreCase = true))
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 12.dp)
                 )
             }
         }
