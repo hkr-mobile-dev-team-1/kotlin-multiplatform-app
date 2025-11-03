@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -21,7 +20,7 @@ fun ManageTeamsScreen(
     userId: String,
     teams: List<TeamWithMembers>,
     onCreateTeam: () -> Unit,
-    onTeamSelected: (TeamWithMembers) -> Unit,
+    onTeamSelected: (TeamWithMembers) -> Unit, // ✅ define as a lambda type
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -116,7 +115,7 @@ fun ManageTeamsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 6.dp)
-                                .clickable { onTeamSelected(team) },
+                                .clickable { onTeamSelected(team) }, // ✅ call the lambda
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Row(
