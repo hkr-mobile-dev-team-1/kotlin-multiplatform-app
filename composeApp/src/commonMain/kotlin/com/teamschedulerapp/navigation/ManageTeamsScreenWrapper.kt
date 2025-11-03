@@ -1,8 +1,6 @@
 package com.teamschedulerapp.navigation
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,7 +48,6 @@ object ManageTeamsScreenWrapper : Screen {
 
         var showCreateTeamModal by remember { mutableStateOf(false) }
 
-        // Custom Snackbar
         val snackbarHostState = remember { SnackbarHostState() }
 
         Scaffold(
@@ -69,7 +66,10 @@ object ManageTeamsScreenWrapper : Screen {
                         userId = userId,
                         teams = userTeams,
                         onCreateTeam = { showCreateTeamModal = true },
-                        onTeamSelected = { team -> TeamManager.selectTeam(team) },
+                        onTeamSelected = { team ->
+                            TeamManager.selectTeam(team)
+                            navigator.push(TeamMembersScreenWrapper(team))
+                        },
                         onBack = { navigator.pop() }
                     )
                 }
