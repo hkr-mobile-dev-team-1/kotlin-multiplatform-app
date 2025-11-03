@@ -4,6 +4,7 @@ import androidx.compose.runtime.LaunchedEffect
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.teamschedulerapp.data.AuthRepository
+import com.teamschedulerapp.model.Notification
 import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.TeamManager
@@ -22,16 +23,21 @@ class MainScreenModel(
     private val teamMemberRepository: TeamMemberRepository,
     private val userRepository: UserRepository,
 ) : ScreenModel {
+
+    val userId = UserManager.getCurrentUserId()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    val userId = UserManager.getCurrentUserId()
+    private val _notifications = MutableStateFlow<List<com.teamschedulerapp.model.Notification>>(emptyList())
+    val notifications: StateFlow<List<com.teamschedulerapp.model.Notification>> = _notifications.asStateFlow()
 
     init {
         loadUserTeams()
+        loadNotifications()
     }
 
     fun loadUserTeams() {
@@ -164,5 +170,81 @@ class MainScreenModel(
 
     fun isUserAdminOfCurrentTeam(): Boolean {
         return TeamManager.isUserAdminOfCurrentTeam(userId)
+    }
+    // Notification management
+    private fun loadNotifications() {
+        screenModelScope.launch {
+            // TODO: Replace with actual repository call when backend is ready
+            // For now, using mock data
+            _notifications.value = generateMockNotifications()
+        }
+    }
+
+    fun markNotificationAsRead(notificationId: String) {
+        screenModelScope.launch {
+            _notifications.value = _notifications.value.map { notification ->
+                if (notification.id == notificationId) {
+                    notification.copy(isRead = true)
+                } else {
+                    notification
+                }
+            }
+        }
+    }
+
+    fun markAllNotificationsAsRead() {
+        screenModelScope.launch {
+            _notifications.value = _notifications.value.map { it.copy(isRead = true) }
+        }
+    }
+
+    fun deleteNotification(notificationId: String) {
+        screenModelScope.launch {
+            _notifications.value = _notifications.value.filter { it.id != notificationId }
+        }
+    }
+
+    fun clearAllNotifications() {
+        screenModelScope.launch {
+            _notifications.value = emptyList()
+        }
+    }
+
+    // Mock data generator - remove when backend is ready
+    private fun generateMockNotifications(): List<Notification> {
+        return listOf(
+            Notification(
+                id = "1",
+                title = "New Task Assigned",
+                message = "You've been assigned to 'Update documentation'",
+                timestamp = "2 hours ago",
+                isRead = false,
+                type = "task"
+            ),
+            Notification(
+                id = "2",
+                title = "Team Invite",
+                message = "You've been invited to join 'Marketing Team'",
+                timestamp = "5 hours ago",
+                isRead = false,
+                type = "team"
+            ),
+            Notification(
+                id = "3",
+                title = "Schedule Change",
+                message = "Your availability for Monday has been updated",
+                timestamp = "1 day ago",
+                isRead = true,
+                type = "schedule"
+            ),
+            Notification(
+                id = "4",
+                title = "Task Completed",
+                message = "John completed 'Design wireframes'",
+                timestamp = "2 days ago",
+                isRead = true,
+                type = "task"
+            )
+        )
     }
 }
