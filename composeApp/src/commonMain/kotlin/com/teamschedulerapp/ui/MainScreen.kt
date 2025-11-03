@@ -55,6 +55,7 @@ import com.teamschedulerapp.ui.components.team.TeamSelectorModal
 import com.teamschedulerapp.ui.components.team.TeamTile
 import com.teamschedulerapp.ui.screens.analytics.AnalyticsScreen
 import com.teamschedulerapp.ui.screens.schedule.ScheduleScreen
+import com.teamschedulerapp.ui.screens.settings.ManageTeamsScreen
 import com.teamschedulerapp.ui.screens.settings.SettingsScreen
 import com.teamschedulerapp.ui.screens.tasks.TasksScreen
 import com.teamschedulerapp.utils.showErrorSnackbar
@@ -63,7 +64,6 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 import com.teamschedulerapp.repositories.AvailabilityRepository
-import com.teamschedulerapp.ui.TasksTab.onCreateTeam
 
 object ScheduleTab : Tab {
     var snackbarHostState: SnackbarHostState? = null
