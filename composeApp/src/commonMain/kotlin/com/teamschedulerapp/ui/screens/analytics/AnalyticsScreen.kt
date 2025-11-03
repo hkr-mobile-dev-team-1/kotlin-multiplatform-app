@@ -1,5 +1,7 @@
 package com.teamschedulerapp.ui.screens.analytics
 
+import kotlinx.datetime.*
+import kotlinx.datetime.TimeZone
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -47,13 +49,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.teamschedulerapp.model.TeamWithMembers
+import com.teamschedulerapp.navigation.TeamManager.currentTeam
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.max
 
 // ---------- Main screen ----------
 @Composable
-fun AnalyticsScreen() {
+fun AnalyticsScreen(currentTeam: TeamWithMembers?) {
     val presenter = remember { AnalyticsPresenter() }
     val scope = rememberCoroutineScopeSafely()
 
@@ -79,25 +83,33 @@ fun AnalyticsScreen() {
     var currentWeekCounts by remember { mutableStateOf(List(7) { 0 }) }
     var lastWeekCounts by remember { mutableStateOf(List(7) { 0 }) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentTeam?.id) {
         loading = true
+        error = null
         try {
-            // fetch summaries
-            scope.launch { byUser = presenter.countByUser() }.join()
-            scope.launch { byStatus = presenter.countByStatus() }.join()
-            scope.launch { byPriority = presenter.countByPriority() }.join()
+            // Safe access to current team ID
+            val currentTeamId = currentTeam?.id
+
+            // fetch summaries filtered by current team
+            scope.launch { byUser = presenter.countByUser(teamId = currentTeamId) }.join()
+            scope.launch { byStatus = presenter.countByStatus(teamId = currentTeamId) }.join()
+            scope.launch { byPriority = presenter.countByPriority(teamId = currentTeamId) }.join()
 
             // fetch raw tasks, avoid null ids
-            val tasks = presenter.fetchTasks()
-            val (current, last) = computeWeeklyCountsFromTasks(tasks.mapNotNull { it.id })
+            val tasks = presenter.fetchTasks(teamId = currentTeamId)
+            val taskIds = tasks.mapNotNull { it.id }
+            val (current, last) = computeWeeklyCountsFromTasks(taskIds)
             currentWeekCounts = current
             lastWeekCounts = last
+
         } catch (e: Exception) {
             error = e.message
         } finally {
             loading = false
         }
     }
+
+
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Analytics", fontSize = 24.sp, fontWeight = FontWeight.Bold)

@@ -28,6 +28,35 @@ class AnalyticsPresenter {
         }
     }
 
+    suspend fun fetchTasks(teamId: String? = null): List<Task> {
+        return try {
+            val allTasks = client.from("tasks").select().decodeList<Task>()
+            if (teamId != null) allTasks.filter { it.teamId == teamId } else allTasks
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun countByUser(teamId: String? = null): List<TasksPerUser> {
+        val tasks = fetchTasks(teamId)
+        val counts = tasks.groupingBy { it.createdBy ?: "Unknown" }.eachCount()
+        return counts.map { TasksPerUser(it.key, it.value) }.sortedByDescending { it.count }
+    }
+
+    suspend fun countByStatus(teamId: String? = null): List<KeyCount> {
+        val tasks = fetchTasks(teamId)
+        return tasks.groupingBy { it.status }.eachCount()
+            .map { KeyCount(it.key, it.value) }
+            .sortedByDescending { it.count }
+    }
+
+    suspend fun countByPriority(teamId: String? = null): List<KeyCount> {
+        val tasks = fetchTasks(teamId)
+        return tasks.groupingBy { it.priority }.eachCount()
+            .map { KeyCount(it.key, it.value) }
+            .sortedByDescending { it.count }
+    }
+
     suspend fun countByStatus(): List<KeyCount> {
         val tasks = fetchTasks()
         return tasks.groupingBy { it.status }.eachCount()

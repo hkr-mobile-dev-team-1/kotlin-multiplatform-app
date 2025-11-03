@@ -154,7 +154,8 @@ object AnalyticsTab : Tab {
 
     @Composable
     override fun Content() {
-        AnalyticsScreen()
+        val currentTeam by TeamManager.currentTeam.collectAsState()
+        AnalyticsScreen(currentTeam = currentTeam)
     }
 }
 
