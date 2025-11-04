@@ -12,7 +12,7 @@ import androidx.compose.ui.draw.scale
 fun InputTimePicker(
     state: TimePickerState,
     modifier: Modifier = Modifier,
-    scale: Float = 0.9f
+    scale: Float = 0.7f
 ) {
     TimeInput(
         state = state,

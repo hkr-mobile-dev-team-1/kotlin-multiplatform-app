@@ -70,6 +70,7 @@ kotlin {
             implementation(libs.kizitonwoseCalendar)
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.no.arg)
+            implementation(libs.materialkolor)
         }
         iosMain.dependencies{
             implementation(libs.ktor.client.darwin)
