@@ -2,13 +2,16 @@
 package com.teamschedulerapp.ui.components.schedule
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.*
 import kotlin.time.ExperimentalTime
@@ -75,22 +78,19 @@ fun AttendanceSheet(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-
             OutlinedCard(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    LabeledField(label = "From") {
-                        InputTimePicker(state = fromState)
-                    }
-                    LabeledField(label = "To") {
-                        InputTimePicker(state = toState)
-                    }
+                    LabeledField(label = "From", labelWidth = 32.dp) { InputTimePicker(state = fromState, modifier = Modifier.scale(0.85f)) }
+                    HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+                    LabeledField(label = "To", labelWidth = 32.dp) { InputTimePicker(state = toState, modifier = Modifier.scale(0.85f)) }
                 }
             }
 
@@ -114,10 +114,12 @@ fun AttendanceSheet(
     }
 }
 
+
 @Composable
 private fun LabeledField(
     label: String,
     modifier: Modifier = Modifier,
+    labelWidth: Dp = 39.dp,
     content: @Composable () -> Unit
 ) {
     Row(
