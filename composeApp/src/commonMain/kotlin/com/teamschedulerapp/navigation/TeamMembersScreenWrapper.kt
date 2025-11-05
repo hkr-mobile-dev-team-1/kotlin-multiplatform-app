@@ -82,7 +82,21 @@ class TeamMembersScreenWrapper(private val team: TeamWithMembers) : Screen {
                         },
                         onMakeAdmin = { member ->
                             scope.launch {
-                                snackbarHostState.showSuccessSnackbar("${member.firstName ?: "User"} promoted to admin (mock)")
+                                try {
+                                    val success = teamMemberRepository.setMemberAdmin(
+                                        teamId = team.id ?: return@launch,
+                                        userId = member.id,
+                                        isAdmin = true
+                                    )
+                                    if (success) {
+                                        snackbarHostState.showSuccessSnackbar("${member.firstName ?: "User"} is now an admin")
+                                        settingsModel.loadUserTeams() // Refresh data if needed
+                                    } else {
+                                        snackbarHostState.showErrorSnackbar("Failed to promote ${member.firstName ?: "user"}")
+                                    }
+                                } catch (e: Exception) {
+                                    snackbarHostState.showErrorSnackbar("Error: ${e.message}")
+                                }
                             }
                         },
                         onInviteMember = {  scope.launch {
