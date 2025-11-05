@@ -14,6 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.model.User
+import com.teamschedulerapp.ui.theme.ThemeMode
+import com.teamschedulerapp.ui.theme.ThemePreferences
+import com.teamschedulerapp.ui.theme.ThemePreferences.getThemeMode
 import kotlinx.coroutines.launch
 
 @Composable
@@ -184,7 +187,8 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
 
 @Composable
 fun ThemeSection() {
-    var isDarkMode by remember { mutableStateOf(false) }
+    // read the saved preference
+    var themeMode by remember { mutableStateOf(ThemePreferences.getThemeMode()) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -196,8 +200,11 @@ fun ThemeSection() {
             modifier = Modifier.weight(1f)
         )
         Switch(
-            checked = isDarkMode,
-            onCheckedChange = { isDarkMode = it }
+            checked = themeMode == ThemeMode.DARK,
+            onCheckedChange = { checked ->
+                themeMode = if (checked) ThemeMode.DARK else ThemeMode.LIGHT
+                ThemePreferences.setThemeMode(themeMode) // persist choice
+            }
         )
     }
 }

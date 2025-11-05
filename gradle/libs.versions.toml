@@ -10,6 +10,7 @@ androidx-espresso = "3.7.0"
 androidx-lifecycle = "2.9.4"
 androidx-testExt = "1.3.0"
 composeMultiplatform = "1.9.0"
+datastorePreferences = "1.1.7"
 kizitonwoseCalendarVersion = "2.9.0"
 junit = "4.13.2"
 kotlin = "2.2.20"
@@ -26,6 +27,7 @@ multiplatformSettings = "1.1.1"
 materialkolorVersion = "4.0.0"
 
 [libraries]
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 kizitonwoseCalendar= { module = "com.kizitonwose.calendar:compose-multiplatform", version.ref = "kizitonwoseCalendarVersion" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }

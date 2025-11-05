@@ -71,6 +71,9 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 import com.teamschedulerapp.repositories.AvailabilityRepository
 import com.teamschedulerapp.ui.components.notifications.NotificationRightSheet
+import com.teamschedulerapp.ui.theme.AppTheme
+import com.teamschedulerapp.ui.theme.ThemePreferences
+import com.teamschedulerapp.ui.theme.ThemePreferences.getThemeMode
 
 object ScheduleTab : Tab {
     var snackbarHostState: SnackbarHostState? = null
@@ -187,21 +190,24 @@ object SettingsTab : Tab {
 
     @Composable
     override fun Content() {
-        val dummyUser = remember {
-            User(
-                id = "12345",
-                firstName = "Jane",
-                lastName = "Doe",
-                email = "jane.doe@example.com"
-            )
-        }
+
         val supabase = SupabaseClientManager.client
         val authRepository = remember { AuthRepository(supabase) }
         val tabNavigator = LocalNavigator.currentOrThrow
         val rootNavigator = tabNavigator.parent ?: tabNavigator
 
+        val currentUser by UserManager.currentUser.collectAsState()
+
+        if (currentUser == null) {
+            // You can show a loading indicator while the user is initializing
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return
+        }
+
         SettingsScreen(
-            user = dummyUser,
+            user = currentUser!!,
             authRepository = authRepository,
             onBack = {
                 rootNavigator.replaceAll(Login)
@@ -233,6 +239,8 @@ fun MainScreen() {
     val currentTeam by TeamManager.currentTeam.collectAsState()
     val userTeams by TeamManager.userTeams.collectAsState()
     val isTeamManagerInitialized by TeamManager.isInitialized.collectAsState()
+
+    val themeMode = remember { ThemePreferences.getThemeMode() }
 
     if (!isTeamManagerInitialized) {
         Box(
@@ -266,175 +274,180 @@ fun MainScreen() {
 
     val isCurrentTeamAdmin = currentTeam?.members?.find { it.id == userId }?.isAdmin ?: false
 
-    TabNavigator(ScheduleTab) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clickable { showTeamSelector = true }
-                                .widthIn(max = 280.dp)
-                        ) {
-                            TeamTile(currentTeam)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = currentTeam?.name ?: "Select team",
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false)
-                            )
-                            if (isCurrentTeamAdmin) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                AdminBadge()
-                            }
-                            Icon(
-                                Icons.Default.ArrowDropDown,
-                                contentDescription = "Change team"
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = { showNotificationModal = true },
-                            modifier = Modifier
-                                .border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                    shape = CircleShape
-                                )
-                        ) {
-                            BadgedBox(
-                                badge = {
-                                    if (unreadCount > 0) {
-                                        Badge(
-                                            containerColor = MaterialTheme.colorScheme.error,
-                                            modifier = Modifier
-                                                .size(10.dp)
-                                                .offset(x = 2.dp, y = (-1).dp)
-                                        )
-                                    }
-                                }
+
+    val userThemeMode by ThemePreferences.themeMode.collectAsState()
+
+    AppTheme(themeMode = userThemeMode) {
+        TabNavigator(ScheduleTab) {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        title = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .clickable { showTeamSelector = true }
+                                    .widthIn(max = 280.dp)
                             ) {
+                                TeamTile(currentTeam)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = currentTeam?.name ?: "Select team",
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
+                                if (isCurrentTeamAdmin) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    AdminBadge()
+                                }
                                 Icon(
-                                    imageVector = Icons.Rounded.Notifications,
-                                    contentDescription = "Notifications"
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = "Change team"
                                 )
                             }
+                        },
+                        actions = {
+                            IconButton(
+                                onClick = { showNotificationModal = true },
+                                modifier = Modifier
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                        shape = CircleShape
+                                    )
+                            ) {
+                                BadgedBox(
+                                    badge = {
+                                        if (unreadCount > 0) {
+                                            Badge(
+                                                containerColor = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier
+                                                    .size(10.dp)
+                                                    .offset(x = 2.dp, y = (-1).dp)
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Notifications,
+                                        contentDescription = "Notifications"
+                                    )
+                                }
+                            }
                         }
+                    )
+                },
+                bottomBar = {
+                    NavigationBar {
+                        TabNavigationItem(ScheduleTab)
+                        TabNavigationItem(TasksTab)
+                        TabNavigationItem(AnalyticsTab)
+                        TabNavigationItem(SettingsTab)
                     }
-                )
-            },
-            bottomBar = {
-                NavigationBar {
-                    TabNavigationItem(ScheduleTab)
-                    TabNavigationItem(TasksTab)
-                    TabNavigationItem(AnalyticsTab)
-                    TabNavigationItem(SettingsTab)
+                },
+                snackbarHost = { CustomSnackbarHost(snackbarHostState) }
+            ) { paddingValues ->
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    CurrentTab()
                 }
-            },
-            snackbarHost = { CustomSnackbarHost(snackbarHostState) }
-        ) { paddingValues ->
-            Box(modifier = Modifier.padding(paddingValues)) {
-                CurrentTab()
             }
         }
-    }
 
-    // Team selector modal
-    if (showTeamSelector) {
-        TeamSelectorModal(
-            userId = userId,
-            teams = userTeams,
-            currentTeam = currentTeam,
-            onTeamSelected = { team ->
-                TeamManager.selectTeam(team)
-                showTeamSelector = false
-            },
-            onCreateTeam = {
-                showTeamSelector = false
-                showCreateTeamModal = true
-            },
-            onEditTeam = { team ->
-                teamToEdit = team
-                showTeamSelector = false
-            },
-            onDeleteTeam = { team ->
-                scope.launch {
-                    try {
-                        mainScreenModel.deleteTeam(team.id)
-                        // Show success snackbar
-                        snackbarHostState.showSuccessSnackbar("Team deleted successfully")
-                    } catch (e: Exception) {
-                        // Show error snackbar
-                        snackbarHostState.showErrorSnackbar("Failed to delete team")
+        // Team selector modal
+        if (showTeamSelector) {
+            TeamSelectorModal(
+                userId = userId,
+                teams = userTeams,
+                currentTeam = currentTeam,
+                onTeamSelected = { team ->
+                    TeamManager.selectTeam(team)
+                    showTeamSelector = false
+                },
+                onCreateTeam = {
+                    showTeamSelector = false
+                    showCreateTeamModal = true
+                },
+                onEditTeam = { team ->
+                    teamToEdit = team
+                    showTeamSelector = false
+                },
+                onDeleteTeam = { team ->
+                    scope.launch {
+                        try {
+                            mainScreenModel.deleteTeam(team.id)
+                            // Show success snackbar
+                            snackbarHostState.showSuccessSnackbar("Team deleted successfully")
+                        } catch (e: Exception) {
+                            // Show error snackbar
+                            snackbarHostState.showErrorSnackbar("Failed to delete team")
+                        }
                     }
+                    showTeamSelector = false
+                },
+                onDismiss = { showTeamSelector = false }
+            )
+        }
+
+        // Notification Modal
+        if (showNotificationModal) {
+            NotificationRightSheet(
+                notifications = notifications,
+                onDismiss = { showNotificationModal = false },
+                onNotificationClick = { notification ->
+                    // Handle notification click (mark as read, navigate, etc.)
+                },
+                onDeleteNotification = {},
+                onMarkAllAsRead = {},
+                onClearAll = {
+                    // Clear all notifications
                 }
-                showTeamSelector = false
-            },
-            onDismiss = { showTeamSelector = false }
-        )
-    }
+            )
+        }
 
-    // Notification Modal
-    if (showNotificationModal) {
-        NotificationRightSheet(
-            notifications = notifications,
-            onDismiss = { showNotificationModal = false },
-            onNotificationClick = { notification ->
-                // Handle notification click (mark as read, navigate, etc.)
-            },
-            onDeleteNotification = {},
-            onMarkAllAsRead = {},
-            onClearAll = {
-                // Clear all notifications
-            }
-        )
-    }
-
-    if (showCreateTeamModal) {
-        TeamDetailModal(
-            teamToEdit = teamToEdit,
-            onDismiss = { showCreateTeamModal = false },
-            onSave = { name, description ->
-                scope.launch {
-                    try {
-                        mainScreenModel.createTeam(name, description)
-                        // Show success snackbar
-                        snackbarHostState.showSuccessSnackbar("Team created successfully")
-                    } catch (e: Exception) {
-                        // Show error snackbar
-                        snackbarHostState.showErrorSnackbar("Failed to create team")
+        if (showCreateTeamModal) {
+            TeamDetailModal(
+                teamToEdit = teamToEdit,
+                onDismiss = { showCreateTeamModal = false },
+                onSave = { name, description ->
+                    scope.launch {
+                        try {
+                            mainScreenModel.createTeam(name, description)
+                            // Show success snackbar
+                            snackbarHostState.showSuccessSnackbar("Team created successfully")
+                        } catch (e: Exception) {
+                            // Show error snackbar
+                            snackbarHostState.showErrorSnackbar("Failed to create team")
+                        }
                     }
+                    showCreateTeamModal = false
                 }
-                showCreateTeamModal = false
-            }
-        )
-    }
+            )
+        }
 
-    // Edit team modal
-    teamToEdit?.let { team ->
-        TeamDetailModal(
-            teamToEdit = team,
-            onDismiss = { teamToEdit = null },
-            onSave = { name, description ->
-                scope.launch {
-                    try {
-                        mainScreenModel.updateTeam(team.id ?: "", name, description)
-                        // Show success snackbar
-                        snackbarHostState.showSuccessSnackbar("Team updated successfully")
-                    } catch (e: Exception) {
-                        // Show error snackbar
-                        snackbarHostState.showErrorSnackbar("Failed to update team")
+        // Edit team modal
+        teamToEdit?.let { team ->
+            TeamDetailModal(
+                teamToEdit = team,
+                onDismiss = { teamToEdit = null },
+                onSave = { name, description ->
+                    scope.launch {
+                        try {
+                            mainScreenModel.updateTeam(team.id ?: "", name, description)
+                            // Show success snackbar
+                            snackbarHostState.showSuccessSnackbar("Team updated successfully")
+                        } catch (e: Exception) {
+                            // Show error snackbar
+                            snackbarHostState.showErrorSnackbar("Failed to update team")
+                        }
                     }
+                    teamToEdit = null
                 }
-                teamToEdit = null
-            }
-        )
+            )
+        }
     }
 }
 

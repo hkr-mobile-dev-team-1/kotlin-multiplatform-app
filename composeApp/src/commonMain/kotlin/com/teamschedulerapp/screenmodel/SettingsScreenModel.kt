@@ -15,8 +15,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import io.github.jan.supabase.postgrest.Postgrest
-
 import kotlinx.coroutines.withContext
+
+
 
 class SettingsScreenModel(
     private val teamRepository: TeamRepository,
@@ -86,6 +87,7 @@ class SettingsScreenModel(
         }
     }
 
+
     suspend fun createTeam(name: String, description: String) {
         _isLoading.value = true
         _error.value = null
@@ -112,6 +114,8 @@ class SettingsScreenModel(
             _isLoading.value = false
         }
     }
+
+
 
     suspend fun updateTeam(teamId: String, name: String, description: String) {
         _isLoading.value = true
