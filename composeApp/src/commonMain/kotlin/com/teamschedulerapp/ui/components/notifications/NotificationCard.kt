@@ -76,7 +76,7 @@ fun NotificationCard(
             ) {
                 // Title with bold text for names/actions
                 Text(
-                    text = notification.title,
+                    text = if (notification.type == "task_assigned") "New Task Assigned" else "Task completed",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Normal,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -120,11 +120,13 @@ fun NotificationCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Timestamp
-                Text(
-                    text = notification.timestamp,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
+                if (notification.createdAt != null) {
+                    Text(
+                        text = notification.createdAt,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
             }
 
             // Unread indicator dot (only show for unread)

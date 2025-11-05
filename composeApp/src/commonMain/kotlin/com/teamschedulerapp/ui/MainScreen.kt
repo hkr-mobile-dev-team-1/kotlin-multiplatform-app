@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Notifications
@@ -61,7 +60,6 @@ import com.teamschedulerapp.ui.components.team.TeamSelectorModal
 import com.teamschedulerapp.ui.components.team.TeamTile
 import com.teamschedulerapp.ui.screens.analytics.AnalyticsScreen
 import com.teamschedulerapp.ui.screens.schedule.ScheduleScreen
-import com.teamschedulerapp.ui.screens.settings.ManageTeamsScreen
 import com.teamschedulerapp.ui.screens.settings.SettingsScreen
 import com.teamschedulerapp.ui.screens.tasks.TasksScreen
 import com.teamschedulerapp.utils.showErrorSnackbar
@@ -70,6 +68,7 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.launch
 import com.teamschedulerapp.repositories.AvailabilityRepository
+import com.teamschedulerapp.repositories.NotificationRepository
 import com.teamschedulerapp.ui.components.notifications.NotificationRightSheet
 
 object ScheduleTab : Tab {
@@ -222,11 +221,13 @@ fun MainScreen() {
     val teamRepository = remember { TeamRepository(supabase.postgrest) }
     val userRepository = remember { UserRepository(supabase.postgrest) }
     val teamMemberRepository = remember { TeamMemberRepository(supabase.postgrest, userRepository) }
+    val notificationRepository = remember { NotificationRepository(supabase) }
     val mainScreenModel = remember {
         MainScreenModel(
             teamRepository = teamRepository,
             teamMemberRepository = teamMemberRepository,
             userRepository = userRepository,
+            notificationRepository = notificationRepository
         )
     }
     val userId = UserManager.getCurrentUserId()

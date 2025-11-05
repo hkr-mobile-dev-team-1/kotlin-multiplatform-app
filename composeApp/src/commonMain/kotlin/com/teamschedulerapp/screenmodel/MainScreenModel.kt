@@ -1,27 +1,27 @@
 package com.teamschedulerapp.screenmodel
 
-import androidx.compose.runtime.LaunchedEffect
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.teamschedulerapp.data.AuthRepository
 import com.teamschedulerapp.model.Notification
 import com.teamschedulerapp.model.TeamMemberWithUser
 import com.teamschedulerapp.model.TeamWithMembers
 import com.teamschedulerapp.navigation.TeamManager
 import com.teamschedulerapp.navigation.UserManager
+import com.teamschedulerapp.repositories.NotificationRepository
 import com.teamschedulerapp.repositories.TeamMemberRepository
 import com.teamschedulerapp.repositories.TeamRepository
 import com.teamschedulerapp.repositories.UserRepository
-import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+
 class MainScreenModel(
     private val teamRepository: TeamRepository,
     private val teamMemberRepository: TeamMemberRepository,
     private val userRepository: UserRepository,
+    private val notificationRepository: NotificationRepository
 ) : ScreenModel {
 
     val userId = UserManager.getCurrentUserId()
@@ -32,12 +32,13 @@ class MainScreenModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val _notifications = MutableStateFlow<List<com.teamschedulerapp.model.Notification>>(emptyList())
-    val notifications: StateFlow<List<com.teamschedulerapp.model.Notification>> = _notifications.asStateFlow()
+    private val _notifications = MutableStateFlow<List<Notification>>(emptyList())
+    val notifications: StateFlow<List<Notification>> = _notifications.asStateFlow()
+    private var isNotificationSubscribed = false
 
     init {
         loadUserTeams()
-        loadNotifications()
+        initializeNotifications()
     }
 
     fun loadUserTeams() {
@@ -171,80 +172,82 @@ class MainScreenModel(
     fun isUserAdminOfCurrentTeam(): Boolean {
         return TeamManager.isUserAdminOfCurrentTeam(userId)
     }
-    // Notification management
-    private fun loadNotifications() {
-        screenModelScope.launch {
-            // TODO: Replace with actual repository call when backend is ready
-            // For now, using mock data
-            _notifications.value = generateMockNotifications()
-        }
-    }
 
-    fun markNotificationAsRead(notificationId: String) {
+
+    // Notification management
+    private fun initializeNotifications() {
         screenModelScope.launch {
-            _notifications.value = _notifications.value.map { notification ->
-                if (notification.id == notificationId) {
-                    notification.copy(isRead = true)
-                } else {
-                    notification
+            notificationRepository.fetchNotifications(userId)
+
+            // Collect notifications from repository
+            launch {
+                notificationRepository.notifications.collect { notifs ->
+                    _notifications.value = notifs
                 }
+            }
+
+            // Subscribe to realtime updates
+            if (!isNotificationSubscribed) {
+                notificationRepository.subscribeToNotifications(userId) { newNotification ->
+                    // Optional: Handle new notification (show toast, play sound, etc.)
+                    println("🔔 New notification: ${newNotification.message}")
+                }
+                isNotificationSubscribed = true
             }
         }
     }
 
+    /**
+     * Mark a notification as read
+     */
+    fun markNotificationAsRead(notificationId: String) {
+        screenModelScope.launch {
+            notificationRepository.markAsRead(notificationId)
+        }
+    }
+
+    /**
+     * Mark all notifications as read
+     */
     fun markAllNotificationsAsRead() {
         screenModelScope.launch {
-            _notifications.value = _notifications.value.map { it.copy(isRead = true) }
+            notificationRepository.markAllAsRead(userId)
         }
     }
 
+    /**
+     * Delete a specific notification
+     */
     fun deleteNotification(notificationId: String) {
         screenModelScope.launch {
-            _notifications.value = _notifications.value.filter { it.id != notificationId }
+            notificationRepository.deleteNotification(notificationId)
         }
     }
 
+    /**
+     * Clear all notifications
+     */
     fun clearAllNotifications() {
         screenModelScope.launch {
-            _notifications.value = emptyList()
+            notificationRepository.clearAllNotifications(userId)
         }
     }
 
-    // Mock data generator - remove when backend is ready
-    private fun generateMockNotifications(): List<Notification> {
-        return listOf(
-            Notification(
-                id = "1",
-                title = "New Task Assigned",
-                message = "You've been assigned to 'Update documentation'",
-                timestamp = "2 hours ago",
-                isRead = false,
-                type = "task"
-            ),
-            Notification(
-                id = "2",
-                title = "Team Invite",
-                message = "You've been invited to join 'Marketing Team'",
-                timestamp = "5 hours ago",
-                isRead = false,
-                type = "team"
-            ),
-            Notification(
-                id = "3",
-                title = "Schedule Change",
-                message = "Your availability for Monday has been updated",
-                timestamp = "1 day ago",
-                isRead = true,
-                type = "schedule"
-            ),
-            Notification(
-                id = "4",
-                title = "Task Completed",
-                message = "John completed 'Design wireframes'",
-                timestamp = "2 days ago",
-                isRead = true,
-                type = "task"
-            )
-        )
+    /**
+     * Refresh notifications manually
+     */
+    fun refreshNotifications() {
+        screenModelScope.launch {
+            notificationRepository.fetchNotifications(userId)
+        }
+    }
+
+    override fun onDispose() {
+        super.onDispose()
+        // Unsubscribe from realtime when screen model is disposed
+        screenModelScope.launch {
+            notificationRepository.unsubscribeFromNotifications()
+            isNotificationSubscribed = false
+        }
     }
 }

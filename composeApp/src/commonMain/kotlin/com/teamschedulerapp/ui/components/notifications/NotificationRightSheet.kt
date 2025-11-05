@@ -52,8 +52,8 @@ fun NotificationRightSheet(
     // Filter notifications based on selected tab
     val filteredNotifications = when (selectedTab) {
         0 -> notifications // All
-        1 -> notifications.filter { it.type == "task" } // Tasks
-        2 -> notifications.filter { it.type == "team" } // Teams
+        1 -> notifications.filter { it.type == "task_assignment" }
+        2 -> notifications.filter { it.type == "task_completed" }
         else -> notifications
     }
 
