@@ -82,10 +82,13 @@ class TeamMembersScreenWrapper(private val team: TeamWithMembers) : Screen {
                         },
                         onMakeAdmin = { member ->
                             scope.launch {
-                                // later replace this with your real "make admin" API call
                                 snackbarHostState.showSuccessSnackbar("${member.firstName ?: "User"} promoted to admin (mock)")
                             }
-                        }
+                        },
+                        onInviteMember = {  scope.launch {
+                            snackbarHostState.showSuccessSnackbar("Invite sent successfully!")
+                        }}
+
                     )
                 }
             }

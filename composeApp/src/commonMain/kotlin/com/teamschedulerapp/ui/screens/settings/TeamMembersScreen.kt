@@ -1,8 +1,10 @@
 package com.teamschedulerapp.ui.screens.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,12 +21,21 @@ fun TeamMembersScreen(
     team: TeamWithMembers,
     onBack: () -> Unit,
     onRemoveMember: (TeamMemberWithUser) -> Unit,
-    onMakeAdmin: (TeamMemberWithUser) -> Unit
+    onMakeAdmin: (TeamMemberWithUser) -> Unit,
+    onInviteMember: (String) -> Unit // now takes a String (user ID or email)
 ) {
+    var showInviteDialog by remember { mutableStateOf(false) }
+    var newMemberInput by remember { mutableStateOf("") }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(team.name) },
+                title = {
+                    Text(
+                        text = team.name,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Normal)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -32,25 +43,66 @@ fun TeamMembersScreen(
                             contentDescription = "Back"
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp)
                 .fillMaxSize()
+                .padding(innerPadding)
+                .padding(vertical = 8.dp)
         ) {
+            // --- Add New Member Tile ---
+            Surface(
+                tonalElevation = 2.dp,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clickable { showInviteDialog = true }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add New Member",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Invite New Member",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
             Text(
-                text = "Team Members for ${team.name}",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 12.dp)
+                text = "Team Members",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 20.dp, bottom = 8.dp)
             )
 
             if (team.members.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -60,7 +112,7 @@ fun TeamMembersScreen(
                     )
                 }
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column {
                     team.members.forEach { member ->
                         TeamMemberItem(
                             member = member,
@@ -71,8 +123,44 @@ fun TeamMembersScreen(
                 }
             }
         }
+
+        // --- Add Member Dialog ---
+        if (showInviteDialog) {
+            AlertDialog(
+                onDismissRequest = { showInviteDialog = false },
+                title = { Text("Invite New Member") },
+                text = {
+                    OutlinedTextField(
+                        value = newMemberInput,
+                        onValueChange = { newMemberInput = it },
+                        label = { Text("Email") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (newMemberInput.isNotBlank()) {
+                                onInviteMember(newMemberInput.trim())
+                                showInviteDialog = false
+                                newMemberInput = ""
+                            }
+                        }
+                    ) {
+                        Text("Invite")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showInviteDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
 }
+
 
 @Composable
 fun TeamMemberItem(
@@ -87,7 +175,7 @@ fun TeamMemberItem(
         shape = MaterialTheme.shapes.medium,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 6.dp)
     ) {
         Row(
             modifier = Modifier
@@ -95,22 +183,17 @@ fun TeamMemberItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Member name / email (TeamMemberWithUser has firstName/lastName/email)
-            Column(modifier = Modifier.weight(1f)) {
-                val fullName = listOfNotNull(member.firstName, member.lastName).joinToString(" ").ifBlank { "Unknown" }
-                Text(
-                    text = fullName,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = member.email ?: "No email",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            val fullName = listOfNotNull(member.firstName, member.lastName)
+                .joinToString(" ")
+                .ifBlank { "Unknown" }
 
-            // Three-dot menu
+            Text(
+                text = fullName,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+
             Box {
                 IconButton(onClick = { expanded = true }) {
                     Icon(

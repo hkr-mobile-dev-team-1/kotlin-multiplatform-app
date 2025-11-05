@@ -52,6 +52,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.android)
             implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.androidx.datastore.preferences)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -113,5 +114,6 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+
 }
 
