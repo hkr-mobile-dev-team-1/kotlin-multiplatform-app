@@ -119,4 +119,28 @@ class AuthRepository(private val supabase: SupabaseClient) {
         }
     }
 
+    suspend fun resetPasswordForEmail(email: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            supabase.auth.resetPasswordForEmail(
+                email = email,
+                redirectUrl = "teamschedulerapp://auth"
+            )
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+    suspend fun updatePassword(newPassword: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            supabase.auth.updateUser {
+                password = newPassword
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 }
