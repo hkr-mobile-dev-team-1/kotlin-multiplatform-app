@@ -190,7 +190,7 @@ class MainScreenModel(
             if (!isNotificationSubscribed) {
                 notificationRepository.subscribeToNotifications(userId) { newNotification ->
                     // Optional: Handle new notification (show toast, play sound, etc.)
-                    println("🔔 New notification: ${newNotification.message}")
+                    println("🔔 New notification: ${newNotification.payload}")
                 }
                 isNotificationSubscribed = true
             }

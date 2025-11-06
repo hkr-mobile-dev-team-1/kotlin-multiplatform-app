@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.teamschedulerapp.model.Notification
@@ -52,8 +51,8 @@ fun NotificationRightSheet(
     // Filter notifications based on selected tab
     val filteredNotifications = when (selectedTab) {
         0 -> notifications // All
-        1 -> notifications.filter { it.type == "task_assignment" }
-        2 -> notifications.filter { it.type == "task_completed" }
+        1 -> notifications.filter { it.type == "task_assigned" || it.type == "task_completed" }
+        2 -> notifications.filter { it.type == "team_update" || it.type == "team_invite" }
         else -> notifications
     }
 
@@ -163,17 +162,13 @@ fun NotificationRightSheet(
                             TabRow(
                                 selectedTabIndex = selectedTab,
                                 containerColor = MaterialTheme.colorScheme.surface,
-                                contentColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
                                 indicator = { tabPositions ->
-                                    if (selectedTab < tabPositions.size) {
-                                        TabRowDefaults.SecondaryIndicator(
-                                            Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                            color = MaterialTheme.colorScheme.primary,
-                                            height = 3.dp
-                                        )
-                                    }
-                                },
-                                divider = {}
+                                    TabRowDefaults.SecondaryIndicator(
+                                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             ) {
                                 Tab(
                                     selected = selectedTab == 0,
@@ -188,23 +183,25 @@ fun NotificationRightSheet(
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 fontWeight = if (selectedTab == 0) FontWeight.SemiBold else FontWeight.Normal
                                             )
-                                            Surface(
-                                                shape = RoundedCornerShape(12.dp),
-                                                color = if (selectedTab == 0)
-                                                    MaterialTheme.colorScheme.primaryContainer
-                                                else
-                                                    MaterialTheme.colorScheme.surfaceVariant
-                                            ) {
-                                                Text(
-                                                    text = notifications.size.toString(),
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.SemiBold,
+                                            if (unreadCount > 0) {
+                                                Surface(
+                                                    shape = RoundedCornerShape(12.dp),
                                                     color = if (selectedTab == 0)
-                                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                                        MaterialTheme.colorScheme.primaryContainer
                                                     else
-                                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
+                                                        MaterialTheme.colorScheme.errorContainer
+                                                ) {
+                                                    Text(
+                                                        text = unreadCount.toString(),
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = if (selectedTab == 0)
+                                                            MaterialTheme.colorScheme.onPrimaryContainer
+                                                        else
+                                                            MaterialTheme.colorScheme.onErrorContainer
+                                                    )
+                                                }
                                             }
                                         }
                                     },
@@ -232,7 +229,9 @@ fun NotificationRightSheet(
                                                     MaterialTheme.colorScheme.surfaceVariant
                                             ) {
                                                 Text(
-                                                    text = notifications.count { it.type == "task" }.toString(),
+                                                    text = notifications.count {
+                                                        it.type == "task_assigned" || it.type == "task_completed"
+                                                    }.toString(),
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.SemiBold,
@@ -268,7 +267,9 @@ fun NotificationRightSheet(
                                                     MaterialTheme.colorScheme.surfaceVariant
                                             ) {
                                                 Text(
-                                                    text = notifications.count { it.type == "team" }.toString(),
+                                                    text = notifications.count {
+                                                        it.type == "team_update" || it.type == "team_invite"
+                                                    }.toString(),
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     fontWeight = FontWeight.SemiBold,

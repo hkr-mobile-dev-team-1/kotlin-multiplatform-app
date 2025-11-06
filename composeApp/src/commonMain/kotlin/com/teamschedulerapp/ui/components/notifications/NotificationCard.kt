@@ -18,6 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.teamschedulerapp.model.Notification
+import com.teamschedulerapp.model.TaskAssignedPayload
+import com.teamschedulerapp.model.TaskCompletedPayload
+import com.teamschedulerapp.model.parsePayload
 
 @Composable
 fun NotificationCard(
@@ -27,6 +30,30 @@ fun NotificationCard(
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
+
+    // Extract data from payload based on notification type
+    val (title, message) = remember(notification) {
+        when (notification.type) {
+            "task_assigned" -> {
+                val payload = notification.parsePayload<TaskAssignedPayload>()
+                Pair(
+                    "New Task Assigned",
+                    payload?.taskTitle ?: "Task assigned to you"
+                )
+            }
+            "task_completed" -> {
+                val payload = notification.parsePayload<TaskCompletedPayload>()
+                Pair(
+                    "Task Completed",
+                    payload?.taskTitle ?: "A task was completed"
+                )
+            }
+            else -> Pair(
+                notification.type.replace("_", " ").capitalize(),
+                notification.payload["task_title"]?.toString()?.removeSurrounding("\"") ?: ""
+            )
+        }
+    }
 
     // Different background for read vs unread - no card, just surface
     Surface(
@@ -76,7 +103,7 @@ fun NotificationCard(
             ) {
                 // Title with bold text for names/actions
                 Text(
-                    text = if (notification.type == "task_assigned") "New Task Assigned" else "Task completed",
+                    text = title,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Normal,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -84,8 +111,8 @@ fun NotificationCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                // Subtitle/context (if provided in message)
-                if (notification.message.isNotEmpty()) {
+                // Subtitle/context (task title from payload)
+                if (message.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -100,7 +127,7 @@ fun NotificationCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = notification.message.take(1).uppercase(),
+                                text = message.take(1).uppercase(),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = getNotificationColor(notification.type)
@@ -108,7 +135,7 @@ fun NotificationCard(
                         }
 
                         Text(
-                            text = notification.message,
+                            text = message,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -122,7 +149,7 @@ fun NotificationCard(
                 // Timestamp
                 if (notification.createdAt != null) {
                     Text(
-                        text = notification.createdAt,
+                        text = formatTimestamp(notification.createdAt),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
@@ -145,11 +172,14 @@ fun NotificationCard(
 @Composable
 private fun getNotificationIcon(type: String): ImageVector {
     return when (type) {
-        "task" -> Icons.Default.Assignment
-        "team" -> Icons.Default.Group
+        "task_assigned" -> Icons.Default.Assignment
+        "task_completed" -> Icons.Default.CheckCircle
+        "task_updated" -> Icons.Default.Edit
+        "task_deleted" -> Icons.Default.Delete
+        "team_update" -> Icons.Default.Group
+        "team_invite" -> Icons.Default.PersonAdd
         "schedule" -> Icons.Default.CalendarMonth
         "comment" -> Icons.Default.ChatBubble
-        "invite" -> Icons.Default.PersonAdd
         "upload" -> Icons.Default.Upload
         "mention" -> Icons.Default.AlternateEmail
         else -> Icons.Default.Notifications
@@ -159,13 +189,30 @@ private fun getNotificationIcon(type: String): ImageVector {
 @Composable
 private fun getNotificationColor(type: String): Color {
     return when (type) {
-        "task" -> Color(0xFF6366F1) // Indigo
-        "team" -> Color(0xFF8B5CF6) // Purple
+        "task_assigned" -> Color(0xFF6366F1) // Indigo
+        "task_completed" -> Color(0xFF10B981) // Green
+        "task_updated" -> Color(0xFF3B82F6) // Blue
+        "task_deleted" -> Color(0xFFEF4444) // Red
+        "team_update" -> Color(0xFF8B5CF6) // Purple
+        "team_invite" -> Color(0xFFEC4899) // Pink
         "schedule" -> Color(0xFF10B981) // Green
         "comment" -> Color(0xFF3B82F6) // Blue
-        "invite" -> Color(0xFFEC4899) // Pink
         "upload" -> Color(0xFFF59E0B) // Amber
         "mention" -> Color(0xFF06B6D4) // Cyan
         else -> MaterialTheme.colorScheme.primary
+    }
+}
+
+/**
+ * Format ISO timestamp to relative time
+ * e.g., "2 hours ago", "Yesterday", "3 days ago"
+ */
+private fun formatTimestamp(timestamp: String): String {
+    return try {
+        // Basic formatting - you may want to use a proper date library
+        // For now, just return the timestamp as-is or implement your formatting logic
+        timestamp
+    } catch (e: Exception) {
+        timestamp
     }
 }
